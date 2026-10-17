@@ -1,5 +1,7 @@
 # W6W local proof-of-concept demo (8 minutes)
 
+For the complete 10 to 12 minute recording storyboard, speaker notes, setup instructions, and automated browser recording, see [demo-video-creation-guide.md](demo-video-creation-guide.md).
+
 This script demonstrates the working local slice and calls out unfinished product areas without implying they are available.
 
 1. **Problem and boundary (1 min):** introduce Tier 1 long-tail workflows and state that complex case management stays in Pega.

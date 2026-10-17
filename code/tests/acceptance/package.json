@@ -2,7 +2,8 @@
   "name": "w6w-browser-acceptance",
   "private": true,
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "demo:video": "playwright test --config=playwright.demo.config.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0"

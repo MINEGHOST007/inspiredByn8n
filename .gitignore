@@ -11,6 +11,8 @@ data/
 **/node_modules/
 **/test-results/
 **/playwright-report/
+artifacts/demo_presentation/video-output/
+artifacts/demo_presentation/video-report/
 /.playwright-cli/
 /tmp/
 
