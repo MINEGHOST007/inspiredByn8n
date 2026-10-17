@@ -5,6 +5,7 @@ import com.w6w.port.WorkflowEnginePort;
 import com.w6w.port.WorkflowFailure;
 import com.w6w.port.WorkflowInstance;
 import com.w6w.runtime.WorkflowDataSchemaRegistry;
+import com.w6w.runtime.WorkflowMdcContext;
 import org.flowable.engine.ManagementService;
 import org.flowable.engine.HistoryService;
 import org.flowable.engine.RepositoryService;
@@ -99,7 +100,7 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
         if (dataSchemas != null) {
             var definition = repositoryService.createProcessDefinitionQuery()
                     .processDefinitionKey(workflowKey).latestVersion().singleResult();
-            if (definition != null) dataSchemas.validate(definition.getId(), variables);
+            if (definition != null) dataSchemas.validate(definition.getId(), WorkflowMdcContext.workflowData(variables));
         }
 
         ProcessInstance pi = runtimeService.startProcessInstanceByKey(workflowKey, businessKey, variables);
@@ -176,7 +177,7 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
         if (dataSchemas != null) {
             Map<String, Object> mergedVariables = new HashMap<>(runtimeService.getVariables(task.getProcessInstanceId()));
             if (variables != null) mergedVariables.putAll(variables);
-            dataSchemas.validate(task.getProcessDefinitionId(), mergedVariables);
+            dataSchemas.validate(task.getProcessDefinitionId(), WorkflowMdcContext.workflowData(mergedVariables));
         }
 
         if (task.getAssignee() == null && username != null) {
@@ -221,7 +222,7 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
             Map<String, Object> updated = new LinkedHashMap<>(runtimeService.getVariables(process.getId()));
             if (variables.containsKey("outcome")) throw new IllegalArgumentException("Signal payload may not set the reserved 'outcome' variable");
             updated.putAll(variables);
-            if (dataSchemas != null) dataSchemas.validate(process.getProcessDefinitionId(), updated);
+            if (dataSchemas != null) dataSchemas.validate(process.getProcessDefinitionId(), WorkflowMdcContext.workflowData(updated));
             matches.add(execution);
         }
         if (matches.size() > 1) throw new IllegalArgumentException("Signal matches multiple waiting workflows; specify workflowKey or use a unique business key");
@@ -266,7 +267,7 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
     }
 
     private WorkflowInstance mapActiveInstance(ProcessInstance pi) {
-        Map<String, Object> vars = pi.getProcessVariables() != null ? pi.getProcessVariables() : Collections.emptyMap();
+        Map<String, Object> vars = publicVariables(pi.getProcessVariables());
         return new WorkflowInstance(
             pi.getId(),
             pi.getProcessDefinitionKey(),
@@ -279,8 +280,9 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
     }
 
     private WorkflowInstance mapHistoricInstance(HistoricProcessInstance hpi) {
-        Map<String, Object> vars = hpi.getProcessVariables() != null ? hpi.getProcessVariables() : Collections.emptyMap();
-        String resolution = (String) vars.get("resolution");
+        Map<String, Object> rawVariables = hpi.getProcessVariables() != null ? hpi.getProcessVariables() : Collections.emptyMap();
+        Map<String, Object> vars = publicVariables(rawVariables);
+        String resolution = (String) rawVariables.get("resolution");
         if (resolution == null && hpi.getEndActivityId() != null) {
             var endActivity = historyService.createHistoricActivityInstanceQuery()
                     .processInstanceId(hpi.getId())
@@ -302,6 +304,10 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
         );
     }
 
+    private Map<String, Object> publicVariables(Map<String, Object> variables) {
+        return WorkflowMdcContext.workflowData(variables);
+    }
+
     private TaskInstance mapTask(Task t) {
         List<String> candidateGroups = taskService.getIdentityLinksForTask(t.getId()).stream()
                 .filter(link -> "candidate".equals(link.getType()))
@@ -319,7 +325,7 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
             t.getFormKey(),
             t.getPriority(),
             t.getDueDate(),
-            t.getProcessVariables()
+            publicVariables(t.getProcessVariables())
         );
     }
 }

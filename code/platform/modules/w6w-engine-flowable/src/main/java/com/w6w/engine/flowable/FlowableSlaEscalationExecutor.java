@@ -1,6 +1,7 @@
 package com.w6w.engine.flowable;
 
 import com.w6w.runtime.WorkflowSlaEscalatedEvent;
+import com.w6w.runtime.WorkflowMdcContext;
 import org.flowable.common.engine.api.delegate.Expression;
 import org.flowable.engine.RepositoryService;
 import org.flowable.engine.RuntimeService;
@@ -42,6 +43,14 @@ public class FlowableSlaEscalationExecutor implements JavaDelegate {
         String taskKey = value(taskDefinitionKey, execution, "taskDefinitionKey");
         String role = value(targetRole, execution, "targetRole");
         if (taskKey.isBlank() || role.isBlank()) throw new IllegalStateException("SLA escalation requires the overdue task key and target role");
+        Object traceValue = execution.getVariable(WorkflowMdcContext.TRACE_VARIABLE);
+        String traceId = traceValue instanceof String value ? value : null;
+        try (var ignored = WorkflowMdcContext.open(traceId, execution.getProcessInstanceId(), null, taskKey)) {
+            escalate(execution, taskKey, role, traceId);
+        }
+    }
+
+    private void escalate(DelegateExecution execution, String taskKey, String role, String traceId) {
         Task task = taskService.createTaskQuery().processInstanceId(execution.getProcessInstanceId())
                 .taskDefinitionKey(taskKey).singleResult();
         if (task == null) {
@@ -49,6 +58,7 @@ public class FlowableSlaEscalationExecutor implements JavaDelegate {
             return;
         }
 
+        try (var ignored = WorkflowMdcContext.open(traceId, execution.getProcessInstanceId(), task.getId(), taskKey)) {
         if (task.getAssignee() != null) taskService.setAssignee(task.getId(), null);
         for (IdentityLink link : taskService.getIdentityLinksForTask(task.getId())) {
             if ("candidate".equals(link.getType()) && link.getGroupId() != null)
@@ -60,9 +70,10 @@ public class FlowableSlaEscalationExecutor implements JavaDelegate {
         ProcessDefinition definition = repositoryService.getProcessDefinition(task.getProcessDefinitionId());
         WorkflowSlaEscalatedEvent event = new WorkflowSlaEscalatedEvent(task.getProcessInstanceId(),
                 definition == null ? null : definition.getKey(), process == null ? null : process.getBusinessKey(),
-                task.getId(), role, Instant.now());
+                task.getId(), role, traceId, Instant.now());
         events.publishEvent(event);
         log.info("Escalated overdue task '{}' for instance '{}' to role '{}'", task.getId(), task.getProcessInstanceId(), role);
+        }
     }
 
     private String value(Expression expression, DelegateExecution execution, String field) {

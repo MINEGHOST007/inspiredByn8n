@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.w6w.runtime.WorkflowDataSchemaRegistry;
+import com.w6w.runtime.WorkflowMdcContext;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -50,8 +51,16 @@ public class FlowableDecisionExecutor implements JavaDelegate {
         String key = decisionKey == null ? null : String.valueOf(decisionKey.getValue(execution));
         String resolvedStep = stepId == null ? execution.getCurrentActivityId() : String.valueOf(stepId.getValue(execution));
         if (key == null || key.isBlank()) throw new IllegalStateException("Missing decision key for step " + resolvedStep);
+        Object traceValue = execution.getVariable(WorkflowMdcContext.TRACE_VARIABLE);
+        String traceId = traceValue instanceof String value ? value : null;
+        try (var ignored = WorkflowMdcContext.open(traceId, execution.getProcessInstanceId(), null, resolvedStep)) {
+            evaluate(execution, key, resolvedStep);
+        }
+    }
+
+    private void evaluate(DelegateExecution execution, String key, String resolvedStep) {
         Map<String, Object> result = dmnEngineProvider.get().getDmnDecisionService().createExecuteDecisionBuilder()
-                .decisionKey(key).variables(execution.getVariables()).instanceId(execution.getProcessInstanceId())
+                .decisionKey(key).variables(WorkflowMdcContext.workflowData(execution.getVariables())).instanceId(execution.getProcessInstanceId())
                 .activityId(execution.getCurrentActivityId()).executeWithSingleResult();
         if (result == null || result.isEmpty()) throw new IllegalStateException("Decision '" + key + "' returned no result for step " + resolvedStep);
         result.forEach(execution::setVariable);
@@ -63,7 +72,7 @@ public class FlowableDecisionExecutor implements JavaDelegate {
         if (!allowed.contains(value)) throw new IllegalStateException("Decision '" + key + "' returned undeclared outcome '" + value + "' for step " + resolvedStep);
         if (dataSchemas != null && repositoryService != null) {
             ProcessDefinition definition = repositoryService.getProcessDefinition(execution.getProcessDefinitionId());
-            if (definition != null) dataSchemas.validate(definition.getId(), execution.getVariables());
+            if (definition != null) dataSchemas.validate(definition.getId(), WorkflowMdcContext.workflowData(execution.getVariables()));
         }
         log.info("Evaluated decision '{}' for instance '{}' at step '{}': outcome='{}'", key, execution.getProcessInstanceId(), resolvedStep, value);
     }

@@ -4,6 +4,10 @@ server:
   error:
     include-message: always
 
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5p [%thread] [trace=%X{traceId:-na} instance=%X{instanceId:-na} task=%X{taskId:-na} step=%X{stepId:-na}] %logger{36} - %msg%n%ex"
+
 spring:
   application:
     name: w6w-local

@@ -2,6 +2,7 @@ package com.w6w.app;
 
 import com.w6w.runtime.WorkflowSlaEscalatedEvent;
 import com.w6w.runtime.WorkflowLifecycleEvent;
+import com.w6w.runtime.WorkflowMdcContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -29,7 +30,9 @@ public class WorkflowSlaAuditListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void publishLifecycleEvent(WorkflowSlaEscalatedEvent event) {
-        events.publishEvent(new WorkflowLifecycleEvent("SLA_BREACHED", event.instanceId(), event.workflowKey(),
-                event.businessKey(), event.taskId(), Map.of("targetRole", event.targetRole()), event.occurredAt()));
+        try (var ignored = WorkflowMdcContext.open(event.traceId(), event.instanceId(), event.taskId(), null)) {
+            events.publishEvent(new WorkflowLifecycleEvent("SLA_BREACHED", event.instanceId(), event.workflowKey(),
+                    event.businessKey(), event.taskId(), Map.of("targetRole", event.targetRole()), event.occurredAt()));
+        }
     }
 }

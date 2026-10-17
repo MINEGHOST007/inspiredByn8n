@@ -9,6 +9,8 @@ import com.w6w.port.TaskInstance;
 import com.w6w.port.WorkflowInstance;
 import com.w6w.port.action.ActionResult;
 import com.w6w.runtime.ActionRegistry;
+import com.w6w.runtime.WorkflowMdcContext;
+import org.slf4j.MDC;
 import org.flowable.engine.ProcessEngine;
 import org.flowable.engine.impl.cfg.StandaloneInMemProcessEngineConfiguration;
 import org.flowable.dmn.engine.DmnEngine;
@@ -354,9 +356,14 @@ class FlowableEngineIntegrationTest {
 
     @Test
     void serviceTaskReceivesVersionedWorkflowActionConfiguration() throws Exception {
+        String expectedTraceId = "0af7651916cd43dd8448eb211c80319c";
         actionRegistry.register("test.configured", ctx -> {
             assertThat(ctx.getConfiguration()).containsEntry("message", "hello")
                     .containsEntry("attempt", 3);
+            assertThat(MDC.get("traceId")).isEqualTo(expectedTraceId);
+            assertThat(MDC.get("instanceId")).isEqualTo(ctx.getInstanceId());
+            assertThat(MDC.get("stepId")).isEqualTo("configured-action");
+            assertThat(ctx.getVariables()).doesNotContainKey(WorkflowMdcContext.TRACE_VARIABLE);
             return ActionResult.success(Map.of("configuredValue", ctx.getConfiguration().get("message")));
         });
         WorkflowDefinition workflow = CwmParser.parse("""
@@ -381,10 +388,12 @@ class FlowableEngineIntegrationTest {
                 """);
         adapter.deploy("configured-action-test", "Configured action test", new CwmToBpmnCompiler().compile(workflow));
 
-        WorkflowInstance instance = adapter.startInstance("configured-action-test", "CONFIG-CASE-001", Map.of());
+        WorkflowInstance instance = adapter.startInstance("configured-action-test", "CONFIG-CASE-001",
+                Map.of(WorkflowMdcContext.TRACE_VARIABLE, expectedTraceId));
         WorkflowInstance completed = await(() -> adapter.getInstance(instance.getId()),
                 item -> "COMPLETED".equals(item.getStatus()), "configured service task");
         assertThat(completed.getVariables().get("configuredValue")).isEqualTo("hello");
+        assertThat(completed.getVariables()).doesNotContainKey(WorkflowMdcContext.TRACE_VARIABLE);
         assertThat(completed.getResolution()).isEqualTo("Done");
     }
 

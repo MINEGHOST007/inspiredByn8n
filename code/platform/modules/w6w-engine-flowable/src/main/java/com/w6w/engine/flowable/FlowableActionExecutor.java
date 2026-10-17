@@ -5,6 +5,7 @@ import com.w6w.port.action.ActionResult;
 import com.w6w.port.action.WorkflowActionHandler;
 import com.w6w.runtime.ActionRegistry;
 import com.w6w.runtime.WorkflowDataSchemaRegistry;
+import com.w6w.runtime.WorkflowMdcContext;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.flowable.engine.RepositoryService;
@@ -50,7 +51,14 @@ public class FlowableActionExecutor implements JavaDelegate {
     public void execute(DelegateExecution execution) {
         String resolvedAction = actionName != null ? (String) actionName.getValue(execution) : null;
         String resolvedStep = stepId != null ? (String) stepId.getValue(execution) : execution.getCurrentActivityId();
+        Object traceValue = execution.getVariable(WorkflowMdcContext.TRACE_VARIABLE);
+        String traceId = traceValue instanceof String value ? value : null;
+        try (var ignored = WorkflowMdcContext.open(traceId, execution.getProcessInstanceId(), null, resolvedStep)) {
+            executeAction(execution, resolvedAction, resolvedStep);
+        }
+    }
 
+    private void executeAction(DelegateExecution execution, String resolvedAction, String resolvedStep) {
         if (resolvedAction == null || resolvedAction.isEmpty()) {
             throw new IllegalStateException("Missing required field 'actionName' for step: " + resolvedStep);
         }
@@ -62,7 +70,7 @@ public class FlowableActionExecutor implements JavaDelegate {
 
         Map<String, Object> configuration = readConfiguration(execution);
         ActionContext ctx = new ActionContext(execution.getProcessInstanceId(), resolvedStep,
-                execution.getVariables(), configuration);
+                workflowData(execution), configuration);
         log.info("Executing action '{}' with IdempotencyKey='{}'", resolvedAction, ctx.getIdempotencyKey());
 
         try {
@@ -95,6 +103,10 @@ public class FlowableActionExecutor implements JavaDelegate {
     private void validateWorkflowData(DelegateExecution execution) {
         if (dataSchemas == null || repositoryService == null) return;
         ProcessDefinition definition = repositoryService.getProcessDefinition(execution.getProcessDefinitionId());
-        if (definition != null) dataSchemas.validate(definition.getId(), execution.getVariables());
+        if (definition != null) dataSchemas.validate(definition.getId(), workflowData(execution));
+    }
+
+    private Map<String, Object> workflowData(DelegateExecution execution) {
+        return WorkflowMdcContext.workflowData(execution.getVariables());
     }
 }

@@ -5,6 +5,7 @@ import com.w6w.engine.flowable.FlowableWorkflowEngineAdapter;
 import com.w6w.port.TaskInstance;
 import com.w6w.port.WorkflowInstance;
 import com.w6w.port.WorkflowFailure;
+import com.w6w.runtime.WorkflowMdcContext;
 import org.flowable.engine.HistoryService;
 import org.flowable.engine.ProcessEngine;
 import org.flowable.engine.repository.ProcessDefinition;
@@ -57,6 +58,10 @@ public class WorkflowApiController {
         catalog.validateWorkflowData(workflow, variables);
         String businessKey = request.businessKey() == null || request.businessKey().isBlank()
                 ? "W6W-" + UUID.randomUUID() : request.businessKey().trim();
+        if (WorkflowMdcContext.currentTraceId() != null) {
+            variables = new LinkedHashMap<>(variables);
+            variables.put(WorkflowMdcContext.TRACE_VARIABLE, WorkflowMdcContext.currentTraceId());
+        }
         WorkflowInstance instance = engine.startInstance(workflow.definition().getMetadata().getKey(), businessKey,
                 variables);
         return ResponseEntity.status(HttpStatus.CREATED).body(instance);

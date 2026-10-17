@@ -66,7 +66,7 @@ SE-04,M,MVP,host integration (planned),,not covered,Not implemented
 SE-05,M,MVP,host integration (planned),,not covered,Not implemented
 SE-06,S,P2,host integration (planned),,not covered,Not implemented
 OP-01,M,MVP,w6w-app; Spring Boot Actuator,manual local check,local endpoint,Partial
-OP-02,M,MVP,ops (planned),,not covered,Not implemented
+OP-02,M,MVP,ops,WorkflowTraceFilterTest; FlowableEngineIntegrationTest.serviceTaskReceivesVersionedWorkflowActionConfiguration,unit+integration,Partial
 OP-03,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 OP-04,M,MVP,artifacts/playbook/local-operations.md,documented,manual review,Partial
 OP-05,S,P2,ops (planned),,not covered,Not implemented

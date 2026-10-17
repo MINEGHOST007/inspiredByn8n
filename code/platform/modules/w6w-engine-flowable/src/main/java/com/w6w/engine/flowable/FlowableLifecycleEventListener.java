@@ -1,6 +1,7 @@
 package com.w6w.engine.flowable;
 
 import com.w6w.runtime.WorkflowLifecycleEvent;
+import com.w6w.runtime.WorkflowMdcContext;
 import org.flowable.common.engine.api.delegate.event.FlowableEngineEvent;
 import org.flowable.common.engine.api.delegate.event.FlowableEngineEventType;
 import org.flowable.common.engine.api.delegate.event.FlowableEntityEvent;
@@ -90,13 +91,21 @@ public class FlowableLifecycleEventListener implements FlowableEventListener {
     }
 
     private void publishAfterCommit(WorkflowLifecycleEvent event) {
+        String traceId = WorkflowMdcContext.currentTraceId();
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-            publish(event);
+            publishScoped(event, traceId);
             return;
         }
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override public void afterCommit() { publish(event); }
+            @Override public void afterCommit() { publishScoped(event, traceId); }
         });
+    }
+
+    private void publishScoped(WorkflowLifecycleEvent event, String traceId) {
+        String stepId = event.details().get("stepId") instanceof String value ? value : null;
+        try (var ignored = WorkflowMdcContext.open(traceId, event.instanceId(), event.taskId(), stepId)) {
+            publish(event);
+        }
     }
 
     private void publish(WorkflowLifecycleEvent event) {
