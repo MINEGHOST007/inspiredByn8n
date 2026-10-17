@@ -284,9 +284,15 @@ public class WorkflowApiController {
 
     private Map<String, Object> instanceSummary(WorkflowInstance instance) {
         Map<String, Object> item = new LinkedHashMap<>();
+        String currentStep = instance.getCurrentStage();
+        if ((currentStep == null || currentStep.isBlank()) && "RUNNING".equals(instance.getStatus())) {
+            currentStep = processEngine.getTaskService().createTaskQuery()
+                    .processInstanceId(instance.getId()).list().stream()
+                    .map(Task::getTaskDefinitionKey).filter(Objects::nonNull).findFirst().orElse(currentStep);
+        }
         item.put("id", instance.getId()); item.put("workflowKey", instance.getWorkflowKey()); item.put("businessKey", instance.getBusinessKey());
         item.put("status", instance.getStatus()); item.put("resolution", instance.getResolution());
-        item.put("currentStep", instance.getCurrentStage()); item.put("currentStage", stageName(instance.getWorkflowKey(), instance.getCurrentStage()));
+        item.put("currentStep", currentStep); item.put("currentStage", stageName(instance.getWorkflowKey(), currentStep));
         item.put("workflowName", catalog.require(instance.getWorkflowKey()).definition().getMetadata().getName());
         return item;
     }

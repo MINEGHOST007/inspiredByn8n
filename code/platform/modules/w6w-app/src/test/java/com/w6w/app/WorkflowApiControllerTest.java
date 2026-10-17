@@ -84,12 +84,18 @@ class WorkflowApiControllerTest {
         String instanceId = started.path("id").asText();
 
         JsonNode intake = findTask("agent.smith", "service_agent", businessKey, "step_receive_request");
+        JsonNode intakeCase = json.readTree(mvc.perform(get("/api/instances/" + instanceId))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(intakeCase.path("currentStage").asText()).isEqualTo("Request Intake");
         JsonNode intakeDetails = json.readTree(mvc.perform(get("/api/tasks/" + intake.path("id").asText()))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
         assertThat(intakeDetails.path("form").path("properties").has("guestName")).isTrue();
         complete(intake.path("id").asText(), "agent.smith", null, startData);
 
         JsonNode review = findTask("agent.smith", "service_agent", businessKey, "step_review_eligibility_details");
+        JsonNode reviewCase = json.readTree(mvc.perform(get("/api/instances/" + instanceId))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(reviewCase.path("currentStage").asText()).isEqualTo("Eligibility Check");
         String invalidDataResponse = mvc.perform(post("/api/tasks/" + review.path("id").asText() + "/complete")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsBytes(Map.of("user", "agent.smith", "outcome", "eligible", "data", Map.of(
