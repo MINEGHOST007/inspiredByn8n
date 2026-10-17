@@ -44,7 +44,11 @@ public class ConversionReport {
         sb.append("# W6W Migration Report: ").append(caseTypeName).append("\n\n");
         sb.append("- **Source Blueprint ID:** `").append(blueprintId).append("`\n");
         sb.append("- **Tier 1 eligibility:** ").append(eligibilityDecision).append("\n");
-        sb.append("- **Deployment status:** DRAFT — complete manual actions and pass validation before deployment\n");
+        if ("REJECT".equalsIgnoreCase(eligibilityDecision)) {
+            sb.append("- **Deployment status:** REJECTED — no workflow package generated\n");
+        } else {
+            sb.append("- **Deployment status:** DRAFT — complete manual actions and pass validation before deployment\n");
+        }
         sb.append("- **Conversion coverage:** ").append(convertedCount).append(" converted, ")
                 .append(approximatedCount).append(" requiring review, ")
                 .append(unsupportedCount).append(" unsupported\n\n");

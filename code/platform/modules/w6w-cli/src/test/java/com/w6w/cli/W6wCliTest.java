@@ -42,8 +42,12 @@ class W6wCliTest {
         try (var packages = Files.list(output)) {
             var packageFolders = packages.filter(Files::isDirectory).toList();
             assertThat(packageFolders).hasSize(3);
-            assertThat(packageFolders).allSatisfy(folder -> assertThat(folder.resolve("workflow.cwm.yaml")).exists());
-            assertThat(packageFolders).allSatisfy(folder -> assertThat(folder.resolve("migration-report.md")).content().contains("Manual actions", "UNSUPPORTED"));
+            assertThat(packageFolders).allSatisfy(folder -> {
+                assertThat(folder.resolve("workflow.cwm.yaml")).doesNotExist();
+                assertThat(folder.resolve("migration-report.md")).content()
+                        .contains("eligibility:** REJECT", "REJECT-MG-01", "UNSUPPORTED");
+                assertThat(folder.resolve("tests/scenarios/migration-smoke.json")).doesNotExist();
+            });
         }
     }
 }

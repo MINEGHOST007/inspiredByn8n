@@ -190,7 +190,8 @@ public final class W6wCli {
         var migrations = new BlueprintMigrationService(new PdfBlueprintExtractor(), new BlueprintToCwmMapper(rules), new EligibilityChecker()).migratePdf(source.toFile());
         if (cases.size() != migrations.size()) throw new IllegalStateException("Migration adapter returned inconsistent case results");
         MigrationFileWriter writer = new MigrationFileWriter();
-        int generated = 0;
+        int generatedDrafts = 0;
+        int rejectedCases = 0;
         for (int i = 0; i < migrations.size(); i++) {
             var migration = migrations.get(i);
             String caseSlug = slug(cases.get(i).getName());
@@ -198,11 +199,13 @@ public final class W6wCli {
             Map<String, String> planned = writer.write(migration, cases.get(i), caseOutput, dryRun);
             System.out.println(migration.report().getEligibilityDecision() + " " + cases.get(i).getName()
                     + (dryRun ? " (dry run)" : "") + ": " + planned.keySet());
-            if (migration.generated()) generated++;
+            if (migration.generated()) generatedDrafts++;
+            else rejectedCases++;
         }
-        System.out.println("Migration complete: " + generated + "/" + migrations.size()
-                + " eligible draft(s); " + (dryRun ? "no files written" : "review output at " + output));
-        System.out.println("Generated drafts require human review and validation before local deployment.");
+        System.out.println("Migration complete: " + generatedDrafts + " reviewable draft(s), "
+                + rejectedCases + " rejected case(s) out of " + migrations.size()
+                + "; " + (dryRun ? "no files written" : "reports at " + output));
+        if (generatedDrafts > 0) System.out.println("Generated drafts require human review and validation before local deployment.");
     }
 
     private WorkflowDefinition checked(Path file) throws Exception {

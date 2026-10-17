@@ -2,6 +2,8 @@ package com.w6w.migrate;
 
 import com.w6w.governance.EligibilityChecker;
 import com.w6w.governance.EligibilityScorecard;
+import com.w6w.compiler.CwmLinter;
+import com.w6w.compiler.CwmToBpmnCompiler;
 import com.w6w.migrate.mapper.BlueprintToCwmMapper;
 import com.w6w.migrate.model.BlueprintIntermediateModel;
 import com.w6w.migrate.pdf.PdfBlueprintExtractor;
@@ -45,6 +47,27 @@ public class BlueprintMigrationService {
             ConversionReport report = new ConversionReport(model.getBlueprintId(), caseType.getName());
             WorkflowDefinition draft = mapper.mapToWorkflow(caseType, model.getBlueprintId(), report);
             EligibilityScorecard scorecard = eligibilityChecker.check(draft);
+            if (report.getUnsupportedCount() > 0) {
+                scorecard.upgradeTo(EligibilityScorecard.TierDecision.REJECT,
+                        "REJECT-MG-01: " + report.getUnsupportedCount()
+                                + " unsupported construct(s) prevent a safe runnable draft; see conversion findings");
+            }
+            if (scorecard.getDecision() != EligibilityScorecard.TierDecision.REJECT) {
+                CwmLinter.LintResult lint = new CwmLinter().lint(draft);
+                if (lint.hasErrors()) {
+                    scorecard.upgradeTo(EligibilityScorecard.TierDecision.REJECT,
+                            "REJECT-MG-02: generated CWM is not runnable until validation errors are resolved: "
+                                    + lint.getIssues().stream().filter(issue -> "ERROR".equals(issue.getLevel()))
+                                    .map(CwmLinter.LintIssue::getMessage).findFirst().orElse("unknown validation error"));
+                } else {
+                    try {
+                        new CwmToBpmnCompiler().compile(draft);
+                    } catch (RuntimeException e) {
+                        scorecard.upgradeTo(EligibilityScorecard.TierDecision.REJECT,
+                                "REJECT-MG-03: generated CWM cannot compile: " + e.getMessage());
+                    }
+                }
+            }
             report.setEligibility(scorecard.getDecision().name(), scorecard.getReasons());
             boolean rejected = scorecard.getDecision() == EligibilityScorecard.TierDecision.REJECT;
             results.add(new CaseMigration(rejected ? null : draft, report, scorecard, !rejected));

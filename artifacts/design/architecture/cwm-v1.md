@@ -17,7 +17,7 @@
 | `userTask` | `assignee` (role or user), optional `form`, outcomes | BPMN user task; linter requires assignee. |
 | `approval` | assignee and explicit outcomes | BPMN user task and outcome gateway. SLA/routing are represented only when authored. |
 | `serviceTask` | registered `action` name | BPMN service task; action is resolved by the host registry. |
-| `decision` | explicit decision/table reference and outcomes | Model field exists; compiler does not yet generate DMN/gateway semantics. Fails compilation pending full support. |
+| `decision` | explicit decision/table reference and outcomes | Supported when the referenced YAML decision table compiles to a version-pinned DMN table whose single output is a declared string `outcome`. BPMN invokes the Flowable DMN executor and routes that outcome through the generated gateway. |
 | `parallel` | explicit branch and join definition | Model field exists; compiler does not yet generate split/join semantics. Fails compilation pending full support. |
 | `subStage` | nested stage reference | Reserved; not yet executable. |
 | `waitEvent` | event name/correlation key | Reserved; not yet executable. |
@@ -25,7 +25,7 @@
 | `end` | explicit resolution | Compiles to BPMN end event. |
 | `childWorkflow` | child workflow key and completion mapping | Draft-only; runtime callback is not implemented. |
 
-Unknown types are schema/linter errors and compiler errors. Never default an unknown construct to a human task.
+`parallel`, `subStage`, `waitEvent`, `timer` and `childWorkflow` are not executable in v1. The compiler rejects them; migration must report and reject the affected case rather than writing an invalid runnable-looking workflow package. Unknown types are schema/linter errors and compiler errors. Never default an unknown construct to a human task.
 
 ## Outcomes and expressions
 

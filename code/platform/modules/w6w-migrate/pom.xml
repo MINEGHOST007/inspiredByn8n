@@ -26,6 +26,10 @@
             <artifactId>w6w-governance</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.w6w.platform</groupId>
+            <artifactId>w6w-compiler</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
         </dependency>

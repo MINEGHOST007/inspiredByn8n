@@ -23,10 +23,10 @@ This document maps the parent folder structure supplied with the project to the 
 | `code/platform/modules/w6w-governance/` | Tier 1 eligibility | Initial configurable checker. |
 | `code/platform/modules/w6w-app/` | Local web workspace and REST integration surface | Implemented local catalog, start forms, worklist, schema-driven task forms, case history, operator actions, health/metrics and OpenAPI docs; local-demo only. |
 | `code/platform/modules/w6w-cli/` | Workflow author CLI | Implements scaffolding templates, validation, deterministic compilation, Markdown/Mermaid rendering, scenario execution, Git diff, and local catalog reload; production deployment remains separate. |
-| `code/workflows/domains/*/*/decisions/` | Versioned decision table YAML | `w6w/decision/v1` tables compile deterministically to DMN; decision runtime routing remains open. |
+| `code/workflows/domains/*/*/decisions/` | Versioned decision table YAML | `w6w/decision/v1` tables compile deterministically to version-pinned DMN and execute through BPMN decision steps; only declared string `outcome` routing is supported. |
 | `code/platform/modules/w6w-migrate/` | Blueprint PDF extraction, versioned YAML mapping rules, CWM draft mapping and report writer | PDF path is callable from the W6W CLI and mapping rules can be overridden; proprietary `.blueprint` and Pega XML adapters are not implemented. |
 | `code/platform/modules/w6w-test/` | Local scenario runner | Implemented for local demo scenarios. |
-| `code/schema/cwm/v1/` | Shared JSON Schemas | Workflow schema exists; form and rubric schemas remain. |
+| `code/schema/cwm/v1/` | Shared JSON Schemas | Workflow, form and rubric schemas are present; runtime form validation and governance use the matching contracts. |
 | `code/workflows/domains/customer-service/refund-processing/` | Example workflow package | CWM, data schema, form, scenarios and migration report. |
 | `code/workflows/shared/` | Shared workflow assets | Reserved; populate when reused assets exist. |
 | `code/src/` | Thin host-app/demo entry points only | No duplicate production classes. |
