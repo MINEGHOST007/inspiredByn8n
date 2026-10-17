@@ -21,6 +21,7 @@ This document maps the parent folder structure supplied with the project to the 
 | `code/platform/modules/w6w-engine-flowable/` | Embedded Flowable adapter | Initial integration; not all SRS operations are exposed. |
 | `code/platform/modules/w6w-runtime-starter/` | Actions, lookup and application startup validation | Initial implementation; no production security/API starter yet. |
 | `code/platform/modules/w6w-governance/` | Tier 1 eligibility | Initial configurable checker. |
+| `code/platform/modules/w6w-app/` | Local web workspace and REST integration surface | Implemented local catalog, start forms, worklist, schema-driven task forms, case history, operator actions, health/metrics and OpenAPI docs; local-demo only. |
 | `code/platform/modules/w6w-migrate/` | Blueprint PDF extraction, CWM draft mapping and report writer | PDF path implemented; proprietary `.blueprint` and Pega XML adapters are not implemented. |
 | `code/platform/modules/w6w-test/` | Local scenario runner | Implemented for local demo scenarios. |
 | `code/schema/cwm/v1/` | Shared JSON Schemas | Workflow schema exists; form and rubric schemas remain. |
@@ -45,4 +46,4 @@ This document maps the parent folder structure supplied with the project to the 
 
 ## Repository evolution
 
-The current repository keeps the user-supplied top-level `artifacts/`, `code/`, `prompts/`, `Readme.md`, and `RULES.md`. Missing SRS modules such as REST API, CLI, UI Kit, integration tests, and operations tooling belong at the reserved paths above; do not move existing application code into duplicate locations. See [the SRS traceability matrix](../srs/traceability.csv) for implementation state by requirement.
+The current repository keeps the user-supplied top-level `artifacts/`, `code/`, `prompts/`, `Readme.md`, and `RULES.md`. The bundled web workspace is a local integration slice; CLI authoring, production identity and authorization, production deployment, durable operations runbooks, and full acceptance coverage remain open. See [the SRS traceability matrix](../srs/traceability.csv) for implementation state by requirement.

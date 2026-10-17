@@ -188,13 +188,23 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
     private WorkflowInstance mapHistoricInstance(HistoricProcessInstance hpi) {
         Map<String, Object> vars = hpi.getProcessVariables() != null ? hpi.getProcessVariables() : Collections.emptyMap();
         String resolution = (String) vars.get("resolution");
+        if (resolution == null && hpi.getEndActivityId() != null) {
+            var endActivity = historyService.createHistoricActivityInstanceQuery()
+                    .processInstanceId(hpi.getId())
+                    .activityId(hpi.getEndActivityId())
+                    .singleResult();
+            if (endActivity != null && endActivity.getActivityName() != null
+                    && endActivity.getActivityName().startsWith("Resolution: ")) {
+                resolution = endActivity.getActivityName().substring("Resolution: ".length());
+            }
+        }
         return new WorkflowInstance(
             hpi.getId(),
             hpi.getProcessDefinitionKey(),
             hpi.getBusinessKey(),
             hpi.getEndActivityId(),
             hpi.getDeleteReason() != null ? "CANCELLED" : "COMPLETED",
-            resolution != null ? resolution : "COMPLETED",
+            resolution != null ? resolution : (hpi.getDeleteReason() != null ? "CANCELLED" : "COMPLETED"),
             vars
         );
     }

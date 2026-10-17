@@ -1844,6 +1844,22 @@ under `code/platform/.maven/`; Maven downloads project dependencies the first
 time it runs. From the repository root:
 
 ```powershell
+.\run-app.ps1
+```
+
+Open `http://127.0.0.1:8080` for the local W6W workspace. It includes workflow
+catalog and launch, a role-filtered worklist with schema-driven task forms,
+case history/timelines, and local operator actions. REST endpoints are under
+`/api/v1` (the `/api` alias remains available); OpenAPI documentation is served
+at `/swagger-ui/index.html`. The app
+uses a local H2 SQL file database in `data/w6w-app` and reads versioned
+definitions from `code/workflows/`. It runs in `local-demo` mode with a demo
+identity selector; this is for local development and is not an authentication
+or production deployment configuration.
+
+To run the local scenario suite and refund approval/denial examples:
+
+```powershell
 .\run-local.ps1
 ```
 
@@ -1862,9 +1878,9 @@ ignored by Git. To run only the automated Maven verification suite:
 
 ## Implementation companion documents
 
-The complete SRS and plan remain in this file. Current repository responsibilities and ownership are documented in [repository-structure.md](artifacts/design/architecture/repository-structure.md); the CWM v1 contract is in [cwm-v1.md](artifacts/design/architecture/cwm-v1.md); authoring and assistant modes are in [agent-modes.md](artifacts/design/architecture/agent-modes.md). [traceability.csv](artifacts/design/srs/traceability.csv) tracks all 95 functional and 14 non-functional requirements against current code and test evidence. `RULES.md` lists contribution and safety rules.
+The complete SRS and plan remain in this file. Start with the [workflow author quick start](artifacts/playbook/workflow-author-quick-start.md) to create and maintain a local workflow. Current repository responsibilities and ownership are documented in [repository-structure.md](artifacts/design/architecture/repository-structure.md); the CWM v1 contract is in [cwm-v1.md](artifacts/design/architecture/cwm-v1.md); authoring and assistant modes are in [agent-modes.md](artifacts/design/architecture/agent-modes.md). [traceability.csv](artifacts/design/srs/traceability.csv) tracks all 95 functional and 14 non-functional requirements against current code and test evidence. `RULES.md` lists contribution and safety rules.
 
-The traceability matrix intentionally distinguishes partial implementation from complete acceptance. The current project is a local, embedded workflow proof of concept with a working PDF extraction path. The REST/OpenAPI surface, full UI Kit, CLI, complete SRS step-type support, PostgreSQL production profile, identity/security controls, observability stack, and CI quality gates remain open requirements; do not treat the current local demo as production complete.
+The traceability matrix intentionally distinguishes partial implementation from complete acceptance. The local application now provides a usable workflow workspace and REST/OpenAPI integration surface, and the migration utility has a PDF extraction path. The current implementation is still a local vertical slice: production identity and authorization, full CWM step-type and SLA behavior, CLI authoring, production database/deployment profiles, and several operations and CI acceptance gates remain open requirements. Use `artifacts/design/srs/traceability.csv` for evidence by requirement; do not treat local-demo mode as production ready.
 
 ---
 

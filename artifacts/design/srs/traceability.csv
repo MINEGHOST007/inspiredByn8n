@@ -1,12 +1,12 @@
 req_id,priority,phase,module,test_id,test_level,status
 WF-01,M,MVP,w6w-model; code/schema/cwm/v1,CwmParser; workflow.schema.json,unit/fixture,Partial
-WF-02,M,MVP,w6w-model / w6w-compiler,,not covered,Not implemented
+WF-02,M,MVP,w6w-model; code/workflows,WorkflowApiControllerTest,api integration,Partial
 WF-03,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
 WF-04,M,MVP,w6w-compiler,CwmLinterTest; unsupported-step test,unit/fixture,Partial
 WF-05,S,MVP,w6w-model / w6w-compiler,,not covered,Not implemented
 WF-06,M,MVP,w6w-model; w6w-compiler,CwmLinterTest,unit/fixture,Partial
 WF-07,M,MVP,w6w-test,ScenarioRunnerTest,unit/fixture,Partial
-WF-08,M,MVP,w6w-model / w6w-compiler,,not covered,Not implemented
+WF-08,M,MVP,code/workflows; .gitignore,repository inspection,source-of-truth review,Partial
 EX-01,M,MVP,w6w-engine-port; w6w-engine-flowable,FlowableEngineIntegrationTest,unit/fixture,Partial
 EX-02,M,MVP,w6w-compiler; w6w-engine-flowable,CwmToBpmnCompilerTest,unit/fixture,Partial
 EX-03,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
@@ -16,47 +16,47 @@ EX-06,M,MVP,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
 EX-07,S,P2,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
 EX-08,S,P2,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
 EX-09,C,P3,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
-HT-01,M,MVP,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
-HT-02,M,MVP,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
+HT-01,M,MVP,w6w-compiler; w6w-app,WorkflowApiControllerTest,api integration,Partial
+HT-02,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 HT-03,S,P2,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
-HT-04,M,MVP,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
+HT-04,M,MVP,w6w-compiler; w6w-app,WorkflowApiControllerTest,api integration,Partial
 HT-05,M,MVP,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
 HT-06,S,P2,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
-HT-07,M,MVP,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
+HT-07,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 HT-08,C,P3,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
-DF-01,M,MVP,w6w-model / workflow forms,,not covered,Not implemented
-DF-02,M,MVP,w6w-model / workflow forms,,not covered,Not implemented
+DF-01,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
+DF-02,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 DF-03,S,P2,w6w-model / workflow forms,,not covered,Not implemented
 DF-04,S,P2,w6w-model / workflow forms,,not covered,Not implemented
 DF-05,S,P2,w6w-model / workflow forms,,not covered,Not implemented
 DC-01,M,MVP,w6w-compiler,,not covered,Not implemented
-DC-02,M,MVP,w6w-compiler,,not covered,Not implemented
+DC-02,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
 DC-03,S,P2,w6w-compiler,,not covered,Not implemented
-IN-01,M,MVP,w6w-runtime-starter,,not covered,Not implemented
+IN-01,M,MVP,w6w-runtime-starter; w6w-app,WorkflowApiControllerTest,api integration,Partial
 IN-02,M,MVP,w6w-runtime-starter,,not covered,Not implemented
 IN-03,M,MVP,w6w-runtime-starter,,not covered,Not implemented
 IN-04,M,MVP,w6w-runtime-starter,,not covered,Not implemented
 IN-05,M,MVP,w6w-runtime-starter,,not covered,Not implemented
 IN-06,S,P2,w6w-runtime-starter,,not covered,Not implemented
-API-01,M,MVP,w6w-api (planned),,not covered,Not implemented
-API-02,M,MVP,w6w-api (planned),,not covered,Not implemented
-API-03,M,MVP,w6w-api (planned),,not covered,Not implemented
+API-01,M,MVP,w6w-app; w6w-engine-port,WorkflowApiControllerTest,api integration,Partial
+API-02,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
+API-03,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 API-04,S,P2,w6w-api (planned),,not covered,Not implemented
 API-05,S,P2,w6w-api (planned),,not covered,Not implemented
-UI-01,M,MVP,w6w-ui-kit (planned),,not covered,Not implemented
-UI-02,M,MVP,w6w-ui-kit (planned),,not covered,Not implemented
-UI-03,M,MVP,w6w-ui-kit (planned),,not covered,Not implemented
-UI-04,M,MVP,w6w-ui-kit (planned),,not covered,Not implemented
+UI-01,M,MVP,w6w-app,WorkflowApiControllerTest,ui resource and api integration,Partial
+UI-02,M,MVP,w6w-app,WorkflowApiControllerTest,ui resource and api integration,Partial
+UI-03,M,MVP,w6w-app,WorkflowApiControllerTest,ui resource and api integration,Partial
+UI-04,M,MVP,w6w-app,WorkflowApiControllerTest,ui resource and api integration,Partial
 UI-05,S,P2,w6w-ui-kit (planned),,not covered,Not implemented
 UI-06,S,P2,w6w-ui-kit (planned),,not covered,Not implemented
 UI-07,C,P3,w6w-ui-kit (planned),,not covered,Not implemented
 VD-01,M,MVP,CI/CD (partial),,not covered,Not implemented
-VD-02,M,MVP,CI/CD (partial),,not covered,Not implemented
+VD-02,M,MVP,w6w-app; w6w-engine-flowable,local deployment version check,manual local check,Partial
 VD-03,C,P3,CI/CD (partial),,not covered,Not implemented
 VD-04,M,MVP,CI/CD (partial),,not covered,Not implemented
 VD-05,S,MVP,CI/CD (partial),,not covered,Not implemented
-AU-01,M,MVP,w6w-runtime-starter (partial),,not covered,Not implemented
-AU-02,M,MVP,w6w-runtime-starter (partial),,not covered,Not implemented
+AU-01,M,MVP,w6w-app; w6w-runtime-starter,WorkflowApiControllerTest,api integration,Partial
+AU-02,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 AU-03,S,P2,w6w-runtime-starter (partial),,not covered,Not implemented
 AU-04,C,P3,w6w-runtime-starter (partial),,not covered,Not implemented
 SE-01,M,MVP,host integration (planned),,not covered,Not implemented
@@ -65,16 +65,16 @@ SE-03,M,MVP,host integration (planned),,not covered,Not implemented
 SE-04,M,MVP,host integration (planned),,not covered,Not implemented
 SE-05,M,MVP,host integration (planned),,not covered,Not implemented
 SE-06,S,P2,host integration (planned),,not covered,Not implemented
-OP-01,M,MVP,ops (planned),,not covered,Not implemented
+OP-01,M,MVP,w6w-app; Spring Boot Actuator,manual local check,local endpoint,Partial
 OP-02,M,MVP,ops (planned),,not covered,Not implemented
-OP-03,M,MVP,ops (planned),,not covered,Not implemented
+OP-03,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 OP-04,M,MVP,ops (planned),,not covered,Not implemented
 OP-05,S,P2,ops (planned),,not covered,Not implemented
 DX-01,M,MVP,w6w-cli (planned),,not covered,Not implemented
 DX-02,M,MVP,w6w-cli (planned),,not covered,Not implemented
 DX-03,M,MVP,run-local.ps1; w6w-test,run-local.ps1,unit/fixture,Partial
 DX-04,S,P2,w6w-cli (planned),,not covered,Not implemented
-DX-05,S,MVP,w6w-cli (planned),,not covered,Not implemented
+DX-05,S,MVP,artifacts/playbook/workflow-author-quick-start.md,documented,manual review,Partial
 GV-01,M,MVP,w6w-governance,EligibilityCheckerTest,unit/fixture,Partial
 GV-02,M,MVP,w6w-governance; w6w-migrate,EligibilityCheckerTest; BlueprintMigrationServiceTest,unit/fixture,Partial
 GV-03,M,MVP,w6w-compiler; w6w-migrate,CwmLinterTest; CwmToBpmnCompilerTest,unit/fixture,Partial

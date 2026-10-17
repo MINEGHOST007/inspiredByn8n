@@ -37,6 +37,7 @@
         <module>modules/w6w-migrate</module>
         <module>modules/w6w-test</module>
         <module>modules/w6w-governance</module>
+        <module>modules/w6w-app</module>
     </modules>
 
     <dependencyManagement>
@@ -120,6 +121,7 @@
                 <version>3.13.0</version>
                 <configuration>
                     <release>${maven.compiler.release}</release>
+                    <parameters>true</parameters>
                 </configuration>
             </plugin>
             <plugin>

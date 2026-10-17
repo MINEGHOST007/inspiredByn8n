@@ -12,6 +12,7 @@ import com.w6w.port.WorkflowInstance;
 import com.w6w.port.action.ActionResult;
 import com.w6w.runtime.ActionRegistry;
 import com.w6w.runtime.DirectoryLookupService;
+import com.w6w.runtime.SlaDeadlineService;
 import com.w6w.runtime.StartupActionValidator;
 import org.flowable.engine.ProcessEngine;
 import org.flowable.engine.impl.cfg.StandaloneInMemProcessEngineConfiguration;
@@ -63,6 +64,7 @@ public class ScenarioRunner {
         Map<Object, Object> beans = new HashMap<>();
         beans.put("w6wActionExecutor", actionExecutor);
         beans.put("w6wDirectoryService", new DirectoryLookupService());
+        beans.put("w6wSlaService", new SlaDeadlineService());
         config.setBeans(beans);
 
         ProcessEngine engine = config.buildProcessEngine();
@@ -82,11 +84,13 @@ public class ScenarioRunner {
                     String bk = "SCENARIO-" + System.currentTimeMillis();
                     instance = adapter.startInstance(scenario.getWorkflowKey(), bk, scenario.getInitialData());
                 } else if ("completeTask".equals(step.getAction()) || "completeApproval".equals(step.getAction())) {
-                    List<org.flowable.task.api.Task> activeTasks = engine.getTaskService().createTaskQuery().list();
-                    if (activeTasks.isEmpty()) {
-                        throw new IllegalStateException("No active tasks found when expecting step: " + step.getStepId());
+                    if (instance == null) throw new IllegalStateException("Scenario must start a workflow before completing a task");
+                    String taskDefinitionKey = "step_" + step.getStepId().replace('-', '_');
+                    org.flowable.task.api.Task target = engine.getTaskService().createTaskQuery()
+                            .processInstanceId(instance.getId()).taskDefinitionKey(taskDefinitionKey).singleResult();
+                    if (target == null) {
+                        throw new IllegalStateException("No active task '" + step.getStepId() + "' found for scenario instance " + instance.getId());
                     }
-                    org.flowable.task.api.Task target = activeTasks.get(0);
                     Map<String, Object> vars = new HashMap<>(step.getFormData());
                     if (step.getOutcome() != null) {
                         vars.put("outcome", step.getOutcome());
@@ -100,6 +104,10 @@ public class ScenarioRunner {
                 if (scenario.getAssertions().getFinalResolution() != null) {
                     if (!"COMPLETED".equals(finished.getStatus())) {
                         throw new AssertionError("Workflow did not complete, status was: " + finished.getStatus());
+                    }
+                    if (!scenario.getAssertions().getFinalResolution().equals(finished.getResolution())) {
+                        throw new AssertionError("Expected resolution '" + scenario.getAssertions().getFinalResolution()
+                                + "' but got '" + finished.getResolution() + "'");
                     }
                 }
             }

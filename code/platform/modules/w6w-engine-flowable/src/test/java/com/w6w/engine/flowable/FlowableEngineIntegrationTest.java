@@ -56,6 +56,7 @@ class FlowableEngineIntegrationTest {
         Map<Object, Object> beans = new HashMap<>();
         beans.put("w6wActionExecutor", actionExecutor);
         beans.put("w6wDirectoryService", new com.w6w.runtime.DirectoryLookupService());
+        beans.put("w6wSlaService", new com.w6w.runtime.SlaDeadlineService());
         config.setBeans(beans);
 
         processEngine = config.buildProcessEngine();

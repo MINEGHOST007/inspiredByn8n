@@ -19,6 +19,10 @@ public class CwmToBpmnCompiler {
         xml.append("  <process id=\"").append(escape(processKey)).append("\" ")
            .append("name=\"").append(escape(processName)).append("\" ")
            .append("isExecutable=\"true\">\n\n");
+        if (workflow.getMetadata().getVersion() != null && !workflow.getMetadata().getVersion().isBlank()) {
+            xml.append("    <documentation>W6W CWM version: ")
+               .append(escape(workflow.getMetadata().getVersion())).append("</documentation>\n\n");
+        }
 
         xml.append("    <startEvent id=\"start_event\" name=\"Start\" />\n");
         xml.append("    <sequenceFlow id=\"flow_start_to_first\" sourceRef=\"start_event\" targetRef=\"")
@@ -80,7 +84,8 @@ public class CwmToBpmnCompiler {
             compileStep(xml, step, stepRef, nextRef, stage, workflow);
         }
 
-        if (nextStage == null) {
+        boolean explicitTerminalStep = !steps.isEmpty() && "end".equals(steps.get(steps.size() - 1).getType());
+        if (nextStage == null && !explicitTerminalStep) {
             if (stage.getResolution() == null || stage.getResolution().isBlank()) {
                 throw new IllegalArgumentException("Terminal stage '" + stage.getId() + "' must declare a resolution");
             }
@@ -97,6 +102,14 @@ public class CwmToBpmnCompiler {
             xml.append("    <userTask id=\"").append(stepRef).append("\" name=\"").append(escape(name)).append("\"");
             if (step.getForm() != null) {
                 xml.append(" flowable:formKey=\"").append(escape(step.getForm())).append("\"");
+            }
+            if (step.getSla() != null && step.getSla().getDeadline() != null && !step.getSla().getDeadline().isBlank()) {
+                try { java.time.Duration.parse(step.getSla().getDeadline()); }
+                catch (java.time.format.DateTimeParseException e) {
+                    throw new IllegalArgumentException("SLA deadline for step '" + step.getId() + "' must be an ISO-8601 duration", e);
+                }
+                xml.append(" flowable:dueDate=\"${w6wSlaService.deadline('")
+                   .append(escape(step.getSla().getDeadline())).append("')}\"");
             }
             if (step.getAssignee() != null) {
                 if (step.getAssignee().getRole() != null) {
@@ -119,7 +132,9 @@ public class CwmToBpmnCompiler {
                .append("    </serviceTask>\n");
 
         } else if ("end".equals(step.getType())) {
-            xml.append("    <endEvent id=\"").append(stepRef).append("\" name=\"").append(escape(name)).append("\" />\n");
+            String resolution = stage.getResolution();
+            String endName = resolution == null || resolution.isBlank() ? name : "Resolution: " + resolution;
+            xml.append("    <endEvent id=\"").append(stepRef).append("\" name=\"").append(escape(endName)).append("\" />\n");
             return;
         } else {
             throw new IllegalArgumentException("Unsupported CWM step type '" + step.getType()

@@ -34,10 +34,13 @@ class CwmToBpmnCompilerTest {
 
         // Structural assertions
         assertThat(bpmnXml1).contains("<process id=\"refund-processing\"");
+        assertThat(bpmnXml1).contains("W6W CWM version: 1.0.0");
         assertThat(bpmnXml1).contains("<userTask id=\"step_receive_request\"");
+        assertThat(bpmnXml1).contains("flowable:dueDate=\"${w6wSlaService.deadline('PT24H')}\"");
         assertThat(bpmnXml1).contains("<serviceTask id=\"step_validate_request_data\"");
         assertThat(bpmnXml1).contains("<exclusiveGateway id=\"gw_request_refund_approval\"");
         assertThat(bpmnXml1).contains("<endEvent id=\"step_close_refund_case\"");
+        assertThat(bpmnXml1).contains("name=\"Resolution: Approved\"");
         assertThat(bpmnXml1).contains("<endEvent id=\"end_refund_denied\"");
     }
 

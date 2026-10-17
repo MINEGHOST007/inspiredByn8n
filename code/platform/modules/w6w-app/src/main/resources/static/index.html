@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>W6W Workflow Workspace</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#overview" aria-label="W6W home"><span class="brand-mark">W</span><span>workflow<span class="brand-light">works</span><small>LOCAL WORKSPACE</small></span></a>
+      <p class="nav-label">WORKSPACE</p>
+      <nav>
+        <button class="nav-item active" data-page="overview"><span>⌂</span>Overview</button>
+        <button class="nav-item" data-page="tasks"><span>☷</span>My work<span class="nav-count" id="task-count">0</span></button>
+        <button class="nav-item" data-page="instances"><span>◷</span>Cases</button>
+        <button class="nav-item" data-page="admin"><span>⚙</span>Operations</button>
+      </nav>
+      <div class="sidebar-bottom"><span class="local-pulse"></span><div><strong>Local mode</strong><small>Data stays on this machine</small></div></div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="breadcrumbs"><span>Workspace</span><b>/</b><strong id="crumb">Overview</strong></div>
+        <div class="top-actions">
+          <label class="identity-label" for="identity">Acting as</label>
+          <select id="identity" aria-label="Local demo identity">
+            <option value="agent.smith|service_agent">Agent Smith · Service agent</option>
+            <option value="manager.jones|property_manager">Manager Jones · Property manager</option>
+            <option value="finance.user|finance_operator">Finance user · Finance operator</option>
+          </select>
+          <span class="avatar" id="avatar">AS</span>
+        </div>
+      </header>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+      <section class="page active" id="page-overview">
+        <div class="page-heading">
+          <div><p class="eyebrow">YOUR WORKFLOW HUB</p><h1>Good morning<span class="period">.</span></h1><p class="subheading">A clear view of your processes, tasks, and activity.</p></div>
+          <button class="button primary" id="new-request">＋ Start a workflow</button>
+        </div>
+        <div class="metrics">
+          <article class="metric-card"><div class="metric-icon violet">☷</div><p>Tasks for you</p><strong id="metric-tasks">—</strong><small>Ready for your attention</small></article>
+          <article class="metric-card"><div class="metric-icon blue">◷</div><p>Open cases</p><strong id="metric-open">—</strong><small>Workflows in progress</small></article>
+          <article class="metric-card"><div class="metric-icon green">✓</div><p>Completed</p><strong id="metric-completed">—</strong><small>Recently finished</small></article>
+        </div>
+        <div class="content-grid">
+          <section class="panel panel-wide">
+            <div class="panel-heading"><div><h2>Pick up where you left off</h2><p>Your next steps, in one place.</p></div><button class="text-button" data-go="tasks">View all tasks <span>→</span></button></div>
+            <div id="overview-tasks" class="task-preview"></div>
+          </section>
+          <section class="panel start-panel">
+            <div class="panel-heading"><div><h2>Start something new</h2><p>Choose a process to get moving.</p></div></div>
+            <div id="workflow-list" class="workflow-list"></div>
+          </section>
+        </div>
+        <section class="panel recent-panel">
+          <div class="panel-heading"><div><h2>Recent activity</h2><p>Latest workflow updates.</p></div><button class="text-button" data-go="instances">All cases <span>→</span></button></div>
+          <div class="table-wrap"><table><thead><tr><th>CASE</th><th>WORKFLOW</th><th>STATUS</th><th>UPDATED</th><th></th></tr></thead><tbody id="recent-instances"></tbody></table></div>
+        </section>
+      </section>
+
+      <section class="page" id="page-tasks">
+        <div class="page-heading compact"><div><p class="eyebrow">YOUR QUEUE</p><h1>My work</h1><p class="subheading">Tasks assigned to you or your team.</p></div></div>
+        <section class="panel list-panel">
+          <div class="toolbar"><div class="searchbox"><span>⌕</span><input id="task-search" type="search" placeholder="Search tasks or case ID" aria-label="Search tasks"></div><button class="button secondary" id="bulk-claim">Claim selected</button><button class="button secondary" id="refresh-tasks">↻ Refresh</button></div>
+          <div class="filter-tabs"><button class="filter active" data-task-filter="all">All tasks</button><button class="filter" data-task-filter="assigned">Assigned to me</button><button class="filter" data-task-filter="available">Available</button></div>
+          <div class="table-wrap"><table><thead><tr><th><input type="checkbox" id="task-select-all" aria-label="Select all tasks"></th><th>TASK</th><th>WORKFLOW</th><th>CASE</th><th>ASSIGNED TO</th><th>PRIORITY</th><th>DUE BY</th><th></th></tr></thead><tbody id="task-table"></tbody></table></div>
+        </section>
+      </section>
+
+      <section class="page" id="page-instances">
+        <div class="page-heading compact"><div><p class="eyebrow">PROCESS TRACKING</p><h1>Cases</h1><p class="subheading">Follow a workflow from start to resolution.</p></div><button class="button primary" id="new-request-2">＋ Start a workflow</button></div>
+        <section class="panel list-panel">
+          <div class="toolbar"><div class="searchbox"><span>⌕</span><input id="instance-search" type="search" placeholder="Search by case ID or workflow" aria-label="Search cases"></div><select id="instance-status" class="select-control"><option value="all">All statuses</option><option value="RUNNING">In progress</option><option value="SUSPENDED">Paused</option><option value="COMPLETED">Completed</option><option value="CANCELLED">Cancelled</option></select><button class="button secondary" id="refresh-instances">↻ Refresh</button></div>
+          <div class="table-wrap"><table><thead><tr><th>CASE</th><th>WORKFLOW</th><th>STAGE</th><th>STATUS</th><th>RESULT</th><th></th></tr></thead><tbody id="instance-table"></tbody></table></div>
+        </section>
+      </section>
+
+      <section class="page" id="page-admin">
+        <div class="page-heading compact"><div><p class="eyebrow">WORKFLOW OPERATIONS</p><h1>Operations</h1><p class="subheading">Review cases and make safe, traceable interventions.</p></div><a class="button secondary" href="/api/audit.csv">↓ Export case list</a></div>
+        <section class="panel list-panel">
+          <div class="panel-heading"><div><h2>All active work</h2><p>Pause, resume, reassign, or cancel a case.</p></div><button class="button secondary" id="refresh-admin">↻ Refresh</button></div>
+          <div class="toolbar"><div class="searchbox"><span>⌕</span><input id="admin-search" type="search" placeholder="Search by case ID or workflow" aria-label="Search cases for operations"></div></div>
+          <div class="table-wrap"><table><thead><tr><th>CASE</th><th>WORKFLOW</th><th>STAGE</th><th>STATUS</th><th>OPERATIONS</th></tr></thead><tbody id="admin-table"></tbody></table></div>
+        </section>
+        <p class="local-warning">Local demo controls are for development only. Production use requires host authentication and authorization.</p>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="start-dialog" class="modal"><form method="dialog" id="start-form"><div class="modal-head"><div><p class="eyebrow">NEW CASE</p><h2>Start a workflow</h2></div><button class="icon-button" value="cancel" aria-label="Close">×</button></div><label class="field-label" for="workflow-select">Choose a workflow</label><select class="select-control full" id="workflow-select" required></select><div id="start-fields" class="form-fields"></div><div class="modal-actions"><button class="button secondary" value="cancel">Cancel</button><button class="button primary" id="start-submit" value="default">Start workflow</button></div></form></dialog>
+
+  <dialog id="task-dialog" class="modal"><form id="task-form"><div class="modal-head"><div><p class="eyebrow">WORK ITEM</p><h2 id="task-title">Complete task</h2><p id="task-caption" class="subheading"></p></div><button type="button" class="icon-button" data-close="task-dialog" aria-label="Close">×</button></div><div id="task-fields" class="form-fields"></div><div id="task-outcomes" class="outcome-row"></div><div class="modal-actions"><button type="button" class="button secondary" data-close="task-dialog">Save for later</button><button type="submit" class="button primary">Complete task</button></div></form></dialog>
+
+  <dialog id="detail-dialog" class="modal modal-large"><div class="modal-head"><div><p class="eyebrow">CASE DETAILS</p><h2 id="detail-title">Case</h2><p id="detail-caption" class="subheading"></p></div><button type="button" class="icon-button" data-close="detail-dialog" aria-label="Close">×</button></div><div id="detail-content"></div></dialog>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>

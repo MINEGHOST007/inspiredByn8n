@@ -16,6 +16,10 @@ try {
     & $maven -f modules/w6w-test/pom.xml exec:java `
         "-Dexec.args=`"$workflow`" `"$scenarioDir`" `"$results`" `"$database`""
     if ($LASTEXITCODE -ne 0) { throw "Local scenario run failed with exit code $LASTEXITCODE" }
+    [xml]$scenarioResults = Get-Content -LiteralPath $results -Raw
+    if ([int]$scenarioResults.testsuite.failures -gt 0) {
+        throw "Local scenario run reported $($scenarioResults.testsuite.failures) failure(s). See $results"
+    }
 }
 finally {
     Pop-Location
