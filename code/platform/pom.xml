@@ -38,6 +38,7 @@
         <module>modules/w6w-test</module>
         <module>modules/w6w-governance</module>
         <module>modules/w6w-app</module>
+        <module>modules/w6w-cli</module>
     </modules>
 
     <dependencyManagement>

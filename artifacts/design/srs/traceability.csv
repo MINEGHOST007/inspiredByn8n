@@ -3,7 +3,7 @@ WF-01,M,MVP,w6w-model; code/schema/cwm/v1,CwmParser; workflow.schema.json,unit/f
 WF-02,M,MVP,w6w-model; code/workflows,WorkflowApiControllerTest,api integration,Partial
 WF-03,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
 WF-04,M,MVP,w6w-compiler,CwmLinterTest; unsupported-step test,unit/fixture,Partial
-WF-05,S,MVP,w6w-model / w6w-compiler,,not covered,Not implemented
+WF-05,S,MVP,w6w-cli,W6wCliTest,unit/fixture,Partial
 WF-06,M,MVP,w6w-model; w6w-compiler,CwmLinterTest,unit/fixture,Partial
 WF-07,M,MVP,w6w-test,ScenarioRunnerTest,unit/fixture,Partial
 WF-08,M,MVP,code/workflows; .gitignore,repository inspection,source-of-truth review,Partial
@@ -70,8 +70,8 @@ OP-02,M,MVP,ops (planned),,not covered,Not implemented
 OP-03,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 OP-04,M,MVP,artifacts/playbook/local-operations.md,documented,manual review,Partial
 OP-05,S,P2,ops (planned),,not covered,Not implemented
-DX-01,M,MVP,w6w-cli (planned),,not covered,Not implemented
-DX-02,M,MVP,w6w-cli (planned),,not covered,Not implemented
+DX-01,M,MVP,w6w-cli,WorkflowScaffolderTest,unit/fixture,Partial
+DX-02,M,MVP,w6w-cli; w6w-app,W6wCliTest; WorkflowApiControllerTest,unit and api integration,Partial
 DX-03,M,MVP,run-local.ps1; w6w-test,run-local.ps1,unit/fixture,Partial
 DX-04,S,P2,w6w-cli (planned),,not covered,Not implemented
 DX-05,S,MVP,artifacts/playbook/workflow-author-quick-start.md,documented,manual review,Partial
@@ -80,15 +80,15 @@ GV-02,M,MVP,w6w-governance; w6w-migrate,EligibilityCheckerTest; BlueprintMigrati
 GV-03,M,MVP,w6w-compiler; w6w-migrate,CwmLinterTest; CwmToBpmnCompilerTest,unit/fixture,Partial
 GV-04,S,P2,w6w-governance,,not covered,Not implemented
 GV-05,C,P3,w6w-governance,,not covered,Not implemented
-MG-01,M,MVP,w6w-migrate,PdfBlueprintExtractorTest; BlueprintMigrationServiceTest,unit/fixture,Partial
+MG-01,M,MVP,w6w-migrate; w6w-cli,PdfBlueprintExtractorTest; BlueprintMigrationServiceTest; W6wCliTest,PDF fixture and CLI output,Partial
 MG-02,M,MVP,w6w-migrate,PdfBlueprintExtractorTest,unit/fixture,Partial
-MG-03,M,MVP,w6w-migrate,PdfBlueprintExtractorTest; BlueprintMigrationServiceTest,unit/fixture,Partial
+MG-03,M,MVP,w6w-migrate,PdfBlueprintExtractorTest; BlueprintMigrationServiceTest; W6wCliTest,PDF fixture and generated package,Partial
 MG-04,M,MVP,w6w-migrate,,not covered,Not implemented
-MG-05,M,MVP,w6w-migrate; w6w-governance,EligibilityCheckerTest; BlueprintMigrationServiceTest,unit/fixture,Partial
-MG-06,M,MVP,w6w-migrate,BlueprintMigrationServiceTest,unit/fixture,Partial
-MG-07,M,MVP,w6w-migrate,BlueprintMigrationServiceTest,unit/fixture,Partial
+MG-05,M,MVP,w6w-migrate; w6w-governance,EligibilityCheckerTest; BlueprintMigrationServiceTest; W6wCliTest,PDF fixture and CLI output,Partial
+MG-06,M,MVP,w6w-migrate; w6w-cli,BlueprintMigrationServiceTest; W6wCliTest,generated package files,Partial
+MG-07,M,MVP,w6w-migrate; w6w-cli,BlueprintMigrationServiceTest; W6wCliTest,conversion report in generated packages,Partial
 MG-08,S,MVP,w6w-migrate,,not covered,Not implemented
-MG-09,M,MVP,w6w-migrate,BlueprintMigrationServiceTest,unit/fixture,Partial
+MG-09,M,MVP,w6w-migrate; w6w-cli,BlueprintMigrationServiceTest; W6wCliTest,dry-run confirms no files written,Partial
 MG-10,M,MVP,w6w-test; w6w-migrate,BlueprintMigrationServiceTest; ScenarioRunnerTest,unit/fixture,Partial
 MG-11,S,P2,w6w-migrate,,not covered,Not implemented
 MG-12,M,MVP,artifacts/design/architecture/agent-modes.md,documented,unit/fixture,Partial

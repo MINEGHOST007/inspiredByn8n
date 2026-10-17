@@ -36,10 +36,14 @@ class WorkflowApiControllerTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
         assertThat(apiDoc.path("info").path("version").asText()).isEqualTo("1.0.0");
         mvc.perform(get("/api/v1/health")).andExpect(status().isOk());
+        JsonNode reloaded = json.readTree(mvc.perform(post("/api/v1/admin/workflows/reload").param("key", "refund-processing"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(reloaded.path("status").asText()).isEqualTo("reloaded");
 
         JsonNode workflows = json.readTree(mvc.perform(get("/api/workflows"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
-        assertThat(workflows.get(0).path("key").asText()).isEqualTo("refund-processing");
+        assertThat(java.util.stream.StreamSupport.stream(workflows.spliterator(), false)
+                .anyMatch(workflow -> "refund-processing".equals(workflow.path("key").asText()))).isTrue();
 
         Map<String, Object> missing = Map.of("workflowKey", "refund-processing", "businessKey", "UI-INVALID", "variables", Map.of());
         mvc.perform(post("/api/instances").contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(missing)))

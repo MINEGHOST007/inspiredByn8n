@@ -69,6 +69,22 @@ public class WorkflowCatalog implements ApplicationRunner {
         log.info("Loaded {} local workflow definition(s) from {}", entries.size(), workflowsRoot);
     }
 
+    public synchronized CatalogEntry reload(String workflowKey) throws Exception {
+        if (!"local-demo".equalsIgnoreCase(runtimeMode))
+            throw new IllegalStateException("Workflow reload is only enabled in local-demo mode");
+        if (!Files.isDirectory(workflowsRoot)) throw new IllegalStateException("Workflow folder does not exist: " + workflowsRoot);
+        List<Path> matches = new ArrayList<>();
+        try (Stream<Path> files = Files.walk(workflowsRoot)) {
+            for (Path file : files.filter(p -> p.getFileName().toString().equals("workflow.cwm.yaml")).toList()) {
+                if (workflowKey.equals(CwmParser.parse(file.toFile()).getMetadata().getKey())) matches.add(file);
+            }
+        }
+        if (matches.isEmpty()) throw new NoSuchElementException("Workflow definition file not found for key: " + workflowKey);
+        if (matches.size() > 1) throw new IllegalArgumentException("Multiple workflow files use key: " + workflowKey);
+        register(matches.get(0), true);
+        return require(workflowKey);
+    }
+
     private void registerLocalDemoActions() {
         Set<String> demoActions = Set.of("refund.validateRequest", "refund.generateId", "notify.email",
                 "refund.retrieveRecords", "refund.checkPolicyAdherence", "refund.initiateTransaction",
@@ -82,6 +98,10 @@ public class WorkflowCatalog implements ApplicationRunner {
     }
 
     private void register(Path file) throws Exception {
+        register(file, false);
+    }
+
+    private void register(Path file, boolean replaceExisting) throws Exception {
         WorkflowDefinition definition = CwmParser.parse(file.toFile());
         CwmLinter.LintResult lint = new CwmLinter().lint(definition);
         if (lint.hasErrors()) throw new IllegalArgumentException("Workflow " + definition.getMetadata().getKey() + " has lint errors: " + lint.getIssues());
@@ -98,7 +118,8 @@ public class WorkflowCatalog implements ApplicationRunner {
             log.info("Workflow '{}' already deployed as version {}; keeping existing deployment", definition.getMetadata().getKey(), existing.get(0).getVersion());
         }
         CatalogEntry entry = new CatalogEntry(definition, file.toAbsolutePath().normalize());
-        if (entries.putIfAbsent(definition.getMetadata().getKey(), entry) != null)
+        if (replaceExisting) entries.put(definition.getMetadata().getKey(), entry);
+        else if (entries.putIfAbsent(definition.getMetadata().getKey(), entry) != null)
             throw new IllegalArgumentException("Duplicate workflow key: " + definition.getMetadata().getKey());
     }
 

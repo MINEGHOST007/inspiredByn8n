@@ -20,6 +20,11 @@ not authentication. Configure host identity, authorization, real action
 handlers, backup and deployment controls before exposing the application to
 other machines or production traffic.
 
+The local-only `POST /api/v1/admin/workflows/reload?key={workflowKey}` endpoint
+revalidates and deploys a changed workflow from the configured definitions
+folder. The `w6w` CLI uses it for `deploy-local` after the author reviews the
+workflow diff.
+
 REST endpoints are available at `/api/v1` (with `/api` retained as a local
 compatibility alias); the health endpoint is `/api/v1/health` and the local
 metrics endpoints are provided by Spring Boot Actuator. Interactive

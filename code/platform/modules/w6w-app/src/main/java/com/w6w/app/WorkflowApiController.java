@@ -6,6 +6,7 @@ import com.w6w.port.TaskInstance;
 import com.w6w.port.WorkflowInstance;
 import org.flowable.engine.HistoryService;
 import org.flowable.engine.ProcessEngine;
+import org.flowable.engine.repository.ProcessDefinition;
 import org.flowable.engine.history.HistoricActivityInstance;
 import org.flowable.engine.history.HistoricProcessInstance;
 import org.flowable.engine.runtime.ProcessInstance;
@@ -36,6 +37,16 @@ public class WorkflowApiController {
 
     @GetMapping("/workflows/{key}")
     public Map<String, Object> workflow(@PathVariable("key") String key) { return catalog.summary(catalog.require(key)); }
+
+    @PostMapping("/admin/workflows/reload")
+    public Map<String, Object> reloadWorkflow(@RequestParam(name = "key") String key) throws Exception {
+        WorkflowCatalog.CatalogEntry entry = catalog.reload(key);
+        ProcessDefinition deployed = processEngine.getRepositoryService().createProcessDefinitionQuery()
+                .processDefinitionKey(key).orderByProcessDefinitionVersion().desc().listPage(0, 1).stream().findFirst()
+                .orElseThrow(() -> new IllegalStateException("Workflow did not deploy: " + key));
+        return Map.of("workflowKey", key, "semanticVersion", entry.definition().getMetadata().getVersion(),
+                "engineVersion", deployed.getVersion(), "status", "reloaded");
+    }
 
     @PostMapping("/instances")
     public ResponseEntity<WorkflowInstance> start(@RequestBody StartRequest request) {

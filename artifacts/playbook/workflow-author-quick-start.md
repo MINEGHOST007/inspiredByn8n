@@ -93,6 +93,29 @@ visibility, and host application lookups are not available in this local slice.
 
 ## 4. Validate and run locally
 
+Start a package with one CLI command. The four templates are `approval`,
+`intake-and-fulfil`, `multi-level-approval`, and `request-with-sla`:
+
+```powershell
+.\w6w.ps1 new --key leave-request --template request-with-sla --owner people-ops --domain people
+```
+
+The CLI writes a workflow folder, form, data schema, and starter README under
+`code/workflows/domains/`. Then validate, render, compile, test, and inspect Git
+changes with the same tool:
+
+```powershell
+.\w6w.ps1 validate code/workflows/domains/people/leave-request/workflow.cwm.yaml
+.\w6w.ps1 render code/workflows/domains/people/leave-request/workflow.cwm.yaml
+.\w6w.ps1 compile code/workflows/domains/people/leave-request/workflow.cwm.yaml
+.\w6w.ps1 test code/workflows/domains/people/leave-request/workflow.cwm.yaml
+.\w6w.ps1 diff code/workflows/domains/people/leave-request/workflow.cwm.yaml
+```
+
+After reviewing the change, `deploy-local leave-request` asks the local app to
+reload and deploy that workflow key. This endpoint is available only in
+loopback-bound `local-demo` mode.
+
 From the repository root, run the platform verification suite, then start the
 workspace:
 
@@ -138,3 +161,18 @@ SRS still includes production authentication and authorization, retry and
 dead-letter operations, business-calendar SLAs, attachments, CI deployment,
 and additional workflow step types; see
 [`traceability.csv`](../design/srs/traceability.csv) for implementation state.
+
+## Blueprint PDF migration
+
+Use dry-run to inspect cases and planned paths before writing generated files:
+
+```powershell
+.\w6w.ps1 migrate-pdf "Pega Blueprint - Travel Management Customer Service.pdf" --dry-run
+.\w6w.ps1 migrate-pdf "Pega Blueprint - Travel Management Customer Service.pdf" --out code/workflows/domains/migrated/travel-management
+```
+
+Each case gets its own folder with a CWM draft (when eligible), form and data
+schema stubs, scenario stub, and migration report. Resolve manual actions,
+validate and scenario-test the CWM, then review and commit it. The adapter
+currently accepts Blueprint PDFs; it does not decode proprietary `.blueprint`
+binaries.
