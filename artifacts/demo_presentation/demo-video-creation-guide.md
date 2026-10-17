@@ -42,6 +42,27 @@ npm run demo:video
 
 The video and screenshots are written under `artifacts/demo_presentation/video-output/`. They are generated evidence and should not be committed unless a release requires them.
 
+## Narrated video assembly
+
+After generating the Roger and Jessica ElevenLabs MP3 files, use FFmpeg to combine them with the screen recording. The repository's Playwright recorder produces the screen track; the final MP4 files are:
+
+```text
+artifacts/demo_presentation/w6w-demo-roger.mp4
+artifacts/demo_presentation/w6w-demo-jessica.mp4
+```
+
+The exact assembly used for the current recordings was:
+
+```powershell
+$ffmpeg = (Get-ChildItem "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" -Recurse -Filter ffmpeg.exe | Select-Object -First 1 -ExpandProperty FullName)
+$video = (Get-ChildItem .\artifacts\demo_presentation\video-output -Recurse -Filter video.webm | Sort-Object LastWriteTime -Descending | Select-Object -First 1 -ExpandProperty FullName)
+
+& $ffmpeg -y -i $video -i "$env:USERPROFILE\Documents\roger.mp3.mp3" -filter:v "setpts=0.9437*PTS" -map 0:v:0 -map 1:a:0 -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest .\artifacts\demo_presentation\w6w-demo-roger.mp4
+& $ffmpeg -y -i $video -i "$env:USERPROFILE\Documents\jessica.mp3.mp3" -filter:v "setpts=0.8723*PTS" -map 0:v:0 -map 1:a:0 -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest .\artifacts\demo_presentation\w6w-demo-jessica.mp4
+```
+
+The video speed factors are based on the measured audio lengths. Recalculate them if new narration files are generated. Verify the final files with `ffprobe` and confirm that each contains one H.264 video stream and one AAC audio stream.
+
 ## Storyboard and speaker notes
 
 ### Page 1 - The problem: expensive platform, simple work
