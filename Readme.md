@@ -720,3 +720,45 @@ Durations are estimates and shall be re-baselined after Phase 0.
 | Develop end-to-end workflow from the blueprint using the tool | MG-06, MG-10, MG-08 |
 | Quick, scalable base | Section 4 (wrap strategy), NF-01 to NF-08, Section 12 |
 
+Here are the points I'd weigh most before committing.
+
+**1. Prove the business case before building.**
+- **Inventory first.** Count the Tier 1 workflows you have today, their volumes, and what they cost to run and change on Pega.
+- **Check the contract.** Pega pricing often involves committed minimums, so moving workloads off may not lower the bill until renewal. Find out what you'd actually save and when.
+- **Compare against buying.** Include commercial low-code and workflow tools in the TCO comparison. Building a utility makes sense only if the portfolio is big enough to amortize it.
+
+**2. Treat Phase 0 as a go/no-go gate, not a formality.**
+Don't commit MVP dates until the two-week proof of concept shows three things:
+- A real process runs end to end in about two days.
+- The adapter can parse real Blueprint exports.
+- The engine handles your timers, task volumes and identity setup.
+
+If the first two fail, the project is a Git-and-Flowable accelerator without the migration piece, and the plan should say so.
+
+**3. You are building a product, so plan to own it.**
+The "days not weeks" promise depends on a standing team: roadmap, on-call, security patching, engine upgrades (Flowable's major versions have moved framework baselines), documentation and user support. If nobody owns it after launch, the long tail drifts back to Pega or to shadow tools.
+
+**4. Be clear about what the migration utility can do.**
+- A Blueprint is a design artifact, not the logic of a running Pega app. Existing Pega applications hold most of their behavior in rules, so the utility gets you a skeleton, not a replica.
+- It is likely most valuable for new Tier 1 work. Design in Blueprint, generate the skeleton, finish it in T1WU. Check Pega's terms of use before building that into a standard process.
+- Don't promise stakeholders that existing apps will convert automatically.
+
+**5. Get the people side right early.**
+- Involve the Pega team or CoE now. They should own the Tier 1 vs Tier 2/3 rubric with you, or the project reads as a threat and the boundary gets fought over.
+- Agree who approves exceptions and what happens when a Tier 1 workflow outgrows its limits.
+- Bring security, audit and compliance in before MVP. Approval workflows often carry audit and segregation-of-duties requirements that you will inherit from Pega.
+
+**6. Keep scope disciplined.**
+Section 10 of the SRS (out of scope) is as important as the requirements. Every request for rules, dynamic case structure or a drag-and-drop designer is a step toward rebuilding Pega. Make each one a rubric change that someone has to approve.
+
+**7. What I'd do in the next 30 days:**
+1. Confirm the host stack and Spring Boot version.
+2. Get the Pega contract and renewal terms, and the Tier 1 inventory.
+3. Download the two sample blueprints and run the adapter spike.
+4. Hand-build 3 to 5 real processes on the reference engine.
+5. Hold a legal review on parsing the Blueprint format.
+6. Name the product owner and the long-term support team.
+
+At the end of that, you'll have evidence for a go/no-go decision.
+
+I can turn the SRS into an epic-level backlog or a day-by-day Phase 0 plan next. Or send me your stack details and I'll draft the workflow definition schema. Your answers to the open questions in Section 13 of the SRS would sharpen all three.
