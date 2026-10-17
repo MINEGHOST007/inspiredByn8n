@@ -25,7 +25,7 @@ class W6wCliTest {
         Path table = repository.resolve("code/workflows/domains/customer-service/refund-processing/decisions/refund-eligibility.yaml");
         Path output = temp.resolve("refund-eligibility.dmn");
         new W6wCli(repository).compileDecision(table, output);
-        assertThat(output).content().contains("DMN/20191111/MODEL", "refund-eligibility", "Refund eligibility", "hitPolicy=\"FIRST\"");
+        assertThat(output).content().contains("http://www.omg.org/spec/DMN/20151101", "refund-eligibility", "Refund eligibility", "hitPolicy=\"FIRST\"");
     }
 
     @Test
