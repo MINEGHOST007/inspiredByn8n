@@ -590,6 +590,8 @@ Service actions keep the workflow in reviewable YAML while the host application 
 | `w6w.events.publish` | `eventName` | Publishes an application event; optional `payload`. |
 | `w6w.data.set` | `values` object | Sets workflow output fields from constants or existing variables. |
 
+The engine also emits host-facing lifecycle events for `INSTANCE_STARTED`, `TASK_CREATED`, `SLA_BREACHED`, and `INSTANCE_COMPLETED`. The local app records them in the audit feed; an embedding Spring application can subscribe to `WorkflowLifecycleEvent`. Event details omit workflow variables. This is an in-process event contract; durable webhook delivery and retry remain a separate requirement.
+
 Example action step:
 
 ```yaml

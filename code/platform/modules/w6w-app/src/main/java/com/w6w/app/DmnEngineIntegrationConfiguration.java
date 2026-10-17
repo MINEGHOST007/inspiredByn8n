@@ -1,6 +1,7 @@
 package com.w6w.app;
 
 import com.w6w.engine.flowable.W6wDmnEngineConfigurator;
+import com.w6w.engine.flowable.FlowableLifecycleEventListener;
 import org.flowable.dmn.engine.DmnEngine;
 import org.flowable.dmn.engine.DmnEngineConfiguration;
 import org.flowable.dmn.engine.configurator.DmnEngineConfigurator;
@@ -8,6 +9,9 @@ import org.flowable.engine.ProcessEngine;
 import org.flowable.spring.boot.ProcessEngineConfigurationConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.flowable.common.engine.api.delegate.event.FlowableEventListener;
+
+import java.util.ArrayList;
 
 import javax.sql.DataSource;
 
@@ -22,8 +26,16 @@ public class DmnEngineIntegrationConfiguration {
     }
 
     @Bean
-    ProcessEngineConfigurationConfigurer processEngineDmnConfigurer(W6wDmnEngineConfigurator configurator) {
-        return processEngineConfiguration -> processEngineConfiguration.addConfigurator(configurator);
+    ProcessEngineConfigurationConfigurer processEngineDmnConfigurer(W6wDmnEngineConfigurator configurator,
+                                                                     FlowableLifecycleEventListener lifecycleEvents) {
+        return processEngineConfiguration -> {
+            processEngineConfiguration.addConfigurator(configurator);
+            ArrayList<FlowableEventListener> listeners = new ArrayList<>();
+            if (processEngineConfiguration.getEventListeners() != null)
+                listeners.addAll(processEngineConfiguration.getEventListeners());
+            listeners.add(lifecycleEvents);
+            processEngineConfiguration.setEventListeners(listeners);
+        };
     }
 
     @Bean

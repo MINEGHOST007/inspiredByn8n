@@ -18,10 +18,10 @@ This document maps the parent folder structure supplied with the project to the 
 | `code/platform/modules/w6w-model/` | CWM POJOs, YAML parser | Implemented. |
 | `code/platform/modules/w6w-compiler/` | CWM linter and BPMN compiler | Partial; unsupported steps fail closed. |
 | `code/platform/modules/w6w-engine-port/` | Engine-neutral runtime interface and action contract | Implemented as an initial port. |
-| `code/platform/modules/w6w-engine-flowable/` | Embedded Flowable adapter | Initial integration; not all SRS operations are exposed. |
+| `code/platform/modules/w6w-engine-flowable/` | Embedded Flowable adapter and lifecycle event bridge | Publishes process-start, task-created and process-completed domain events; SLA breach is bridged from runtime timer execution. |
 | `code/platform/modules/w6w-runtime-starter/` | Standard configurable actions, secret-provider/email-gateway host ports, lookup and startup validation | HTTP, email, Spring event and data mapping actions; environment-backed local secret provider; production secret/security adapters remain host responsibilities. |
 | `code/platform/modules/w6w-governance/` | Tier 1 eligibility | Initial configurable checker. |
-| `code/platform/modules/w6w-app/` | Local web workspace and REST integration surface | Implemented local catalog, start forms, worklist, schema-driven task forms, case history, operator actions, health/metrics and OpenAPI docs; local-demo only. |
+| `code/platform/modules/w6w-app/` | Local web workspace and REST integration surface | Implemented local catalog, start forms, worklist, schema-driven task forms, case history, operator actions, lifecycle event audit, health/metrics and OpenAPI docs; local-demo only. |
 | `code/platform/modules/w6w-cli/` | Workflow author CLI | Implements scaffolding templates, validation, deterministic compilation, Markdown/Mermaid rendering, scenario execution, Git diff, and local catalog reload; production deployment remains separate. |
 | `code/workflows/domains/*/*/decisions/` | Versioned decision table YAML | `w6w/decision/v1` tables compile deterministically to version-pinned DMN and execute through BPMN decision steps; only declared string `outcome` routing is supported. |
 | `code/platform/modules/w6w-migrate/` | Blueprint PDF extraction, versioned YAML mapping rules, CWM draft mapping and report writer | PDF path is callable from the W6W CLI and mapping rules can be overridden; proprietary `.blueprint` and Pega XML adapters are not implemented. |

@@ -59,8 +59,6 @@ public class WorkflowApiController {
                 ? "W6W-" + UUID.randomUUID() : request.businessKey().trim();
         WorkflowInstance instance = engine.startInstance(workflow.definition().getMetadata().getKey(), businessKey,
                 variables);
-        audit.record(instance.getId(), instance.getWorkflowKey(), businessKey, null, "local-demo", "INSTANCE_STARTED",
-                Map.of("workflowVersion", workflow.definition().getMetadata().getVersion()));
         return ResponseEntity.status(HttpStatus.CREATED).body(instance);
     }
 

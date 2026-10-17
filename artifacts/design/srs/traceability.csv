@@ -19,13 +19,13 @@ EX-09,C,P3,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
 HT-01,M,MVP,w6w-compiler; w6w-app,WorkflowApiControllerTest,api integration,Partial
 HT-02,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 HT-03,S,P2,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
-HT-04,M,MVP,w6w-compiler; w6w-app,WorkflowApiControllerTest.deadlineBreachMovesTaskToEscalationRoleAndAuditsTheChange,compiler and API integration (deadline timer, reassignment, role visibility, audit),Partial
+HT-04,M,MVP,w6w-compiler; w6w-app,WorkflowApiControllerTest.deadlineBreachMovesTaskToEscalationRoleAndAuditsTheChange,"compiler and API integration (deadline timer, reassignment, role visibility, audit)",Partial
 HT-05,M,MVP,w6w-runtime-starter; w6w-engine-flowable; w6w-app,WorkflowApiControllerTest.deadlineBreachMovesTaskToEscalationRoleAndAuditsTheChange,API integration (role reassignment and audit only),Partial
 HT-06,S,P2,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
 HT-07,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 HT-08,C,P3,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
 DF-01,M,MVP,w6w-app; w6w-runtime-starter; w6w-engine-flowable,WorkflowApiControllerTest; WorkflowDataSchemaRegistryTest; FlowableEngineIntegrationTest,API and validator unit coverage; runtime boundaries,Partial
-DF-02,M,MVP,w6w-app; code/schema/cwm/v1/form.schema.json,manual Playwright: layout rows, labels, help text, conditional visibility, hidden-value exclusion, and hidden required fields; WorkflowApiControllerTest,API integration and browser behavior,Partial (attachments are not implemented)
+DF-02,M,MVP,w6w-app; code/schema/cwm/v1/form.schema.json,"manual Playwright: layout rows, labels, help text, conditional visibility, hidden-value exclusion, and hidden required fields; WorkflowApiControllerTest",API integration and browser behavior,Partial (attachments are not implemented)
 DF-03,S,P2,w6w-model / workflow forms,,not covered,Not implemented
 DF-04,S,P2,w6w-model / workflow forms,,not covered,Not implemented
 DF-05,S,P2,w6w-model / workflow forms,,not covered,Not implemented
@@ -35,7 +35,7 @@ DC-03,S,P2,w6w-compiler,,not covered,Not implemented
 IN-01,M,MVP,w6w-runtime-starter; w6w-app,WorkflowApiControllerTest,api integration,Partial
 IN-02,M,MVP,w6w-runtime-starter,StandardWorkflowActionsTest; FlowableEngineIntegrationTest.serviceTaskReceivesVersionedWorkflowActionConfiguration,standard handlers and end-to-end config execution; email delivery requires host WorkflowEmailGateway,Partial
 IN-03,M,MVP,w6w-engine-port; w6w-engine-flowable; w6w-app,WorkflowApiControllerTest.inboundSignalApiResumesOnlyTheWorkflowMatchingItsBusinessKey; FlowableEngineIntegrationTest.inboundSignalResumesOnlyTheInstanceWithTheMatchingBusinessKey,API and Flowable integration (business-key correlation and schema-validated payload),Implemented
-IN-04,M,MVP,w6w-runtime-starter,,not covered,Not implemented
+IN-04,M,MVP,w6w-engine-flowable; w6w-app,WorkflowApiControllerTest.servesWorkspaceRunsApprovalWorkflowAndExposesDeadLetterQueueApi; WorkflowApiControllerTest.deadlineBreachMovesTaskToEscalationRoleAndAuditsTheChange,"Flowable lifecycle events publish to host Spring event bus and local audit for started, task-created, SLA-breached and completed transitions",Implemented
 IN-05,M,MVP,w6w-runtime-starter,CwmLinterTest.sensitiveActionValuesMustReferenceHostSecrets; StandardWorkflowActionsTest.httpRequestUsesConfiguredMethodSecretAndWritesResponseVariables,secret references are enforced and resolved; default provider reads local environment and production secret-store adapter is host supplied,Partial
 IN-06,S,P2,w6w-runtime-starter,,not covered,Not implemented
 API-01,M,MVP,w6w-app; w6w-engine-port,WorkflowApiControllerTest,api integration,Partial
@@ -43,7 +43,7 @@ API-02,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 API-03,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 API-04,S,P2,w6w-api (planned),,not covered,Not implemented
 API-05,S,P2,w6w-api (planned),,not covered,Not implemented
-UI-01,M,MVP,w6w-app,WorkflowApiControllerTest; manual Playwright: sort asc/desc, preserve selection, filter/search, select and claim,API integration and browser end-to-end,Implemented
+UI-01,M,MVP,w6w-app,"WorkflowApiControllerTest; manual Playwright: sort asc/desc, preserve selection, filter/search, select and claim",API integration and browser end-to-end,Implemented
 UI-02,M,MVP,w6w-app,WorkflowApiControllerTest; Playwright workflow-lifecycle.spec.js,API integration and browser form lifecycle (attachments remain unsupported),Partial
 UI-03,M,MVP,w6w-app,WorkflowApiControllerTest; Playwright workflow-lifecycle.spec.js,API integration and browser timeline evidence (SLA visualization remains incomplete),Partial
 UI-04,M,MVP,w6w-app,WorkflowApiControllerTest.servesWorkspaceRunsApprovalWorkflowAndExposesDeadLetterQueueApi; FlowableEngineIntegrationTest.failedServiceTaskRetriesThenAppearsInDeadLetterQueueAndCanBeReplayed,api and engine integration,Partial

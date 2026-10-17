@@ -117,7 +117,11 @@ class WorkflowApiControllerTest {
         assertThat(finished.path("timeline").size()).isGreaterThan(5);
         JsonNode events = json.readTree(mvc.perform(get("/api/instances/" + instanceId + "/audit"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
-        assertThat(events.toString()).contains("INSTANCE_STARTED", "TASK_COMPLETED", "manager.jones");
+        assertThat(events.toString()).contains("INSTANCE_STARTED", "TASK_CREATED", "INSTANCE_COMPLETED",
+                "TASK_COMPLETED", "manager.jones");
+        assertThat(java.util.stream.StreamSupport.stream(events.spliterator(), false)
+                .anyMatch(event -> "TASK_CREATED".equals(event.path("action").asText())
+                        && businessKey.equals(event.path("businessKey").asText()))).isTrue();
         String auditCsv = mvc.perform(get("/api/audit.csv"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         assertThat(auditCsv).contains("actor,action,details", "INSTANCE_STARTED", businessKey);
@@ -262,7 +266,7 @@ class WorkflowApiControllerTest {
                 .noneMatch(task -> instance.getId().equals(task.getInstanceId()));
         JsonNode auditEvents = json.readTree(mvc.perform(get("/api/instances/" + instance.getId() + "/audit"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
-        assertThat(auditEvents.toString()).contains("SLA_DEADLINE_ESCALATED", "operations");
+        assertThat(auditEvents.toString()).contains("SLA_DEADLINE_ESCALATED", "SLA_BREACHED", "operations");
     }
 
     @Test
