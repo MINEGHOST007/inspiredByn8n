@@ -3,6 +3,7 @@ package com.w6w.cli;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.w6w.compiler.CwmLinter;
 import com.w6w.compiler.CwmToBpmnCompiler;
+import com.w6w.compiler.DecisionTableCompiler;
 import com.w6w.model.CwmParser;
 import com.w6w.model.StageDefinition;
 import com.w6w.model.StepDefinition;
@@ -46,6 +47,7 @@ public final class W6wCli {
             case "new" -> scaffold(Arrays.copyOfRange(args, 1, args.length));
             case "validate" -> validate(resolve(arg(args, 1, "workflow file")));
             case "compile" -> compile(resolve(arg(args, 1, "workflow file")), args.length > 2 ? resolve(args[2]) : null);
+            case "compile-decision" -> compileDecision(resolve(arg(args, 1, "decision table YAML")), args.length > 2 ? resolve(args[2]) : null);
             case "render" -> render(resolve(arg(args, 1, "workflow file")), args.length > 2 ? resolve(args[2]) : null);
             case "test" -> test(resolve(arg(args, 1, "workflow file")), args.length > 2 ? resolve(args[2]) : null);
             case "deploy-local" -> deployLocal(arg(args, 1, "workflow key"));
@@ -82,6 +84,15 @@ public final class W6wCli {
         Files.createDirectories(output.toAbsolutePath().getParent());
         Files.writeString(output, new CwmToBpmnCompiler().compile(workflow));
         System.out.println("Compiled " + workflow.getMetadata().getKey() + " to " + output);
+    }
+
+    void compileDecision(Path file, Path output) throws Exception {
+        DecisionTableCompiler compiler = new DecisionTableCompiler();
+        var table = compiler.parse(file);
+        if (output == null) output = root.resolve("code/workflows/build/decisions/" + table.getKey() + ".dmn");
+        Files.createDirectories(output.toAbsolutePath().getParent());
+        Files.writeString(output, compiler.compile(table));
+        System.out.println("Compiled decision table " + table.getKey() + " to " + output);
     }
 
     void render(Path file, Path output) throws Exception {
@@ -226,7 +237,8 @@ public final class W6wCli {
     private static void help() {
         System.out.println("W6W workflow CLI\n"
                 + "  new --key KEY --template approval|intake-and-fulfil|multi-level-approval|request-with-sla [--name NAME --owner OWNER --domain DOMAIN]\n"
-                + "  validate WORKFLOW.yaml | compile WORKFLOW.yaml [OUTPUT.bpmn] | render WORKFLOW.yaml [OUTPUT.md]\n"
+                + "  validate WORKFLOW.yaml | compile WORKFLOW.yaml [OUTPUT.bpmn] | compile-decision TABLE.yaml [OUTPUT.dmn]\n"
+                + "  render WORKFLOW.yaml [OUTPUT.md]\n"
                 + "  test WORKFLOW.yaml [SCENARIOS_DIR] | deploy-local WORKFLOW_KEY | diff WORKFLOW.yaml\n"
                 + "  migrate-pdf BLUEPRINT.pdf [--out DIRECTORY] [--dry-run] [--rules RULES.yaml]");
     }

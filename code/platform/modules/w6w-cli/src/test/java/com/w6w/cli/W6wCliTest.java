@@ -20,6 +20,15 @@ class W6wCliTest {
     }
 
     @Test
+    void compilesDecisionTableFileThroughTheCli() throws Exception {
+        Path repository = Path.of("../../../../").toAbsolutePath().normalize();
+        Path table = repository.resolve("code/workflows/domains/customer-service/refund-processing/decisions/refund-eligibility.yaml");
+        Path output = temp.resolve("refund-eligibility.dmn");
+        new W6wCli(repository).compileDecision(table, output);
+        assertThat(output).content().contains("DMN/20191111/MODEL", "refund-eligibility", "Refund eligibility", "hitPolicy=\"FIRST\"");
+    }
+
+    @Test
     void migratesBlueprintPdfToReviewablePackagesAndDryRunDoesNotWrite() throws Exception {
         Path repository = Path.of("../../../../").toAbsolutePath().normalize();
         Path pdf = repository.resolve("Pega Blueprint - Travel Management Customer Service.pdf");

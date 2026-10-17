@@ -1,0 +1,20 @@
+﻿apiVersion: w6w/decision/v1
+key: refund-eligibility
+name: Refund eligibility
+hitPolicy: FIRST
+inputs:
+  - id: purchase-amount
+    label: Purchase amount
+    typeRef: number
+    expression: purchaseAmount
+outputs:
+  - id: eligible
+    name: eligible
+    typeRef: boolean
+rules:
+  - id: low-value
+    inputEntries: ["<= 500"]
+    outputEntries: ["true"]
+  - id: high-value
+    inputEntries: ["> 500"]
+    outputEntries: ["false"]

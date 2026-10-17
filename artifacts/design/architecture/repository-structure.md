@@ -23,6 +23,7 @@ This document maps the parent folder structure supplied with the project to the 
 | `code/platform/modules/w6w-governance/` | Tier 1 eligibility | Initial configurable checker. |
 | `code/platform/modules/w6w-app/` | Local web workspace and REST integration surface | Implemented local catalog, start forms, worklist, schema-driven task forms, case history, operator actions, health/metrics and OpenAPI docs; local-demo only. |
 | `code/platform/modules/w6w-cli/` | Workflow author CLI | Implements scaffolding templates, validation, deterministic compilation, Markdown/Mermaid rendering, scenario execution, Git diff, and local catalog reload; production deployment remains separate. |
+| `code/workflows/domains/*/*/decisions/` | Versioned decision table YAML | `w6w/decision/v1` tables compile deterministically to DMN; decision runtime routing remains open. |
 | `code/platform/modules/w6w-migrate/` | Blueprint PDF extraction, versioned YAML mapping rules, CWM draft mapping and report writer | PDF path is callable from the W6W CLI and mapping rules can be overridden; proprietary `.blueprint` and Pega XML adapters are not implemented. |
 | `code/platform/modules/w6w-test/` | Local scenario runner | Implemented for local demo scenarios. |
 | `code/schema/cwm/v1/` | Shared JSON Schemas | Workflow schema exists; form and rubric schemas remain. |

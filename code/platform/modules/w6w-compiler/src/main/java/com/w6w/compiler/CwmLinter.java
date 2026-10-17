@@ -111,6 +111,9 @@ public class CwmLinter {
                     result.addError("Step '" + step.getId() + "' of type '" + step.getType()
                             + "' must declare explicit outcomes before compilation");
                 }
+                if ("decision".equals(step.getType()) && (step.getDecision() == null || step.getDecision().isBlank())) {
+                    result.addError("Decision step '" + step.getId() + "' must reference a decision table file");
+                }
             }
         }
 

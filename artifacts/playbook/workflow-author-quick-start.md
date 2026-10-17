@@ -177,3 +177,19 @@ schema stubs, scenario stub, and migration report. Resolve manual actions,
 validate and scenario-test the CWM, then review and commit it. The adapter
 currently accepts Blueprint PDFs; `--rules` can override the versioned default
 step mappings. It does not decode proprietary `.blueprint` binaries.
+
+## Decision table files
+
+Decision tables use versioned `w6w/decision/v1` YAML. For example,
+`code/workflows/domains/customer-service/refund-processing/decisions/refund-eligibility.yaml`
+shows the input, output, hit policy and ordered rules. Compile a table to
+deterministic DMN XML with:
+
+```powershell
+.\w6w.ps1 compile-decision code/workflows/domains/customer-service/refund-processing/decisions/refund-eligibility.yaml
+```
+
+The command writes generated DMN under the Git-ignored `code/workflows/build/decisions/` folder. A workflow decision step must
+reference its table in the `decision` field and declare outcomes. Decision
+execution and BPMN routing through compiled DMN are not wired into the local
+runtime yet.
