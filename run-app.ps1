@@ -1,4 +1,5 @@
 $ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $false
 
 $repoRoot = $PSScriptRoot
 $platformRoot = Join-Path $repoRoot 'code\platform'
