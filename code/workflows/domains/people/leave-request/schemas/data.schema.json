@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w6w.io/schemas/domains/people/leave-request/data.schema.json",
+  "title": "Leave Request Data",
+  "type": "object",
+  "required": ["employeeName", "employeeEmail", "startDate", "endDate", "leaveType", "reason"],
+  "properties": {
+    "employeeName": { "type": "string", "title": "Employee name" },
+    "employeeEmail": { "type": "string", "format": "email", "title": "Employee email" },
+    "startDate": { "type": "string", "title": "First day" },
+    "endDate": { "type": "string", "title": "Last day" },
+    "leaveType": { "type": "string", "enum": ["Annual leave", "Sick leave", "Personal leave"], "title": "Leave type" },
+    "reason": { "type": "string", "title": "Reason" },
+    "managerComment": { "type": "string", "title": "Manager comment" }
+  }
+}

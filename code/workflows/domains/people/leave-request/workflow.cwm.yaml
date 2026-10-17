@@ -1,0 +1,53 @@
+apiVersion: w6w/v1
+kind: Workflow
+metadata:
+  key: leave-request
+  name: "Leave Request"
+  version: 1.0.0
+  tier: 1
+  owner: people-ops
+  dataClassification: internal
+  source: "hand-authored:poc"
+  description: "A simple employee leave request with manager approval and explicit resolution."
+data:
+  schema: schemas/data.schema.json
+roles:
+  - employee
+  - manager
+stages:
+  - id: submit
+    name: "Submit Request"
+    steps:
+      - id: enter-details
+        name: "Enter Leave Details"
+        type: userTask
+        assignee:
+          role: employee
+        form: forms/leave-details.json
+  - id: approve
+    name: "Manager Approval"
+    steps:
+      - id: manager-approval
+        name: "Review Leave Request"
+        type: approval
+        assignee:
+          role: manager
+        form: forms/leave-approval.json
+        outcomes:
+          approve: stage:approved
+          reject: stage:rejected
+  - id: approved
+    name: "Approved"
+    resolution: Approved
+    steps:
+      - id: close-approved
+        name: "Close Approved Request"
+        type: end
+  - id: rejected
+    name: "Rejected"
+    alternate: true
+    resolution: Rejected
+    steps:
+      - id: close-rejected
+        name: "Close Rejected Request"
+        type: end

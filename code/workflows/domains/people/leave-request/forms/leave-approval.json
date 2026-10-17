@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Manager Decision",
+  "type": "object",
+  "properties": {
+    "managerComment": { "type": "string", "title": "Comment", "ui:widget": "textarea" }
+  },
+  "ui": {
+    "helpText": { "managerComment": "Leave a short explanation for the employee." }
+  }
+}

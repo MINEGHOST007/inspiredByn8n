@@ -82,6 +82,11 @@ class WorkflowApiControllerTest {
                         .content(json.writeValueAsBytes(Map.of("workflowKey", "refund-processing", "businessKey", businessKey, "variables", startData))))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
         String instanceId = started.path("id").asText();
+        JsonNode duplicate = json.readTree(mvc.perform(post("/api/instances")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsBytes(Map.of("workflowKey", "refund-processing", "businessKey", businessKey, "variables", Map.of()))))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+        assertThat(duplicate.path("id").asText()).isEqualTo(instanceId);
 
         JsonNode intake = findTask("agent.smith", "service_agent", businessKey, "step_receive_request");
         JsonNode intakeCase = json.readTree(mvc.perform(get("/api/instances/" + instanceId))

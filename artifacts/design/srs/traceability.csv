@@ -11,7 +11,7 @@ EX-01,M,MVP,w6w-engine-port; w6w-engine-flowable,FlowableEngineIntegrationTest,u
 EX-02,M,MVP,w6w-compiler; w6w-engine-flowable,CwmToBpmnCompilerTest.waitEventCompilesToNamedSignalCatchEvent; FlowableEngineIntegrationTest.inboundSignalResumesOnlyTheInstanceWithTheMatchingBusinessKey; FlowableEngineIntegrationTest.timerStepWaitsThenAllowsTheNextHumanTask,compiler and Flowable timer/signal integration,Partial (parallel and subprocess remain unsupported)
 EX-03,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
 EX-04,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
-EX-05,M,MVP,w6w-engine-flowable,FlowableEngineIntegrationTest,integration,Partial
+EX-05,M,MVP,w6w-engine-flowable,FlowableEngineIntegrationTest; WorkflowApiControllerTest,integration and API idempotency,Implemented
 EX-06,M,MVP,w6w-engine-port / w6w-engine-flowable,FlowableEngineIntegrationTest.failedServiceTaskRetriesThenAppearsInDeadLetterQueueAndCanBeReplayed; CwmLinterTest.serviceTaskRetryPolicyRejectsInvalidBackoffAndFailureBehavior; CwmToBpmnCompilerTest.testDeterminismAndCompilation,engine integration; linter; compiler,Implemented
 EX-07,S,P2,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
 EX-08,S,P2,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented

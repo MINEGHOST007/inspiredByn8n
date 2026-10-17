@@ -28,6 +28,15 @@ jobs:
         working-directory: code/platform
         run: mvn --batch-mode verify
 
+      - name: Validate SRS Traceability
+        run: node code/tools/coverage-report/check-traceability.mjs --report artifacts/design/srs/implementation-status.md
+
+      - name: Upload Implementation Status
+        uses: actions/upload-artifact@v4
+        with:
+          name: w6w-implementation-status
+          path: artifacts/design/srs/implementation-status.md
+
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4

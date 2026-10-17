@@ -28,6 +28,7 @@ This document maps the parent folder structure supplied with the project to the 
 | `code/platform/modules/w6w-test/` | Local scenario runner | Implemented for local demo scenarios. |
 | `code/schema/cwm/v1/` | Shared JSON Schemas | Workflow, form and rubric schemas are present; runtime form validation and governance use the matching contracts. |
 | `code/workflows/domains/customer-service/refund-processing/` | Example workflow package | CWM, data schema, form, scenarios and migration report. |
+| `code/workflows/domains/people/leave-request/` | Walking-skeleton POC workflow | Git-versioned intake and manager approval flow with forms, data schema and scenario evidence. |
 | `code/workflows/shared/` | Shared workflow assets | Reserved; populate when reused assets exist. |
 | `code/src/` | Thin host-app/demo entry points only | No duplicate production classes. |
 | `code/tests/acceptance/` | Playwright browser acceptance tests for the local UI | Start-form cancellation and an approval case through task routing to final timeline resolution. |

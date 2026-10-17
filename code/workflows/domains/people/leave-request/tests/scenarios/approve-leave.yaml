@@ -1,0 +1,33 @@
+name: "Leave Request Approval"
+workflowKey: "leave-request"
+initialData:
+  employeeName: "Avery Chen"
+  employeeEmail: "avery.chen@example.test"
+  startDate: "2026-11-02"
+  endDate: "2026-11-06"
+  leaveType: "Annual leave"
+  reason: "Family travel"
+steps:
+  - action: startWorkflow
+    expectedStage: "submit"
+  - action: completeTask
+    stepId: "enter-details"
+    user: "employee.avery"
+    formData:
+      employeeName: "Avery Chen"
+      employeeEmail: "avery.chen@example.test"
+      startDate: "2026-11-02"
+      endDate: "2026-11-06"
+      leaveType: "Annual leave"
+      reason: "Family travel"
+    expectedNextStage: "approve"
+  - action: completeApproval
+    stepId: "manager-approval"
+    user: "manager.jones"
+    outcome: "approve"
+assertions:
+  finalResolution: "Approved"
+  completedStages:
+    - "submit"
+    - "approve"
+    - "approved"

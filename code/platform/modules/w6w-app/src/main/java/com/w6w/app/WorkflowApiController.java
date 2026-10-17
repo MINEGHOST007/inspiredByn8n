@@ -54,10 +54,14 @@ public class WorkflowApiController {
     public ResponseEntity<WorkflowInstance> start(@RequestBody StartRequest request) {
         WorkflowCatalog.CatalogEntry workflow = catalog.require(request.workflowKey());
         Map<String, Object> variables = request.variables() == null ? Map.of() : request.variables();
-        catalog.validateForm(catalog.startForm(workflow), variables);
-        catalog.validateWorkflowData(workflow, variables);
         String businessKey = request.businessKey() == null || request.businessKey().isBlank()
                 ? "W6W-" + UUID.randomUUID() : request.businessKey().trim();
+        if (request.businessKey() != null && !request.businessKey().isBlank()) {
+            WorkflowInstance existing = existingInstance(workflow.definition().getMetadata().getKey(), businessKey);
+            if (existing != null) return ResponseEntity.status(HttpStatus.CREATED).body(existing);
+        }
+        catalog.validateForm(catalog.startForm(workflow), variables);
+        catalog.validateWorkflowData(workflow, variables);
         if (WorkflowMdcContext.currentTraceId() != null) {
             variables = new LinkedHashMap<>(variables);
             variables.put(WorkflowMdcContext.TRACE_VARIABLE, WorkflowMdcContext.currentTraceId());
@@ -65,6 +69,17 @@ public class WorkflowApiController {
         WorkflowInstance instance = engine.startInstance(workflow.definition().getMetadata().getKey(), businessKey,
                 variables);
         return ResponseEntity.status(HttpStatus.CREATED).body(instance);
+    }
+
+    private WorkflowInstance existingInstance(String workflowKey, String businessKey) {
+        ProcessInstance active = processEngine.getRuntimeService().createProcessInstanceQuery()
+                .processDefinitionKey(workflowKey).processInstanceBusinessKey(businessKey)
+                .includeProcessVariables().singleResult();
+        if (active != null) return engine.getInstance(active.getId());
+        HistoricProcessInstance completed = processEngine.getHistoryService().createHistoricProcessInstanceQuery()
+                .processDefinitionKey(workflowKey).processInstanceBusinessKey(businessKey)
+                .includeProcessVariables().finished().singleResult();
+        return completed == null ? null : engine.getInstance(completed.getId());
     }
 
     @PostMapping("/events/{eventName}")

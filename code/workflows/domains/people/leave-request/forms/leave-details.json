@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Leave Request",
+  "type": "object",
+  "required": ["employeeName", "employeeEmail", "startDate", "endDate", "leaveType", "reason"],
+  "properties": {
+    "employeeName": { "type": "string", "title": "Employee name" },
+    "employeeEmail": { "type": "string", "format": "email", "title": "Employee email" },
+    "startDate": { "type": "string", "title": "First day" },
+    "endDate": { "type": "string", "title": "Last day" },
+    "leaveType": { "type": "string", "enum": ["Annual leave", "Sick leave", "Personal leave"], "title": "Leave type" },
+    "reason": { "type": "string", "title": "Reason", "ui:widget": "textarea" }
+  },
+  "ui": {
+    "layout": [["employeeName", "employeeEmail"], ["startDate", "endDate"], ["leaveType"], ["reason"]],
+    "helpText": { "reason": "Add enough context for your manager to make a decision." }
+  }
+}
