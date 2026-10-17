@@ -1430,3 +1430,188 @@ Request
 Response
 
 {"verdict":"allow","rev":33,"data":{"rev":33,"xml":"<doc node='b91a6b01-7691' rev='33' hits='3'><gap blocks='2'/><paragraph id='mybve51yyh2.29236' rev='33' h='bc0cdee0'><text id='.29237'>Part I (sections 1 to 14) is the requirements specification. Part II (sections P1 to P14) is the research, implementation and verification plan, including the repository layout. W6W is the working name: workflow with its first and last letters kept and the six letters between them counted, the same convention n8n uses for nodemation. Earlier drafts called it <hit n='1' start='mybve51yyh2.29598' end='mybve51yyh2.29601'>T1WU</hit>.</text></paragraph><gap blocks='80'/><list id='.23579' h='022422c2' kind='ordered'><gap blocks='4'/><listItem id='.23883' rev='1' h='5afb51f5'><paragraph id='.23884' h='12f18aee'><text id='.23885'>One database schema owned by the engine; <hit n='2' start='mybve51yyh2.23926' end='mybve51yyh2.23929'>T1WU</hit> tables prefixed and migrated with a standard tool (Flyway or Liquibase).</text></paragraph></listItem></list><gap blocks='13'/><list id='.27638' h='500ea0f3' kind='ordered'><gap blocks='1'/><listItem id='.27757' h='4783211a'><paragraph id='.27758' h='9d02cf0e'><text id='.27759'>Which identity provider and role model will <hit n='3' start='mybve51yyh2.27803' end='mybve51yyh2.27806'>T1WU</hit> use?</text></paragraph></listItem><gap blocks='6'/></list><gap blocks='2'/></doc>","complete":true,"hits":3},"frame":{"slug":"43f32a19-e7f2-4c58-9edf-5e90092e43d2","url":"https://claude.ai/code/artifact/43f32a19-e7f2-4c58-9edf-5e90092e43d2","artifactUrl":"https://claude.ai/code/artifact/43f32a19-e7f2-4c58-9edf-5e90092e43d2"}}
+
+Understood. The folder structure in your screenshot will remain the parent structure, and I’ll fit the W6W modules, Java source code, workflow definitions, and testing layout underneath it according to the SRS. I won’t replace your existing `artifacts/`, `code/`, `prompts/`, `README.md`, or `RULES.md`.
+
+## Updated folder structure
+
+```
+main/
+│
+├── artifacts/
+│   ├── demo_presentation/
+│   │   └── demo_video.mp4
+│   │
+│   ├── design/
+│   │   ├── design.MD
+│   │   ├── srs/
+│   │   │   └── requirements-specification.md
+│   │   ├── architecture/
+│   │   │   └── system-architecture.md
+│   │   └── adr/
+│   │       └── 0001-workflow-engine.md
+│   │
+│   ├── playbook/
+│   │   ├── runbook.MD
+│   │   └── implementation-plan.md
+│   │
+│   ├── test_results/
+│   │   └── results.xml
+│   │
+│   └── user_stories/
+│       └── user_story_1.md
+│
+├── code/
+│   │
+│   ├── platform/
+│   │   ├── pom.xml
+│   │   │
+│   │   ├── modules/
+│   │   │   ├── w6w-model/
+│   │   │   │   └── src/
+│   │   │   │       ├── main/java/
+│   │   │   │       └── test/java/
+│   │   │   │
+│   │   │   ├── w6w-compiler/
+│   │   │   │   └── src/
+│   │   │   │       ├── main/java/
+│   │   │   │       └── test/java/
+│   │   │   │
+│   │   │   ├── w6w-engine-port/
+│   │   │   │   └── src/
+│   │   │   │       ├── main/java/
+│   │   │   │       └── test/java/
+│   │   │   │
+│   │   │   ├── w6w-engine-flowable/
+│   │   │   │   └── src/
+│   │   │   │       ├── main/java/
+│   │   │   │       └── test/java/
+│   │   │   │
+│   │   │   ├── w6w-runtime-starter/
+│   │   │   │   └── src/
+│   │   │   │       ├── main/java/
+│   │   │   │       └── test/java/
+│   │   │   │
+│   │   │   ├── w6w-api/
+│   │   │   ├── w6w-governance/
+│   │   │   ├── w6w-migrate/
+│   │   │   ├── w6w-cli/
+│   │   │   └── w6w-test/
+│   │   │
+│   │   ├── packages/
+│   │   │   └── ui-kit/
+│   │   │       ├── src/
+│   │   │       └── tests/
+│   │   │
+│   │   ├── examples/
+│   │   │   └── host-app/
+│   │   │       ├── src/main/java/
+│   │   │       ├── src/test/java/
+│   │   │       └── pom.xml
+│   │   │
+│   │   ├── fixtures/
+│   │   │   └── migration/
+│   │   │       └── blueprint/
+│   │   │           └── sample-01/
+│   │   │               ├── input.blueprint
+│   │   │               ├── input.pdf
+│   │   │               └── expected/
+│   │   │                   ├── model.json
+│   │   │                   ├── workflow.cwm.yaml
+│   │   │                   └── migration-report.md
+│   │   │
+│   │   ├── perf/
+│   │   │   ├── load/
+│   │   │   └── soak/
+│   │   │
+│   │   └── ops/
+│   │       ├── docker-compose.yml
+│   │       ├── helm/
+│   │       ├── dashboards/
+│   │       └── database/
+│   │
+│   ├── workflows/
+│   │   ├── .w6w/
+│   │   │   └── config.yaml
+│   │   │
+│   │   ├── domains/
+│   │   │   └── hr/
+│   │   │       └── leave-request/
+│   │   │           ├── workflow.cwm.yaml
+│   │   │           ├── schemas/
+│   │   │           │   └── data.schema.json
+│   │   │           ├── forms/
+│   │   │           ├── decisions/
+│   │   │           ├── tests/
+│   │   │           │   └── scenarios/
+│   │   │           ├── migration-report.md
+│   │   │           └── README.md
+│   │   │
+│   │   ├── shared/
+│   │   ├── templates/
+│   │   ├── environments/
+│   │   └── build/
+│   │
+│   ├── schema/
+│   │   └── cwm/
+│   │       └── v1/
+│   │           ├── workflow.schema.json
+│   │           ├── form.schema.json
+│   │           └── rubric.schema.json
+│   │
+│   ├── integration-tests/
+│   │   └── src/test/java/
+│   │
+│   ├── src/
+│   │   └── main/java/
+│   │       └── com/w6w/demo/
+│   │
+│   ├── tests/
+│   │   └── acceptance/
+│   │
+│   └── tools/
+│       ├── license-scan/
+│       ├── sbom/
+│       └── coverage-report/
+│
+├── prompts/
+│   └── promptsample.txt
+│
+├── .github/
+│   └── workflows/
+│       ├── platform-ci.yml
+│       ├── workflows-ci.yml
+│       ├── cross-check.yml
+│       └── release.yml
+│
+├── .gitignore
+├── CODEOWNERS
+├── README.md
+└── RULES.md
+```
+
+The module names and `platform/`, `workflows/`, `schema/`, and `tools/` directories follow the repository format described in the SRS and its implementation plan.&#x20;
+
+Pasted text(20261017-070445).txt
+
+
+
+## How to use the existing folders
+
+| Existing location         | Purpose after the update                                                                               |
+| ------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `artifacts/design/`       | Design documentation, SRS, architecture and architecture decision records                              |
+| `artifacts/playbook/`     | Runbooks and implementation plan                                                                       |
+| `artifacts/test_results/` | Generated test result reports                                                                          |
+| `artifacts/user_stories/` | User stories and acceptance context                                                                    |
+| `code/platform/`          | Actual W6W product and its Maven modules                                                               |
+| `code/workflows/`         | Git-versioned Canonical Workflow Model definitions                                                     |
+| `code/integration-tests/` | Tests across runtime, database, API and timers                                                         |
+| `code/src/`               | Existing demo or host-application entry point; migrate production classes to their appropriate modules |
+| `code/tests/`             | Cross-module acceptance and smoke tests                                                                |
+| `code/schema/`            | Shared CWM, form and eligibility schemas                                                               |
+| `prompts/`                | Prompt samples and supporting prompt files                                                             |
+
+Important implementation detail: the individual Maven modules own their production source and unit tests. The existing `code/src/` and `code/tests/` directories are retained as part of your parent structure, but shouldn't become duplicate locations for the same production classes. The `code/platform/pom.xml` should manage the platform modules.
+
+The `.github/` directory is an additional repository-level folder for the SRS CI/CD pipelines; it doesn't replace any of the existing screenshot folders. Test result files and generated workflow builds should normally be excluded from Git or retained only as explicitly required release artifacts.
