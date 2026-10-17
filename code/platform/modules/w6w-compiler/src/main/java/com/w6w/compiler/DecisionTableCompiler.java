@@ -18,13 +18,19 @@ public class DecisionTableCompiler {
     }
 
     public String compile(DecisionTableDefinition table) {
+        return compile(table, table.getKey());
+    }
+
+    public String compile(DecisionTableDefinition table, String decisionId) {
         table.validate();
+        if (decisionId == null || !decisionId.matches("[A-Za-z_][A-Za-z0-9_-]*"))
+            throw new IllegalArgumentException("DMN decision ID must be an XML-safe identifier");
         StringBuilder xml = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
                 .append("<definitions xmlns=\"http://www.omg.org/spec/DMN/20151101\" ")
-                .append("id=\"definitions_").append(escape(table.getKey())).append("\" name=\"W6W Decisions\" ")
+                .append("id=\"definitions_").append(escape(decisionId)).append("\" name=\"W6W Decisions\" ")
                 .append("namespace=\"http://www.flowable.org/dmn\">\n")
-                .append("  <decision id=\"").append(escape(table.getKey())).append("\" name=\"").append(escape(table.getName())).append("\">\n")
-                .append("    <decisionTable id=\"table_").append(escape(table.getKey())).append("\" hitPolicy=\"")
+                .append("  <decision id=\"").append(escape(decisionId)).append("\" name=\"").append(escape(table.getName())).append("\">\n")
+                .append("    <decisionTable id=\"table_").append(escape(decisionId)).append("\" hitPolicy=\"")
                 .append(table.getHitPolicy().toUpperCase()).append("\">\n");
         for (DecisionTableDefinition.Input input : table.getInputs()) {
             xml.append("      <input id=\"").append(escape(input.getId())).append("\" label=\"").append(escape(input.getLabel() == null ? input.getExpression() : input.getLabel())).append("\">\n")

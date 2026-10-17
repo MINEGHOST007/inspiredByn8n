@@ -6,6 +6,7 @@
   <meta name="color-scheme" content="light">
   <title>W6W Workflow Workspace</title>
   <link rel="stylesheet" href="/app.css">
+  <link rel="icon" href="data:,">
 </head>
 <body>
   <div class="app-shell">
@@ -92,7 +93,7 @@
     </main>
   </div>
 
-  <dialog id="start-dialog" class="modal"><form method="dialog" id="start-form"><div class="modal-head"><div><p class="eyebrow">NEW CASE</p><h2>Start a workflow</h2></div><button class="icon-button" value="cancel" aria-label="Close">×</button></div><label class="field-label" for="workflow-select">Choose a workflow</label><select class="select-control full" id="workflow-select" required></select><div id="start-fields" class="form-fields"></div><div class="modal-actions"><button class="button secondary" value="cancel">Cancel</button><button class="button primary" id="start-submit" value="default">Start workflow</button></div></form></dialog>
+  <dialog id="start-dialog" class="modal"><form id="start-form"><div class="modal-head"><div><p class="eyebrow">NEW CASE</p><h2>Start a workflow</h2></div><button type="button" class="icon-button" data-close="start-dialog" aria-label="Close">×</button></div><label class="field-label" for="workflow-select">Choose a workflow</label><select class="select-control full" id="workflow-select" required></select><div id="start-fields" class="form-fields"></div><div class="modal-actions"><button type="button" class="button secondary" data-close="start-dialog">Cancel</button><button type="submit" class="button primary" id="start-submit">Start workflow</button></div></form></dialog>
 
   <dialog id="task-dialog" class="modal"><form id="task-form"><div class="modal-head"><div><p class="eyebrow">WORK ITEM</p><h2 id="task-title">Complete task</h2><p id="task-caption" class="subheading"></p></div><button type="button" class="icon-button" data-close="task-dialog" aria-label="Close">×</button></div><div id="task-fields" class="form-fields"></div><div id="task-outcomes" class="outcome-row"></div><div class="modal-actions"><button type="button" class="button secondary" data-close="task-dialog">Save for later</button><button type="submit" class="button primary">Complete task</button></div></form></dialog>
 

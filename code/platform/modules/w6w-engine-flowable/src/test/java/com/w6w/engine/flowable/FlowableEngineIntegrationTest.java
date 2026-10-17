@@ -1,7 +1,9 @@
 package com.w6w.engine.flowable;
 
 import com.w6w.compiler.CwmToBpmnCompiler;
+import com.w6w.compiler.DecisionTableCompiler;
 import com.w6w.model.CwmParser;
+import com.w6w.model.DecisionTableDefinition;
 import com.w6w.model.WorkflowDefinition;
 import com.w6w.port.TaskInstance;
 import com.w6w.port.WorkflowInstance;
@@ -9,11 +11,15 @@ import com.w6w.port.action.ActionResult;
 import com.w6w.runtime.ActionRegistry;
 import org.flowable.engine.ProcessEngine;
 import org.flowable.engine.impl.cfg.StandaloneInMemProcessEngineConfiguration;
+import org.flowable.dmn.engine.DmnEngine;
+import org.flowable.dmn.engine.DmnEngineConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FlowableEngineIntegrationTest {
 
     private ProcessEngine processEngine;
+    private DmnEngine dmnEngine;
     private FlowableWorkflowEngineAdapter adapter;
     private ActionRegistry actionRegistry;
 
@@ -48,7 +55,6 @@ class FlowableEngineIntegrationTest {
         actionRegistry.register("refund.generateReceipt", ctx -> ActionResult.success());
 
         FlowableActionExecutor actionExecutor = new FlowableActionExecutor(actionRegistry);
-
         StandaloneInMemProcessEngineConfiguration config = new StandaloneInMemProcessEngineConfiguration();
         config.setJdbcUrl("jdbc:h2:mem:flowable_int_test;DB_CLOSE_DELAY=-1");
         config.setDatabaseSchemaUpdate(StandaloneInMemProcessEngineConfiguration.DB_SCHEMA_UPDATE_TRUE);
@@ -58,8 +64,16 @@ class FlowableEngineIntegrationTest {
         beans.put("w6wDirectoryService", new com.w6w.runtime.DirectoryLookupService());
         beans.put("w6wSlaService", new com.w6w.runtime.SlaDeadlineService());
         config.setBeans(beans);
+        DmnEngineConfiguration dmnConfiguration = DmnEngineConfiguration.createStandaloneDmnEngineConfiguration();
+        dmnConfiguration.setJdbcUrl("jdbc:h2:mem:flowable_int_test;DB_CLOSE_DELAY=-1");
+        dmnConfiguration.setDatabaseSchemaUpdate(DmnEngineConfiguration.DB_SCHEMA_UPDATE_TRUE);
+        W6wDmnEngineConfigurator dmnConfigurator = (W6wDmnEngineConfigurator) new W6wDmnEngineConfigurator()
+                .setDmnEngineConfiguration(dmnConfiguration);
+        config.addConfigurator(dmnConfigurator);
 
         processEngine = config.buildProcessEngine();
+        dmnEngine = dmnConfigurator.getConfiguredDmnEngine();
+        beans.put("w6wDecisionExecutor", new FlowableDecisionExecutor(dmnEngine));
 
         adapter = new FlowableWorkflowEngineAdapter(
             processEngine.getRepositoryService(),
@@ -74,6 +88,88 @@ class FlowableEngineIntegrationTest {
         if (processEngine != null) {
             processEngine.close();
         }
+        if (dmnEngine != null) dmnEngine.close();
+    }
+
+    @Test
+    void decisionStepExecutesVersionPinnedDmnAndRoutesByOutcome() throws Exception {
+        Path packageRoot = Files.createTempDirectory("w6w-decision-flow-");
+        Path decisions = Files.createDirectories(packageRoot.resolve("decisions"));
+        Path tableFile = decisions.resolve("route.yaml");
+        Files.writeString(tableFile, """
+                apiVersion: w6w/decision/v1
+                key: route
+                name: Route request
+                hitPolicy: FIRST
+                inputs:
+                  - id: amount-input
+                    typeRef: number
+                    expression: amount
+                outputs:
+                  - id: outcome-output
+                    name: outcome
+                    typeRef: string
+                rules:
+                  - id: approve-small
+                    inputEntries: [\"<= 500\"]
+                    outputEntries: ['\"approve\"']
+                  - id: reject-large
+                    inputEntries: [\"> 500\"]
+                    outputEntries: ['\"reject\"']
+                """);
+        DecisionTableCompiler tableCompiler = new DecisionTableCompiler();
+        var table = tableCompiler.parse(tableFile);
+        String versionedKey = CwmToBpmnCompiler.versionedDecisionKey("decisions/route.yaml", "1.0.0");
+        dmnEngine.getDmnRepositoryService().createDeployment().name(versionedKey)
+                .addString(versionedKey + ".dmn", tableCompiler.compile(table, versionedKey)).deploy();
+
+        Path workflowFile = packageRoot.resolve("workflow.cwm.yaml");
+        Files.writeString(workflowFile, """
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: decision-routing-test
+                  name: Decision routing test
+                  version: 1.0.0
+                  tier: 1
+                  owner: test-team
+                  dataClassification: internal
+                roles: []
+                stages:
+                  - id: route
+                    steps:
+                      - id: evaluate-request
+                        name: Evaluate request
+                        type: decision
+                        decision: decisions/route.yaml
+                        outcomes:
+                          approve: stage:approved
+                          reject: stage:rejected
+                  - id: approved
+                    resolution: Approved
+                    steps:
+                      - id: finish-approved
+                        type: end
+                  - id: rejected
+                    alternate: true
+                    resolution: Rejected
+                    steps:
+                      - id: finish-rejected
+                        type: end
+                """);
+        WorkflowDefinition workflow = CwmParser.parse(workflowFile.toFile());
+        String bpmn = new CwmToBpmnCompiler().compile(workflow);
+        assertThat(bpmn).contains("w6wDecisionExecutor", "route_v1_0_0", "allowedOutcomes");
+        adapter.deploy("decision-routing-test", "Decision routing test", bpmn);
+
+        WorkflowInstance approved = adapter.startInstance("decision-routing-test", "DECISION-APPROVE", Map.of("amount", 250));
+        WorkflowInstance rejected = adapter.startInstance("decision-routing-test", "DECISION-REJECT", Map.of("amount", 900));
+        assertThat(adapter.getInstance(approved.getId()).getStatus()).isEqualTo("COMPLETED");
+        assertThat(adapter.getInstance(approved.getId()).getVariables()).containsEntry("outcome", "approve");
+        assertThat(adapter.getInstance(approved.getId()).getResolution()).isEqualTo("Approved");
+        assertThat(adapter.getInstance(rejected.getId()).getStatus()).isEqualTo("COMPLETED");
+        assertThat(adapter.getInstance(rejected.getId()).getVariables()).containsEntry("outcome", "reject");
+        assertThat(adapter.getInstance(rejected.getId()).getResolution()).isEqualTo("Rejected");
     }
 
     @Test

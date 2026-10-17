@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.w6w.compiler.CwmLinter;
 import com.w6w.compiler.CwmToBpmnCompiler;
+import com.w6w.compiler.DecisionTableCompiler;
+import com.w6w.model.DecisionTableDefinition;
 import com.w6w.model.CwmParser;
 import com.w6w.model.StageDefinition;
 import com.w6w.model.StepDefinition;
@@ -14,6 +16,8 @@ import com.w6w.runtime.ActionRegistry;
 import com.w6w.runtime.StartupActionValidator;
 import org.flowable.engine.RepositoryService;
 import org.flowable.engine.repository.ProcessDefinition;
+import org.flowable.dmn.api.DmnDecision;
+import org.flowable.dmn.engine.DmnEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,18 +41,20 @@ public class WorkflowCatalog implements ApplicationRunner {
     private final RepositoryService repository;
     private final ActionRegistry actions;
     private final ObjectMapper json;
+    private final DmnEngine dmnEngine;
     private final Map<String, CatalogEntry> entries = new ConcurrentHashMap<>();
 
     public WorkflowCatalog(@Value("${w6w.workflows-dir}") String workflowsDir,
                            @Value("${w6w.runtime-mode:local-demo}") String runtimeMode,
                            WorkflowEnginePort engine, RepositoryService repository,
-                           ActionRegistry actions, ObjectMapper json) {
+                           ActionRegistry actions, ObjectMapper json, DmnEngine dmnEngine) {
         this.workflowsRoot = Path.of(workflowsDir).toAbsolutePath().normalize();
         this.runtimeMode = runtimeMode;
         this.engine = engine;
         this.repository = repository;
         this.actions = actions;
         this.json = json;
+        this.dmnEngine = dmnEngine;
     }
 
     @Override
@@ -107,6 +113,7 @@ public class WorkflowCatalog implements ApplicationRunner {
         if (lint.hasErrors()) throw new IllegalArgumentException("Workflow " + definition.getMetadata().getKey() + " has lint errors: " + lint.getIssues());
         new StartupActionValidator(actions).validateWorkflowActions(definition);
         String bpm = new CwmToBpmnCompiler().compile(definition);
+        deployDecisionTables(file, definition);
         List<ProcessDefinition> existing = repository.createProcessDefinitionQuery()
                 .processDefinitionKey(definition.getMetadata().getKey()).orderByProcessDefinitionVersion().desc().list();
         if (existing.isEmpty()) {
@@ -121,6 +128,50 @@ public class WorkflowCatalog implements ApplicationRunner {
         if (replaceExisting) entries.put(definition.getMetadata().getKey(), entry);
         else if (entries.putIfAbsent(definition.getMetadata().getKey(), entry) != null)
             throw new IllegalArgumentException("Duplicate workflow key: " + definition.getMetadata().getKey());
+    }
+
+    private void deployDecisionTables(Path workflowFile, WorkflowDefinition definition) throws Exception {
+        DecisionTableCompiler compiler = new DecisionTableCompiler();
+        Path packageRoot = workflowFile.getParent().toAbsolutePath().normalize();
+        Map<String, StepDefinition> references = new LinkedHashMap<>();
+        for (StageDefinition stage : definition.getStages()) for (StepDefinition step : stage.getSteps()) {
+            if ("decision".equals(step.getType())) references.putIfAbsent(step.getDecision(), step);
+        }
+        for (var reference : references.entrySet()) {
+            Path source = packageRoot.resolve(reference.getKey()).normalize();
+            if (!source.startsWith(packageRoot) || !Files.isRegularFile(source))
+                throw new IllegalArgumentException("Decision table file is missing or escapes workflow package: " + reference.getKey());
+            DecisionTableDefinition table = compiler.parse(source);
+            String baseKey = source.getFileName().toString().replaceFirst("(?i)\\.(yaml|yml)$", "");
+            if (!baseKey.equals(table.getKey())) throw new IllegalArgumentException("Decision file name must match decision table key '" + table.getKey() + "'");
+            int outcomeColumn = -1;
+            for (int i = 0; i < table.getOutputs().size(); i++) {
+                if ("outcome".equals(table.getOutputs().get(i).getName())) outcomeColumn = i;
+            }
+            if (outcomeColumn < 0 || !"string".equalsIgnoreCase(table.getOutputs().get(outcomeColumn).getTypeRef()))
+                throw new IllegalArgumentException("Decision table '" + table.getKey() + "' needs a string output named 'outcome'");
+            for (DecisionTableDefinition.Rule rule : table.getRules()) {
+                String result = rule.getOutputEntries().get(outcomeColumn).trim();
+                if (result.length() < 2 || result.charAt(0) != '\"' || result.charAt(result.length() - 1) != '\"')
+                    throw new IllegalArgumentException("Decision table '" + table.getKey() + "' outcome values must be quoted string literals");
+                String label = result.substring(1, result.length() - 1);
+                if (!reference.getValue().getOutcomes().containsKey(label))
+                    throw new IllegalArgumentException("Decision table '" + table.getKey() + "' returns undeclared workflow outcome '" + label + "'");
+            }
+            String versionedKey = CwmToBpmnCompiler.versionedDecisionKey(reference.getKey(), definition.getMetadata().getVersion());
+            String dmn = compiler.compile(table, versionedKey);
+            DmnDecision deployed = dmnEngine.getDmnRepositoryService().createDecisionQuery()
+                    .decisionKey(versionedKey).latestVersion().singleResult();
+            if (deployed != null) {
+                try (var input = dmnEngine.getDmnRepositoryService().getResourceAsStream(deployed.getDeploymentId(), deployed.getResourceName())) {
+                    String existing = input == null ? "" : new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                    if (!dmn.equals(existing)) throw new IllegalStateException("Decision '" + versionedKey + "' changed without a workflow semantic version bump");
+                }
+            } else {
+                dmnEngine.getDmnRepositoryService().createDeployment().name(versionedKey)
+                        .addString(versionedKey + ".dmn", dmn).deploy();
+            }
+        }
     }
 
     private boolean deploymentMatches(ProcessDefinition processDefinition, String source) {

@@ -114,6 +114,10 @@ public class CwmLinter {
                 if ("decision".equals(step.getType()) && (step.getDecision() == null || step.getDecision().isBlank())) {
                     result.addError("Decision step '" + step.getId() + "' must reference a decision table file");
                 }
+                if ("decision".equals(step.getType()) && step.getOutcomes() != null
+                        && step.getOutcomes().keySet().stream().anyMatch(outcome -> outcome.contains(","))) {
+                    result.addError("Decision step '" + step.getId() + "' outcome labels cannot contain commas");
+                }
             }
         }
 

@@ -131,6 +131,17 @@ public class CwmToBpmnCompiler {
                .append("      </extensionElements>\n")
                .append("    </serviceTask>\n");
 
+        } else if ("decision".equals(step.getType())) {
+            String decisionKey = versionedDecisionKey(step.getDecision(), workflow.getMetadata().getVersion());
+            xml.append("    <serviceTask id=\"").append(stepRef).append("\" name=\"").append(escape(name)).append("\"")
+                    .append(" flowable:delegateExpression=\"${w6wDecisionExecutor}\">\n")
+                    .append("      <extensionElements>\n")
+                    .append("        <flowable:field name=\"decisionKey\" stringValue=\"").append(escape(decisionKey)).append("\" />\n")
+                    .append("        <flowable:field name=\"stepId\" stringValue=\"").append(escape(step.getId())).append("\" />\n")
+                    .append("        <flowable:field name=\"allowedOutcomes\" stringValue=\"").append(escape(String.join(",", step.getOutcomes().keySet()))).append("\" />\n")
+                    .append("      </extensionElements>\n")
+                    .append("    </serviceTask>\n");
+
         } else if ("end".equals(step.getType())) {
             String resolution = stage.getResolution();
             String endName = resolution == null || resolution.isBlank() ? name : "Resolution: " + resolution;
@@ -183,6 +194,15 @@ public class CwmToBpmnCompiler {
 
     private String sanitize(String id) {
         return id != null ? id.replace("-", "_").replace(".", "_") : "node";
+    }
+
+    public static String versionedDecisionKey(String decisionPath, String workflowVersion) {
+        if (decisionPath == null || decisionPath.isBlank()) throw new IllegalArgumentException("Decision step has no decision file reference");
+        String fileName = decisionPath.replace('\\', '/').substring(decisionPath.replace('\\', '/').lastIndexOf('/') + 1);
+        String key = fileName.replaceFirst("(?i)\\.(yaml|yml)$", "");
+        if (!key.matches("[a-z0-9]+(-[a-z0-9]+)*")) throw new IllegalArgumentException("Decision filename must use its kebab-case table key");
+        if (workflowVersion == null || !workflowVersion.matches("\\d+\\.\\d+\\.\\d+")) throw new IllegalArgumentException("Decision workflow version must be semantic versioning");
+        return key + "_v" + workflowVersion.replace('.', '_');
     }
 
     private String escape(String str) {
