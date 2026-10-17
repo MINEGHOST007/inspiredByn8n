@@ -37,6 +37,7 @@ async function init(){
 }
 function bindUiEvents(){
   $$('.nav-item').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page))); $$('[data-go]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.go)));
+  $('#help-open').onclick=()=>$('#help-dialog').showModal(); $('#help-dialog').addEventListener('click',e=>{if(e.target===$('#help-dialog'))$('#help-dialog').close()});
   $('#new-request').onclick=$('#new-request-2').onclick=()=>openStart(); $('#workflow-select').addEventListener('change',startFormChanged); $('#start-form').addEventListener('submit',startWorkflow);
   $('#start-dialog').addEventListener('click',e=>{if(e.target===$('#start-dialog'))$('#start-dialog').close()});
   $('#task-form').addEventListener('submit',completeTask); $$('[data-close]').forEach(b=>b.addEventListener('click',()=>$('#'+b.dataset.close).close()));

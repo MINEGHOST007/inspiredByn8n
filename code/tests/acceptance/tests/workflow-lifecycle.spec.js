@@ -3,6 +3,13 @@ import { test, expect } from '@playwright/test';
 test('users can cancel a blank start form and complete an approval workflow', async ({ page }) => {
   await page.goto('/');
 
+  await page.getByRole('button', { name: 'Help' }).click();
+  const helpDialog = page.getByRole('dialog');
+  await expect(helpDialog).toContainText('Start a request');
+  await expect(helpDialog).toContainText('Create and maintain a workflow');
+  await expect(helpDialog).toContainText('deploy-local my-request');
+  await helpDialog.getByRole('button', { name: 'Close help' }).click();
+
   await page.getByRole('button', { name: '＋ Start a workflow' }).click();
   const startDialog = page.getByRole('dialog');
   await expect(startDialog).toBeVisible();
