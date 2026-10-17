@@ -1615,3 +1615,254 @@ Pasted text(20261017-070445).txt
 Important implementation detail: the individual Maven modules own their production source and unit tests. The existing `code/src/` and `code/tests/` directories are retained as part of your parent structure, but shouldn't become duplicate locations for the same production classes. The `code/platform/pom.xml` should manage the platform modules.
 
 The `.github/` directory is an additional repository-level folder for the SRS CI/CD pipelines; it doesn't replace any of the existing screenshot folders. Test result files and generated workflow builds should normally be excluded from Git or retained only as explicitly required release artifacts.
+
+# W6W Implementation Plan: Gap Fill (Addendum v0.1)
+
+Companion to the SRS and the Research, Implementation and Verification Plan. Date: 17 October 2026.
+Each section below names a gap in the current plan, then supplies the missing content. Section numbers (G1 to G16) are local to this addendum.
+
+---
+
+## G1. Cleanups needed in the existing documents
+
+| # | Issue | Fix |
+|---|---|---|
+| 1 | Rename incomplete: the plan still says T1WU in R5, section 8.2 step 3 and section 9.2 step 8; the SRS has leftovers in section 9.2 item 5 and open question 2 | Run a global replace T1WU -> W6W, then search to confirm zero hits |
+| 2 | Repository layout in the plan (`w6w/platform`, `w6w/workflows`) does not match your actual folder structure (`code/platform`, `code/workflows`, plus `artifacts/`, `prompts/`) | Adopt the mapping in G2 and update CI path filters and CODEOWNERS |
+| 3 | `code/src/` and `code/tests/` exist beside the Maven modules, with no defined role | Define them as in G2 (host demo app and cross-module acceptance tests only) |
+| 4 | Plan says "Java 17 or later" but Flowable 8 sits on Spring Boot 4 | Pin the baseline at G0 (see G11) |
+| 5 | Weeks are relative; no calendar dates | Use the calendar in G3 |
+| 6 | MVP acceptance criterion "2 working days" has no definition of what is included | Use the definition in G12 |
+
+## G2. Repository mapping to your folder structure
+
+| Plan path | Actual path in your repo |
+|---|---|
+| `platform/` | `code/platform/` |
+| `workflows/` | `code/workflows/` |
+| `schema/` | `code/schema/` |
+| `tools/` | `code/tools/` |
+| `docs/srs`, `docs/adr`, `docs/architecture` | `artifacts/design/srs`, `artifacts/design/adr`, `artifacts/design/architecture` |
+| `docs/runbooks`, implementation plan | `artifacts/playbook/` |
+| `docs/rubric/` | `artifacts/design/rubric/` (versioned; also copied into `code/schema/cwm/v1/rubric.schema.json` as a machine form) |
+| Test run output | `artifacts/test_results/results.xml` (JUnit XML, produced by CI, not hand-edited) |
+| Demo | `artifacts/demo_presentation/` |
+
+Path filters to change in `.github/workflows/`:
+
+- `workflows-ci.yml` triggers on `code/workflows/**`
+- `platform-ci.yml` triggers on `code/platform/**` and `code/schema/**`
+- `cross-check.yml` compiles every workflow in `code/workflows/` against the platform built from the same commit
+- CODEOWNERS: `/code/platform/ @platform-team`, `/code/schema/ @platform-team`, `/code/workflows/domains/<domain>/ @<domain>-owners`, `/artifacts/design/rubric/ @product-owner @pega-architect`
+
+Rules for the two extra folders:
+
+- `code/src/main/java/com/w6w/demo/`: only the thin demo entry point that boots the host-app example. No production classes; those live in the Maven modules.
+- `code/tests/acceptance/`: black-box scenario tests that call only the public W6W API (they must not import engine types).
+- `code/integration-tests/`: Testcontainers tests (PostgreSQL, timers, restart).
+- `artifacts/test_results/` is produced by CI. Commit only the release-tagged copy; otherwise add to `.gitignore`.
+- `code/workflows/build/` stays git-ignored.
+
+## G3. Calendar dates (start Monday 19 October 2026)
+
+| Phase | Weeks | Dates |
+|---|---|---|
+| R. Mobilize and research | 1 to 2 | 19 Oct to 30 Oct 2026 |
+| Gate G0 | end wk 2 | 30 Oct |
+| 0. Proof of concept | 3 to 4 | 2 Nov to 13 Nov |
+| Gate G1 | end wk 4 | 13 Nov |
+| 1. MVP build (5 sprints) | 5 to 14 | 16 Nov 2026 to 22 Jan 2027 |
+| Gate G2 | end wk 14 | 22 Jan |
+| 2. Pilot | 15 to 18 | 25 Jan to 19 Feb 2027 |
+| Gate G3 | end wk 18 | 19 Feb |
+| 3. Harden and scale | 19 to 26 | 22 Feb to 16 Apr 2027 |
+| Gate G4 | end wk 26 | 16 Apr |
+
+Calendar risks to confirm with the team: Diwali (around 8 Nov 2026), year-end leave in late December, and Republic Day (26 Jan 2027, inside Gate G2 week). Add 1 to 2 weeks of float in Phase 1 if December leave is heavy. Gates are re-dated at G1.
+
+## G4. Gap: the Canonical Workflow Model is only a sample, not a specification
+
+The SRS shows one example but never defines the language. Before sprint 1, write a CWM v1 specification covering:
+
+1. **Step types, with exact fields:** `userTask`, `approval`, `serviceTask`, `decision`, `parallel` (fork/join), `subStage`, `waitEvent`, `timer`, `end`.
+2. **Outcomes and transitions:** named outcomes, default outcome, `next`, `stage:<id>`, `end:<resolution>`. No free-form goto.
+3. **Expression language:** pick one (recommendation: Spring Expression Language or JUEL, because Flowable supports both) and restrict it to a safe subset (no method calls on arbitrary beans, no reflection, whitelisted functions only). Document it in the spec.
+4. **Time values:** ISO-8601 durations; business-calendar form `PT8BH` reserved for P2.
+5. **Error handling:** per step `onError: retry(n, backoff) | route(stage) | fail`; dead-letter rules.
+6. **Data:** JSON Schema draft 2020-12 subset; no remote `$ref`.
+7. **Versioning rules:** `apiVersion` bumps; additive-only inside `v1`; deprecation window of two minor releases (matches NF-14).
+8. **Reserved keys** for migration traceability (`source.element-id`, `source.system`, `source.confidence`).
+9. **Conformance suite:** a set of valid and invalid CWM fixtures that both the linter and the compiler must pass.
+
+Acceptance: spec reviewed by tech lead and Pega architect; every Pega mapping row in SRS section 7 has a CWM construct.
+
+## G5. Gap: Pega-to-CWM mapping covers too few constructs
+
+SRS section 7 lists 14 mappings but says nothing about the many Pega constructs a real Blueprint will contain. Proposed disposition table (to be validated against real exports in R3):
+
+| Pega construct | Disposition | Handling |
+|---|---|---|
+| Case type, stages, steps (collect, approval, automation) | Convert | As SRS section 7 |
+| Alternate stage, resolution stage | Convert | As SRS section 7 |
+| Persona, access role | Convert | CWM `roles` |
+| Data object, fields, simple validation | Convert | JSON Schema |
+| SLA goal/deadline/urgency | Convert (goal and deadline); urgency becomes task priority | Warn on escalation actions outside the whitelist |
+| Simple decision table | Convert | DMN |
+| Child case (one level) | Convert | Call activity |
+| Parallel processes, split-join | Convert if two to four branches and no nested splits | Else reject |
+| Conditions ("when" rules) | Approximate | Translate simple comparisons; flag complex ones |
+| Notifications and correspondence | Approximate | Template stub, text reviewed by a human |
+| Integrations (connectors, data pages) | Stub | Action-registry stub with the endpoint name, never working code |
+| Declarative rules, data pages, activities | Unsupported | Report with reason |
+| Case hierarchy deeper than one level, dynamic or ad hoc cases | Reject whole workflow | Stays in Pega |
+| Decision strategies, predictive or adaptive models, next-best-action | Reject whole workflow | Stays in Pega |
+| Constellation views, portals, channels | Out of scope | UI Kit generic forms replace them |
+| Reports and dashboards | Out of scope | Standard W6W metrics instead |
+| Unknown element type | Report and continue | MG-14 |
+
+Add three outputs per conversion: a **coverage score** (converted / approximated / unsupported counts), a **confidence tag** per element, and a **manual follow-up checklist** ordered by effort.
+
+## G6. Gap: walking skeleton and a worked end-to-end example
+
+The plan has spikes but no single thin vertical slice. Add a **walking skeleton** as the first deliverable of Phase 0 (days 1 to 3):
+
+1. A two-step leave-request CWM (`submit` -> `manager approval` -> `notify`), compiled to BPMN by a minimal compiler.
+2. Started and completed through the REST facade on the Flowable engine behind the Engine Port.
+3. One worklist call and one task completion via the UI Kit form.
+4. Run in CI with `results.xml` published.
+
+Everything after that grows from this slice. Use the `hr/leave-request` workflow (already in your folder structure) as the reference example, and keep its CWM, form, data schema, scenario tests and generated BPMN as the golden documentation example.
+
+## G7. Gap: engine and baseline decisions needed before sprint 1
+
+Decide and record as ADRs under `artifacts/design/adr/`:
+
+| ADR | Decision | Input needed |
+|---|---|---|
+| 0001 | Reference engine (Flowable 8 vs alternate) | Host stack, scorecard R4 |
+| 0002 | Java and Spring Boot baseline (Flowable 8 needs Spring Boot 4; check Java level and that your other dependencies support it, or stay on the 7.x line) | Host stack |
+| 0003 | Embedded library vs sidecar | Host team |
+| 0004 | Expression language | G4 |
+| 0005 | Form renderer approach (framework-agnostic web components vs host framework) | Host UI |
+| 0006 | Audit store (engine history tables vs separate append-only table) | Compliance (R6) |
+| 0007 | Identity and role mapping model | IdP team |
+| 0008 | Cutover pattern (new-cases-only default) | Pega CoE |
+
+Open question to the user: the host stack is still unconfirmed in all prior material. Until it is, treat the Java and Flowable path as an assumption.
+
+## G8. Gap: effort, capacity and budget
+
+The plan gives team shape but no numbers. Proposed planning baseline (re-baseline at G1):
+
+| Phase | Effort (person-weeks, indicative) | Notes |
+|---|---|---|
+| R | 8 to 10 | Mostly product owner, analyst, architect and advisors |
+| 0 | 12 to 16 | Whole core team for two weeks |
+| 1 | 55 to 70 | Seven people over ten weeks, less part-time roles |
+| 2 | 20 to 24 | Pilot support dominates |
+| 3 | 40 to 50 | P2 features plus onboarding batches |
+
+Also add:
+
+- **Infrastructure estimate:** dev, test, pre-prod, prod (application nodes, PostgreSQL, CI runners, observability).
+- **Run cost model per workflow**, compared to the Pega baseline from R1.
+- **Break-even calculation:** build cost / annual saving per migrated workflow = number of workflows needed. If the candidate inventory is below that, the business case at G0 fails.
+- **Contingency:** 20% on Phase 1.
+
+## G9. Gap: stakeholder, change management and training
+
+| Item | Content |
+|---|---|
+| RACI | Product owner (A for scope), tech lead (A for architecture), Pega architect (R for rubric), security (C), legal (C), operations (R for runbooks), process owners (R for UAT) |
+| Communication plan | Fortnightly sponsor update, sprint demos, one-page monthly status with KPIs from section 12 of the plan |
+| Pega CoE engagement | Joint rubric ownership; agree a framing of "right-sizing" so the CoE focuses on Tier 2/3 |
+| Training | Developer workshop (half day), CWM authoring guide, analyst reading guide for generated summaries, admin console training for support |
+| Adoption | Template catalog, office hours, a "first workflow in a day" onboarding track |
+| Exit criteria for adoption | At least 10 workflows live and two teams building workflows without core-team help (G4) |
+
+## G10. Gap: operations and support model
+
+- **Support tiers:** L1 helpdesk, L2 W6W support (admin console actions), L3 platform engineers.
+- **Severity definitions:** Sev1 (lost or duplicated cases, total outage), Sev2 (SLA timers not firing, degraded latency), Sev3 (single workflow defect), Sev4 (cosmetic). Response and resolution targets per severity, set with operations.
+- **On-call:** begins at pilot; rotation of at least four people before G4.
+- **Runbooks to write** (in `artifacts/playbook/`): deploy and rollback, stuck instance, dead-letter handling, timer backlog, database restore, engine upgrade, schema migration, credential rotation, incident template.
+- **Patch policy:** critical dependency CVEs patched within 7 days, high within 30 days.
+- **Upgrade cadence:** engine and Spring minor updates quarterly through the upgrade test suite.
+- **Archival:** history older than the retention period moves to cold storage; test restore quarterly.
+
+## G11. Gap: security and compliance detail
+
+- Threat model document (STRIDE) in `artifacts/design/architecture/`, produced in sprint 1.
+- CWM expression sandbox review (see G4, item 3), since user-authored expressions are the main injection risk.
+- Secrets: host secret store only; CI secret scanner blocks commits.
+- PII handling: data classification per field, masking in logs and audit exports (DF-04), retention per workflow.
+- Segregation-of-duties tests for every approval workflow.
+- Third-party license scan and SBOM gating (NF-09, SE-05).
+- Use of LLM assistance (MG-13): written policy on which data may leave the organization, prompt logging, human review before merge.
+- Legal confirmation before any real `.blueprint` or Pega-derived content is stored as a fixture (R7).
+
+## G12. Gap: definition of "days, not weeks"
+
+Define the metric precisely so the pilot can prove it.
+
+- **Clock starts:** approved one-page spec (steps, roles, SLA, data fields).
+- **Clock stops:** workflow deployed to production behind a flag, with passing scenario tests and approved pull request.
+- **Included:** authoring, form definition, test scenarios, review, CI/CD run.
+- **Excluded:** waiting for other teams' integration endpoints, security sign-off lead time, UAT waiting time.
+- **Target:** two working days for a template-based workflow, five working days for a workflow with one integration.
+- **Baseline:** measure the same steps for the equivalent Pega workflows (use history from R2). Report median and range, not the best case.
+
+## G13. Gap: requirements traceability matrix seed
+
+Create `artifacts/design/srs/traceability.csv` with columns: `req_id, priority, phase, module, test_id, test_level, status`. Seed all requirement IDs from the SRS (WF, EX, HT, DF, DC, IN, API, UI, VD, AU, SE, OP, DX, GV, MG, NF). A CI job (`tools/coverage-report/`) fails the build if any Must requirement targeted by the current gate has no passing test, as already required in plan section 7.5. Generate `artifacts/test_results/results.xml` and a requirement-coverage report from the same run.
+
+## G14. Gap: user stories and acceptance scenarios
+
+Seed `artifacts/user_stories/` with at least one story per user class in SRS section 3.2:
+
+1. Workflow developer: "As a developer, I scaffold an approval workflow from a template and deploy it by pull request within two days."
+2. Business analyst: "I read a generated diagram and summary and approve without reading YAML."
+3. Task user: "I see only my tasks, complete a form and track status."
+4. Process owner/admin: "I find a failed instance, retry it and see SLA breaches."
+5. Pega architect: "I run the eligibility checker and receive pass, review or reject with reasons."
+6. Auditor: "I export who did what and when for a completed instance."
+7. Platform/SRE: "I deploy, scale and restore from backup using the runbook."
+
+Each story has Given/When/Then acceptance scenarios that map to automated tests in `code/tests/acceptance/`.
+
+## G15. Gap: demo and evidence package
+
+Your structure includes `artifacts/demo_presentation/` and `prompts/`, which the plan does not cover. Add:
+
+- **Demo script (8 to 10 minutes):** (1) a Blueprint in; (2) eligibility report; (3) generated pull request with CWM, diagram and migration report; (4) CI run; (5) running workflow with worklist, approval, SLA timer firing; (6) admin console retry; (7) audit export.
+- **Demo data:** the `hr/leave-request` workflow plus one rejected (ineligible) Blueprint to show the reject path.
+- **Evidence pack per gate:** requirements coverage, `results.xml`, performance results, security scan summary, KPI snapshot.
+- **Prompts folder:** keep prompt files used for generation or LLM-assisted drafting, each with purpose, input, expected output and review rule.
+- **RULES.md:** list working rules (no engine types in public API, CWM is the source of truth, generated files never committed, no unsupported construct silently converted).
+
+## G16. Additional risks missing from the register
+
+| ID | Risk | Mitigation |
+|---|---|---|
+| R10 | Flowable 8 / Spring Boot 4 is new; ecosystem libraries may lag | Pilot the baseline in S1; keep a fallback to the 7.x line |
+| R11 | Open-source edition lacks a modeler or admin UI; effort for UI Kit grows | Hold the UI Kit scope at worklist, form, timeline, admin |
+| R12 | Pega contract terms may block parsing or reuse of exports | Legal gate before adapter work; hand-authored CWM remains the fallback |
+| R13 | Business case fails because Pega minimums prevent savings until renewal | Test at G0; reframe value as capacity release and delivery speed |
+| R14 | Not enough eligible workflows to amortize the build | Break-even check in G8; stop or switch to buy at G0 |
+| R15 | Users bypass the eligibility rubric and put complex logic into W6W | Linter and rubric as hard gates; quarterly portfolio review |
+| R16 | LLM-assisted drafting leaks data or produces wrong form text | Policy in G11; suggestions only, never auto-merge |
+| R17 | Single database becomes a shared bottleneck across workflows | Per-workflow retention, archival, index review, load test at S7 |
+
+## G17. Updated gate checklists (additions)
+
+- **G0 adds:** break-even calculation; ADRs 0001 to 0003 recorded; legal opinion on fixtures; RACI agreed.
+- **G1 adds:** walking skeleton running in CI; CWM v1 specification reviewed; effort baseline measured for three hand-built workflows; calendar re-baselined.
+- **G2 adds:** traceability matrix with no untested Must requirement; threat model closed with no open high findings; runbooks drafted; demo rehearsed.
+- **G3 adds:** "days not weeks" measured against the G12 definition; support model staffed; one incident drill run.
+- **G4 adds:** two non-core teams delivered a workflow independently; patch and upgrade cycle exercised once.
+
+## G18. Next three actions
+
+1. Apply G1 (rename cleanup, repository mapping, CI path filters).
+2. Confirm the host stack (open question 1) and record ADRs 0001 and 0002.
+3. Write the CWM v1 specification (G4) and build the walking skeleton (G6).
