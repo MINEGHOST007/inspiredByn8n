@@ -55,6 +55,9 @@ public interface WorkflowEnginePort {
     /** Resumes a suspended workflow instance. */
     void resumeInstance(String instanceId);
 
+    /** Correlates a named inbound signal to active workflow subscriptions matching a business key. */
+    List<String> correlateSignal(String eventName, String businessKey, String workflowKey, Map<String, Object> payload);
+
     /** Returns service-step jobs that exhausted their configured automatic retries. */
     List<WorkflowFailure> getDeadLetterJobs();
 

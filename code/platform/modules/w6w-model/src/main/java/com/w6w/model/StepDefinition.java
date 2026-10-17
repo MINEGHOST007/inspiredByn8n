@@ -12,6 +12,7 @@ public class StepDefinition {
     private String form;
     private String action;
     private String duration;
+    private String eventName;
     private String childWorkflowKey;
     private int childWorkflowDepth;
     private String subStage;
@@ -41,6 +42,9 @@ public class StepDefinition {
 
     public String getDuration() { return duration; }
     public void setDuration(String duration) { this.duration = duration; }
+
+    public String getEventName() { return eventName; }
+    public void setEventName(String eventName) { this.eventName = eventName; }
 
     public String getChildWorkflowKey() { return childWorkflowKey; }
     public void setChildWorkflowKey(String childWorkflowKey) { this.childWorkflowKey = childWorkflowKey; }

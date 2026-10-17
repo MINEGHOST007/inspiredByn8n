@@ -62,14 +62,14 @@ class CwmLinterTest {
                   - id: process
                     resolution: Done
                     steps:
-                      - id: wait-for-event
-                        type: waitEvent
+                      - id: unsupported-parallel
+                        type: parallel
                 """);
 
         CwmLinter.LintResult result = new CwmLinter().lint(workflow);
 
         assertThat(result.getIssues()).extracting(CwmLinter.LintIssue::getMessage)
-                .anyMatch(message -> message.contains("waitEvent") && message.contains("not executable"));
+                .anyMatch(message -> message.contains("parallel") && message.contains("not executable"));
     }
 
     @Test
@@ -156,6 +156,32 @@ class CwmLinterTest {
 
         assertThat(result.getIssues()).extracting(CwmLinter.LintIssue::getMessage)
                 .anyMatch(message -> message.contains("must be declared in workflow roles"));
+    }
+
+    @Test
+    void waitEventRequiresAValidEventName() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: invalid-event-name
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                roles: [operations]
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: wait-for-event
+                        type: waitEvent
+                        eventName: "bad event name"
+                """);
+
+        CwmLinter.LintResult result = new CwmLinter().lint(workflow);
+
+        assertThat(result.getIssues()).extracting(CwmLinter.LintIssue::getMessage)
+                .anyMatch(message -> message.contains("eventName must start with a letter"));
     }
 
     @Test

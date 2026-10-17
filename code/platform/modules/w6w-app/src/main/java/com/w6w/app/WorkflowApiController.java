@@ -64,6 +64,22 @@ public class WorkflowApiController {
         return ResponseEntity.status(HttpStatus.CREATED).body(instance);
     }
 
+    @PostMapping("/events/{eventName}")
+    public ResponseEntity<Map<String, Object>> signal(@PathVariable("eventName") String eventName,
+                                                       @RequestBody SignalRequest request) {
+        if (request.businessKey() == null || request.businessKey().isBlank())
+            throw new IllegalArgumentException("businessKey is required for inbound signal correlation");
+        List<String> instanceIds = engine.correlateSignal(eventName, request.businessKey(), request.workflowKey(), request.payload());
+        if (instanceIds.isEmpty()) throw new NoSuchElementException("No workflow is waiting for event '" + eventName
+                + "' with business key '" + request.businessKey() + "'");
+        for (String instanceId : instanceIds) {
+            WorkflowInstance instance = engine.getInstance(instanceId);
+            audit.record(instanceId, instance.getWorkflowKey(), instance.getBusinessKey(), null, "inbound-event",
+                    "INBOUND_SIGNAL_RECEIVED", Map.of("eventName", eventName));
+        }
+        return ResponseEntity.accepted().body(Map.of("eventName", eventName, "correlated", instanceIds.size(), "instanceIds", instanceIds));
+    }
+
     @GetMapping("/tasks")
     public List<Map<String, Object>> tasks(@RequestParam(name = "user", defaultValue = "demo.user") String user,
                                            @RequestParam(name = "roles", defaultValue = "") String roles,
@@ -337,6 +353,7 @@ public class WorkflowApiController {
     }
 
     public record StartRequest(String workflowKey, String businessKey, Map<String, Object> variables) {}
+    public record SignalRequest(String workflowKey, String businessKey, Map<String, Object> payload) {}
     public record UserRequest(String user) {}
     public record CompleteTaskRequest(String user, String outcome, Map<String, Object> data) {}
     public record BulkClaimRequest(String user, List<String> taskIds) {}

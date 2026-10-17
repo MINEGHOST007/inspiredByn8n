@@ -16,6 +16,15 @@ public class CwmToBpmnCompiler {
         xml.append("             xmlns:flowable=\"http://flowable.org/bpmn\"\n");
         xml.append("             targetNamespace=\"http://w6w.io/workflows\">\n\n");
 
+        for (StageDefinition stage : workflow.getStages()) for (StepDefinition step : stage.getSteps()) {
+            if (!"waitEvent".equals(step.getType())) continue;
+            if (step.getEventName() == null || !step.getEventName().matches("[A-Za-z][A-Za-z0-9_.-]*"))
+                throw new IllegalArgumentException("waitEvent step '" + step.getId() + "' needs a valid eventName");
+            xml.append("  <signal id=\"").append(signalRef(step)).append("\" name=\"")
+                    .append(escape(step.getEventName())).append("\" />\n");
+        }
+        xml.append("\n");
+
         xml.append("  <process id=\"").append(escape(processKey)).append("\" ")
            .append("name=\"").append(escape(processName)).append("\" ")
            .append("isExecutable=\"true\">\n\n");
@@ -157,6 +166,13 @@ public class CwmToBpmnCompiler {
             }
             xml.append("    <intermediateCatchEvent id=\"").append(stepRef).append("\" name=\"").append(escape(name)).append("\">\n")
                .append("      <timerEventDefinition><timeDuration>").append(escape(step.getDuration())).append("</timeDuration></timerEventDefinition>\n")
+               .append("    </intermediateCatchEvent>\n");
+
+        } else if ("waitEvent".equals(step.getType())) {
+            if (step.getEventName() == null || !step.getEventName().matches("[A-Za-z][A-Za-z0-9_.-]*"))
+                throw new IllegalArgumentException("waitEvent step '" + step.getId() + "' needs a valid eventName");
+            xml.append("    <intermediateCatchEvent id=\"").append(stepRef).append("\" name=\"").append(escape(name)).append("\">\n")
+               .append("      <signalEventDefinition signalRef=\"").append(signalRef(step)).append("\" />\n")
                .append("    </intermediateCatchEvent>\n");
 
         } else if ("end".equals(step.getType())) {
@@ -333,6 +349,8 @@ public class CwmToBpmnCompiler {
     private String entryNodeRef(StepDefinition step) {
         return step.getCondition() == null ? "step_" + sanitize(step.getId()) : conditionGatewayId(step);
     }
+
+    private String signalRef(StepDefinition step) { return "signal_" + sanitize(step.getId()); }
 
     private String conditionGatewayId(StepDefinition step) { return "gw_condition_" + sanitize(step.getId()); }
 

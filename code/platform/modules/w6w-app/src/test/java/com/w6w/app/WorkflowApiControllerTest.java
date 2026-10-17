@@ -259,6 +259,66 @@ class WorkflowApiControllerTest {
         assertThat(auditEvents.toString()).contains("SLA_DEADLINE_ESCALATED", "operations");
     }
 
+    @Test
+    void inboundSignalApiResumesOnlyTheWorkflowMatchingItsBusinessKey() throws Exception {
+        var workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: inbound-signal-api-test
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                roles: [operations]
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: wait-for-payment
+                        type: waitEvent
+                        eventName: payment.confirmed
+                      - id: reconcile-payment
+                        name: Reconcile payment
+                        type: userTask
+                        assignee:
+                          role: operations
+                """);
+        workflowEngine.deploy("inbound-signal-api-test", "Inbound signal API test", new CwmToBpmnCompiler().compile(workflow));
+        var deployed = processEngine.getRepositoryService().createProcessDefinitionQuery()
+                .processDefinitionKey("inbound-signal-api-test").latestVersion().singleResult();
+        dataSchemas.register(deployed.getId(), json.readTree("""
+                {"type":"object","properties":{"paymentStatus":{"type":"string"}},"additionalProperties":false}
+                """));
+        WorkflowInstance target = workflowEngine.startInstance("inbound-signal-api-test", "EVENT-MATCH-" + System.nanoTime(), Map.of());
+        WorkflowInstance other = workflowEngine.startInstance("inbound-signal-api-test", "EVENT-OTHER-" + System.nanoTime(), Map.of());
+        Map<String, Object> request = Map.of("workflowKey", "inbound-signal-api-test", "businessKey", target.getBusinessKey(),
+                "payload", Map.of("paymentStatus", "confirmed"));
+
+        mvc.perform(post("/api/v1/events/payment.confirmed")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsBytes(Map.of("workflowKey", "inbound-signal-api-test", "businessKey", target.getBusinessKey(),
+                                "payload", Map.of("unexpected", "value")))))
+                .andExpect(status().isBadRequest());
+        assertThat(workflowEngine.getTasksForUser("operator", List.of("operations")))
+                .noneMatch(task -> target.getId().equals(task.getInstanceId()));
+
+        JsonNode response = json.readTree(mvc.perform(post("/api/v1/events/payment.confirmed")
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(request)))
+                .andExpect(status().isAccepted()).andReturn().getResponse().getContentAsString());
+        assertThat(response.path("correlated").asInt()).isEqualTo(1);
+        assertThat(response.path("instanceIds").get(0).asText()).isEqualTo(target.getId());
+        assertThat(workflowEngine.getTasksForUser("operator", List.of("operations")))
+                .anyMatch(task -> target.getId().equals(task.getInstanceId()) && task.getStepId().equals("step_reconcile_payment"))
+                .noneMatch(task -> other.getId().equals(task.getInstanceId()));
+        mvc.perform(post("/api/v1/events/payment.confirmed")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsBytes(Map.of("businessKey", "missing-business-key", "payload", Map.of()))))
+                .andExpect(status().isNotFound());
+        JsonNode audit = json.readTree(mvc.perform(get("/api/v1/instances/" + target.getId() + "/audit"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(audit.toString()).contains("INBOUND_SIGNAL_RECEIVED", "payment.confirmed");
+    }
+
     private TaskInstance waitForTask(String instanceId, String user, List<String> roles) throws Exception {
         long deadline = System.nanoTime() + java.time.Duration.ofSeconds(15).toNanos();
         do {

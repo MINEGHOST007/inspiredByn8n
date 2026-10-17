@@ -206,6 +206,35 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
     }
 
     @Override
+    public List<String> correlateSignal(String eventName, String businessKey, String workflowKey, Map<String, Object> payload) {
+        if (eventName == null || eventName.isBlank()) throw new IllegalArgumentException("A signal event name is required");
+        if (businessKey == null || businessKey.isBlank()) throw new IllegalArgumentException("A business key is required for signal correlation");
+        Map<String, Object> variables = payload == null ? Map.of() : payload;
+        List<org.flowable.engine.runtime.Execution> matches = new ArrayList<>();
+        for (org.flowable.engine.runtime.Execution execution : runtimeService.createExecutionQuery()
+                .signalEventSubscriptionName(eventName.trim()).list()) {
+            ProcessInstance process = runtimeService.createProcessInstanceQuery()
+                    .processInstanceId(execution.getProcessInstanceId()).singleResult();
+            if (process == null || !businessKey.trim().equals(process.getBusinessKey())) continue;
+            if (workflowKey != null && !workflowKey.isBlank()
+                    && !workflowKey.trim().equals(process.getProcessDefinitionKey())) continue;
+            Map<String, Object> updated = new LinkedHashMap<>(runtimeService.getVariables(process.getId()));
+            if (variables.containsKey("outcome")) throw new IllegalArgumentException("Signal payload may not set the reserved 'outcome' variable");
+            updated.putAll(variables);
+            if (dataSchemas != null) dataSchemas.validate(process.getProcessDefinitionId(), updated);
+            matches.add(execution);
+        }
+        if (matches.size() > 1) throw new IllegalArgumentException("Signal matches multiple waiting workflows; specify workflowKey or use a unique business key");
+        List<String> correlated = new ArrayList<>();
+        for (org.flowable.engine.runtime.Execution execution : matches) {
+            runtimeService.signalEventReceived(eventName.trim(), execution.getId(), variables);
+            correlated.add(execution.getProcessInstanceId());
+            log.info("Correlated signal '{}' to instance '{}' using business key '{}'", eventName, execution.getProcessInstanceId(), businessKey);
+        }
+        return correlated;
+    }
+
+    @Override
     public List<WorkflowFailure> getDeadLetterJobs() {
         return managementService.createDeadLetterJobQuery().orderByJobCreateTime().desc().list().stream()
                 .map(job -> {

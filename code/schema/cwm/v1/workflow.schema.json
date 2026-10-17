@@ -151,6 +151,11 @@
           "pattern": "^P.*",
           "description": "Positive ISO-8601 duration required for a timer step"
         },
+        "eventName": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$",
+          "description": "Inbound signal name required for a waitEvent step"
+        },
         "childWorkflowKey": {
           "type": "string",
           "description": "Key of child workflow for childWorkflow step type"

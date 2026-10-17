@@ -8,7 +8,7 @@ WF-06,M,MVP,w6w-model; w6w-compiler,CwmLinterTest,unit/fixture,Partial
 WF-07,M,MVP,w6w-test,ScenarioRunnerTest,unit/fixture,Partial
 WF-08,M,MVP,code/workflows; .gitignore,repository inspection,source-of-truth review,Partial
 EX-01,M,MVP,w6w-engine-port; w6w-engine-flowable,FlowableEngineIntegrationTest,unit/fixture,Partial
-EX-02,M,MVP,w6w-compiler; w6w-engine-flowable,CwmToBpmnCompilerTest.timerStepCompilesToDurableBpmnTimerCatchEvent; FlowableEngineIntegrationTest.timerStepWaitsThenAllowsTheNextHumanTask,compiler and Flowable timer integration,Partial
+EX-02,M,MVP,w6w-compiler; w6w-engine-flowable,CwmToBpmnCompilerTest.waitEventCompilesToNamedSignalCatchEvent; FlowableEngineIntegrationTest.inboundSignalResumesOnlyTheInstanceWithTheMatchingBusinessKey; FlowableEngineIntegrationTest.timerStepWaitsThenAllowsTheNextHumanTask,compiler and Flowable timer/signal integration,Partial (parallel and subprocess remain unsupported)
 EX-03,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
 EX-04,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
 EX-05,M,MVP,w6w-engine-flowable,FlowableEngineIntegrationTest,integration,Partial
@@ -34,7 +34,7 @@ DC-02,M,MVP,w6w-compiler; w6w-engine-flowable,CwmToBpmnCompilerTest; FlowableEng
 DC-03,S,P2,w6w-compiler,,not covered,Not implemented
 IN-01,M,MVP,w6w-runtime-starter; w6w-app,WorkflowApiControllerTest,api integration,Partial
 IN-02,M,MVP,w6w-runtime-starter,,not covered,Not implemented
-IN-03,M,MVP,w6w-runtime-starter,,not covered,Not implemented
+IN-03,M,MVP,w6w-engine-port; w6w-engine-flowable; w6w-app,WorkflowApiControllerTest.inboundSignalApiResumesOnlyTheWorkflowMatchingItsBusinessKey; FlowableEngineIntegrationTest.inboundSignalResumesOnlyTheInstanceWithTheMatchingBusinessKey,API and Flowable integration (business-key correlation and schema-validated payload),Implemented
 IN-04,M,MVP,w6w-runtime-starter,,not covered,Not implemented
 IN-05,M,MVP,w6w-runtime-starter,,not covered,Not implemented
 IN-06,S,P2,w6w-runtime-starter,,not covered,Not implemented
@@ -43,7 +43,7 @@ API-02,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 API-03,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 API-04,S,P2,w6w-api (planned),,not covered,Not implemented
 API-05,S,P2,w6w-api (planned),,not covered,Not implemented
-UI-01,M,MVP,w6w-app,WorkflowApiControllerTest,ui resource and api integration,Partial
+UI-01,M,MVP,w6w-app,WorkflowApiControllerTest; manual Playwright: sort asc/desc, preserve selection, filter/search, select and claim,API integration and browser end-to-end,Implemented
 UI-02,M,MVP,w6w-app,WorkflowApiControllerTest,ui resource and api integration,Partial
 UI-03,M,MVP,w6w-app,WorkflowApiControllerTest,ui resource and api integration,Partial
 UI-04,M,MVP,w6w-app,WorkflowApiControllerTest.servesWorkspaceRunsApprovalWorkflowAndExposesDeadLetterQueueApi; FlowableEngineIntegrationTest.failedServiceTaskRetriesThenAppearsInDeadLetterQueueAndCanBeReplayed,api and engine integration,Partial

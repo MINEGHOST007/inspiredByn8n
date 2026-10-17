@@ -98,6 +98,39 @@ class CwmToBpmnCompilerTest {
     }
 
     @Test
+    void waitEventCompilesToNamedSignalCatchEvent() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: inbound-event-workflow
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                roles: [operations]
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: wait-for-payment
+                        name: Wait for payment confirmation
+                        type: waitEvent
+                        eventName: payment.confirmed
+                      - id: reconcile-payment
+                        type: userTask
+                        assignee:
+                          role: operations
+                """);
+
+        String bpmn = new CwmToBpmnCompiler().compile(workflow);
+
+        assertThat(bpmn).contains("<signal id=\"signal_wait_for_payment\" name=\"payment.confirmed\" />")
+                .contains("<intermediateCatchEvent id=\"step_wait_for_payment\"")
+                .contains("<signalEventDefinition signalRef=\"signal_wait_for_payment\" />")
+                .contains("targetRef=\"step_reconcile_payment\"");
+    }
+
+    @Test
     void timerStepCompilesToDurableBpmnTimerCatchEvent() throws Exception {
         WorkflowDefinition workflow = CwmParser.parse("""
                 apiVersion: w6w/v1

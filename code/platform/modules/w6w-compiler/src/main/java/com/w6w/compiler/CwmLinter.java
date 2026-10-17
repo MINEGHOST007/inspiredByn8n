@@ -26,7 +26,7 @@ import java.time.format.DateTimeParseException;
 /** Static checks for the subset of CWM v1 that this runtime can execute. */
 public class CwmLinter {
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Set<String> EXECUTABLE_TYPES = Set.of("userTask", "approval", "serviceTask", "decision", "timer", "end");
+    private static final Set<String> EXECUTABLE_TYPES = Set.of("userTask", "approval", "serviceTask", "decision", "waitEvent", "timer", "end");
     private static final Set<String> KNOWN_TYPES = Set.of("userTask", "approval", "serviceTask", "decision",
             "parallel", "subStage", "waitEvent", "timer", "childWorkflow", "end");
 
@@ -245,6 +245,7 @@ public class CwmLinter {
         if ("serviceTask".equals(type) && isBlank(step.getAction()))
             result.addError("Service task '" + step.getId() + "' in stage '" + stage.getId() + "' has no registered action name");
         if ("timer".equals(type)) lintTimer(step, result);
+        if ("waitEvent".equals(type)) lintWaitEvent(step, result);
         lintErrorPolicy(step, result);
         if (("decision".equals(type) || "parallel".equals(type))
                 && (step.getOutcomes() == null || step.getOutcomes().isEmpty()))
@@ -330,6 +331,13 @@ public class CwmLinter {
         } catch (DateTimeParseException e) {
             result.addError("Timer step '" + step.getId() + "' duration must be an ISO-8601 duration");
         }
+    }
+
+    private void lintWaitEvent(StepDefinition step, LintResult result) {
+        String eventName = step.getEventName();
+        if (isBlank(eventName)) result.addError("waitEvent step '" + step.getId() + "' must declare eventName");
+        else if (!eventName.matches("[A-Za-z][A-Za-z0-9_.-]*"))
+            result.addError("waitEvent step '" + step.getId() + "' eventName must start with a letter and contain only letters, numbers, dots, underscores or hyphens");
     }
 
     private void lintErrorPolicy(StepDefinition step, LintResult result) {

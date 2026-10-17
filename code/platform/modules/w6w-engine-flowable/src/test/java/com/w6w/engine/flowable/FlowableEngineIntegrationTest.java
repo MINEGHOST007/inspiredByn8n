@@ -385,6 +385,46 @@ class FlowableEngineIntegrationTest {
         assertThat(review.getStepId()).isEqualTo("step_review");
     }
 
+    @Test
+    void inboundSignalResumesOnlyTheInstanceWithTheMatchingBusinessKey() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: signal-correlation-test
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                roles: [operations]
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: wait-for-payment
+                        type: waitEvent
+                        eventName: payment.confirmed
+                      - id: reconcile-payment
+                        name: Reconcile payment
+                        type: userTask
+                        assignee:
+                          role: operations
+                """);
+        adapter.deploy(workflow.getMetadata().getKey(), "Signal correlation test", new CwmToBpmnCompiler().compile(workflow));
+        WorkflowInstance target = adapter.startInstance("signal-correlation-test", "PAYMENT-MATCH", Map.of());
+        WorkflowInstance other = adapter.startInstance("signal-correlation-test", "PAYMENT-OTHER", Map.of());
+
+        assertThat(adapter.getTasksForUser("operator", List.of("operations")))
+                .noneMatch(task -> task.getInstanceId().equals(target.getId()) || task.getInstanceId().equals(other.getId()));
+        List<String> correlated = adapter.correlateSignal("payment.confirmed", "PAYMENT-MATCH",
+                "signal-correlation-test", Map.of("paymentStatus", "confirmed"));
+
+        assertThat(correlated).containsExactly(target.getId());
+        awaitTask(target.getId(), "Reconcile payment", "operator", List.of("operations"));
+        assertThat(adapter.getTasksForUser("operator", List.of("operations")))
+                .noneMatch(task -> task.getInstanceId().equals(other.getId()));
+        assertThat(adapter.getInstance(target.getId()).getVariables()).containsEntry("paymentStatus", "confirmed");
+    }
+
     private TaskInstance awaitTask(String instanceId, String taskName, String user, List<String> roles) throws Exception {
         return await(() -> adapter.getTasksForUser(user, roles).stream()
                         .filter(task -> instanceId.equals(task.getInstanceId()) && taskName.equals(task.getName()))
