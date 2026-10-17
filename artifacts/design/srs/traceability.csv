@@ -24,7 +24,7 @@ HT-05,M,MVP,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
 HT-06,S,P2,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
 HT-07,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 HT-08,C,P3,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
-DF-01,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
+DF-01,M,MVP,w6w-app; w6w-runtime-starter; w6w-engine-flowable,WorkflowApiControllerTest; WorkflowDataSchemaRegistryTest; FlowableEngineIntegrationTest,API and validator unit coverage; runtime boundaries,Partial
 DF-02,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 DF-03,S,P2,w6w-model / workflow forms,,not covered,Not implemented
 DF-04,S,P2,w6w-model / workflow forms,,not covered,Not implemented

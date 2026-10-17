@@ -4,6 +4,7 @@ import com.w6w.port.TaskInstance;
 import com.w6w.port.WorkflowEnginePort;
 import com.w6w.port.WorkflowFailure;
 import com.w6w.port.WorkflowInstance;
+import com.w6w.runtime.WorkflowDataSchemaRegistry;
 import org.flowable.engine.ManagementService;
 import org.flowable.engine.HistoryService;
 import org.flowable.engine.RepositoryService;
@@ -18,6 +19,7 @@ import org.flowable.task.api.TaskQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,17 +33,29 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
     private final TaskService taskService;
     private final HistoryService historyService;
     private final ManagementService managementService;
+    private final WorkflowDataSchemaRegistry dataSchemas;
+
+    @Autowired
+    public FlowableWorkflowEngineAdapter(RepositoryService repositoryService,
+                                         RuntimeService runtimeService,
+                                         TaskService taskService,
+                                         HistoryService historyService,
+                                         ManagementService managementService,
+                                         WorkflowDataSchemaRegistry dataSchemas) {
+        this.repositoryService = repositoryService;
+        this.runtimeService = runtimeService;
+        this.taskService = taskService;
+        this.historyService = historyService;
+        this.managementService = managementService;
+        this.dataSchemas = dataSchemas;
+    }
 
     public FlowableWorkflowEngineAdapter(RepositoryService repositoryService,
                                          RuntimeService runtimeService,
                                          TaskService taskService,
                                          HistoryService historyService,
                                          ManagementService managementService) {
-        this.repositoryService = repositoryService;
-        this.runtimeService = runtimeService;
-        this.taskService = taskService;
-        this.historyService = historyService;
-        this.managementService = managementService;
+        this(repositoryService, runtimeService, taskService, historyService, managementService, null);
     }
 
     @Override
@@ -79,6 +93,12 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
         if (completed != null) {
             log.warn("Workflow instance with completed business key '{}' already exists: {}", businessKey, completed.getId());
             return mapHistoricInstance(completed);
+        }
+
+        if (dataSchemas != null) {
+            var definition = repositoryService.createProcessDefinitionQuery()
+                    .processDefinitionKey(workflowKey).latestVersion().singleResult();
+            if (definition != null) dataSchemas.validate(definition.getId(), variables);
         }
 
         ProcessInstance pi = runtimeService.startProcessInstanceByKey(workflowKey, businessKey, variables);
@@ -150,6 +170,12 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
         if (task == null) {
             throw new IllegalArgumentException("Task not found with ID: " + taskId);
+        }
+
+        if (dataSchemas != null) {
+            Map<String, Object> mergedVariables = new HashMap<>(runtimeService.getVariables(task.getProcessInstanceId()));
+            if (variables != null) mergedVariables.putAll(variables);
+            dataSchemas.validate(task.getProcessDefinitionId(), mergedVariables);
         }
 
         if (task.getAssignee() == null && username != null) {

@@ -4,11 +4,14 @@ import org.flowable.common.engine.api.delegate.Expression;
 import org.flowable.dmn.engine.DmnEngine;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.flowable.engine.delegate.JavaDelegate;
+import org.flowable.engine.RepositoryService;
+import org.flowable.engine.repository.ProcessDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.w6w.runtime.WorkflowDataSchemaRegistry;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -21,14 +24,26 @@ import java.util.function.Supplier;
 public class FlowableDecisionExecutor implements JavaDelegate {
     private static final Logger log = LoggerFactory.getLogger(FlowableDecisionExecutor.class);
     private final Supplier<DmnEngine> dmnEngineProvider;
+    private final WorkflowDataSchemaRegistry dataSchemas;
+    private final RepositoryService repositoryService;
     private Expression decisionKey;
     private Expression stepId;
     private Expression allowedOutcomes;
 
     @Autowired
-    public FlowableDecisionExecutor(ObjectProvider<DmnEngine> dmnEngineProvider) { this.dmnEngineProvider = dmnEngineProvider::getObject; }
+    public FlowableDecisionExecutor(ObjectProvider<DmnEngine> dmnEngineProvider,
+                                    WorkflowDataSchemaRegistry dataSchemas,
+                                    RepositoryService repositoryService) {
+        this.dmnEngineProvider = dmnEngineProvider::getObject;
+        this.dataSchemas = dataSchemas;
+        this.repositoryService = repositoryService;
+    }
 
-    public FlowableDecisionExecutor(DmnEngine dmnEngine) { this.dmnEngineProvider = () -> dmnEngine; }
+    public FlowableDecisionExecutor(DmnEngine dmnEngine) {
+        this.dmnEngineProvider = () -> dmnEngine;
+        this.dataSchemas = null;
+        this.repositoryService = null;
+    }
 
     @Override
     public void execute(DelegateExecution execution) {
@@ -46,6 +61,10 @@ public class FlowableDecisionExecutor implements JavaDelegate {
         Set<String> allowed = allowedOutcomes == null ? Set.of() : Arrays.stream(String.valueOf(allowedOutcomes.getValue(execution)).split(",", -1))
                 .collect(Collectors.toSet());
         if (!allowed.contains(value)) throw new IllegalStateException("Decision '" + key + "' returned undeclared outcome '" + value + "' for step " + resolvedStep);
+        if (dataSchemas != null && repositoryService != null) {
+            ProcessDefinition definition = repositoryService.getProcessDefinition(execution.getProcessDefinitionId());
+            if (definition != null) dataSchemas.validate(definition.getId(), execution.getVariables());
+        }
         log.info("Evaluated decision '{}' for instance '{}' at step '{}': outcome='{}'", key, execution.getProcessInstanceId(), resolvedStep, value);
     }
 }

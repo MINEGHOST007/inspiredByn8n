@@ -4,6 +4,10 @@ import com.w6w.port.action.ActionContext;
 import com.w6w.port.action.ActionResult;
 import com.w6w.port.action.WorkflowActionHandler;
 import com.w6w.runtime.ActionRegistry;
+import com.w6w.runtime.WorkflowDataSchemaRegistry;
+import org.flowable.engine.RepositoryService;
+import org.flowable.engine.repository.ProcessDefinition;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.flowable.common.engine.api.delegate.Expression;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.flowable.engine.delegate.JavaDelegate;
@@ -18,12 +22,24 @@ public class FlowableActionExecutor implements JavaDelegate {
     private static final Logger log = LoggerFactory.getLogger(FlowableActionExecutor.class);
 
     private final ActionRegistry actionRegistry;
+    private final WorkflowDataSchemaRegistry dataSchemas;
+    private final RepositoryService repositoryService;
 
     private Expression actionName;
     private Expression stepId;
 
+    @Autowired
+    public FlowableActionExecutor(ActionRegistry actionRegistry, WorkflowDataSchemaRegistry dataSchemas,
+                                  RepositoryService repositoryService) {
+        this.actionRegistry = actionRegistry;
+        this.dataSchemas = dataSchemas;
+        this.repositoryService = repositoryService;
+    }
+
     public FlowableActionExecutor(ActionRegistry actionRegistry) {
         this.actionRegistry = actionRegistry;
+        this.dataSchemas = null;
+        this.repositoryService = null;
     }
 
     @Override
@@ -54,9 +70,16 @@ public class FlowableActionExecutor implements JavaDelegate {
                     execution.setVariable(entry.getKey(), entry.getValue());
                 }
             }
+            validateWorkflowData(execution);
         } catch (Exception e) {
             log.error("Error executing action '{}' for instance '{}': {}", resolvedAction, execution.getProcessInstanceId(), e.getMessage(), e);
             throw new RuntimeException("Workflow action execution failed: " + e.getMessage(), e);
         }
+    }
+
+    private void validateWorkflowData(DelegateExecution execution) {
+        if (dataSchemas == null || repositoryService == null) return;
+        ProcessDefinition definition = repositoryService.getProcessDefinition(execution.getProcessDefinitionId());
+        if (definition != null) dataSchemas.validate(definition.getId(), execution.getVariables());
     }
 }

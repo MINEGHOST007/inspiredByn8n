@@ -9,6 +9,8 @@ import com.w6w.port.TaskInstance;
 import com.w6w.port.WorkflowInstance;
 import com.w6w.port.action.ActionResult;
 import com.w6w.runtime.ActionRegistry;
+import com.w6w.runtime.WorkflowDataSchemaRegistry;
+import org.flowable.engine.ProcessEngine;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -39,6 +41,8 @@ class WorkflowApiControllerTest {
     @Autowired private ObjectMapper json;
     @Autowired private FlowableWorkflowEngineAdapter workflowEngine;
     @Autowired private ActionRegistry actionRegistry;
+    @Autowired private WorkflowDataSchemaRegistry dataSchemas;
+    @Autowired private ProcessEngine processEngine;
 
     @Test
     void servesWorkspaceRunsApprovalWorkflowAndExposesDeadLetterQueueApi() throws Exception {
@@ -86,6 +90,12 @@ class WorkflowApiControllerTest {
         complete(intake.path("id").asText(), "agent.smith", null, startData);
 
         JsonNode review = findTask("agent.smith", "service_agent", businessKey, "step_review_eligibility_details");
+        String invalidDataResponse = mvc.perform(post("/api/tasks/" + review.path("id").asText() + "/complete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsBytes(Map.of("user", "agent.smith", "outcome", "eligible", "data", Map.of(
+                                "policyAdherencePassed", true, "refundType", "Cryptocurrency")))))
+                .andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+        assertThat(invalidDataResponse).contains("refundType has an unsupported value");
         complete(review.path("id").asText(), "agent.smith", "eligible", Map.of(
                 "policyAdherencePassed", true, "calculatedRefundAmount", 125.0,
                 "compensationType", "BonusPoints", "reviewerComments", "Reviewed"));
@@ -162,6 +172,52 @@ class WorkflowApiControllerTest {
         JsonNode events = json.readTree(mvc.perform(get("/api/instances/" + instance.getId() + "/audit"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
         assertThat(events.toString()).contains("DEAD_LETTER_JOB_RETRIED", "Downstream recovered");
+    }
+
+    @Test
+    void rejectsServiceActionOutputThatBreaksTheWorkflowDataSchema() throws Exception {
+        String action = "test.invalidDataOutput";
+        actionRegistry.register(action, context -> ActionResult.success(Map.of("count", 0)));
+        var workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: invalid-data-output-test
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                roles: [operations]
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: submit
+                        type: userTask
+                        assignee:
+                          role: operations
+                      - id: invalid-output
+                        type: serviceTask
+                        action: test.invalidDataOutput
+                        onError:
+                          retries: 1
+                          backoff: PT1S
+                          onFailure: deadLetter
+                """);
+        workflowEngine.deploy("invalid-data-output-test", "Invalid data output test", new CwmToBpmnCompiler().compile(workflow));
+        String processDefinitionId = processEngine.getRepositoryService().createProcessDefinitionQuery()
+                .processDefinitionKey("invalid-data-output-test").latestVersion().singleResult().getId();
+        dataSchemas.register(processDefinitionId, json.readTree("""
+                {"type":"object","required":["count"],"properties":{"count":{"type":"integer","minimum":1}}}
+                """));
+        WorkflowInstance instance = workflowEngine.startInstance("invalid-data-output-test", "INVALID-DATA-" + System.nanoTime(), Map.of("count", 1));
+        TaskInstance submit = workflowEngine.getTasksForUser(null, List.of()).stream()
+                .filter(task -> instance.getId().equals(task.getInstanceId())).findFirst().orElseThrow();
+        workflowEngine.completeTask(submit.getId(), "operator", Map.of());
+
+        JsonNode queue = awaitDeadLetter(instance.getId());
+        JsonNode failure = java.util.stream.StreamSupport.stream(queue.spliterator(), false)
+                .filter(job -> instance.getId().equals(job.path("instanceId").asText())).findFirst().orElseThrow();
+        assertThat(failure.path("errorMessage").asText()).contains("count is below its minimum");
     }
 
     private JsonNode findTask(String user, String role, String businessKey, String step) throws Exception {

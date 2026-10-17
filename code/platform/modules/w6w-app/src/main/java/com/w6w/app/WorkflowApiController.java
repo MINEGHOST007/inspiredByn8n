@@ -54,6 +54,7 @@ public class WorkflowApiController {
         WorkflowCatalog.CatalogEntry workflow = catalog.require(request.workflowKey());
         Map<String, Object> variables = request.variables() == null ? Map.of() : request.variables();
         catalog.validateForm(catalog.startForm(workflow), variables);
+        catalog.validateWorkflowData(workflow, variables);
         String businessKey = request.businessKey() == null || request.businessKey().isBlank()
                 ? "W6W-" + UUID.randomUUID() : request.businessKey().trim();
         WorkflowInstance instance = engine.startInstance(workflow.definition().getMetadata().getKey(), businessKey,
@@ -119,6 +120,12 @@ public class WorkflowApiController {
         WorkflowCatalog.CatalogEntry workflow = catalog.require(instance.getWorkflowKey());
         String formPath = catalog.stepForm(instance.getWorkflowKey(), task.getStepId().replaceFirst("^step_", "").replace('_', '-'));
         if (formPath != null) catalog.validateForm(catalog.form(workflow, formPath), request.data());
+        Map<String, Object> updatedData = new LinkedHashMap<>(instance.getVariables());
+        if (request.data() != null) updatedData.putAll(request.data());
+        var runningInstance = processEngine.getRuntimeService().createProcessInstanceQuery()
+                .processInstanceId(instance.getId()).singleResult();
+        if (runningInstance == null) throw new IllegalStateException("Workflow instance is no longer active: " + instance.getId());
+        catalog.validateWorkflowData(runningInstance.getProcessDefinitionId(), updatedData);
         if (request.outcome() != null && !request.outcome().isBlank() && !stepOutcomes(workflow, task.getStepId()).containsKey(request.outcome()))
             throw new IllegalArgumentException("Outcome '" + request.outcome() + "' is not defined for this task");
         Map<String, Object> variables = new LinkedHashMap<>();

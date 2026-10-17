@@ -14,6 +14,7 @@ import com.w6w.port.WorkflowEnginePort;
 import com.w6w.port.action.ActionResult;
 import com.w6w.runtime.ActionRegistry;
 import com.w6w.runtime.StartupActionValidator;
+import com.w6w.runtime.WorkflowDataSchemaRegistry;
 import org.flowable.engine.RepositoryService;
 import org.flowable.engine.repository.ProcessDefinition;
 import org.flowable.dmn.api.DmnDecision;
@@ -26,6 +27,8 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -42,12 +45,14 @@ public class WorkflowCatalog implements ApplicationRunner {
     private final ActionRegistry actions;
     private final ObjectMapper json;
     private final DmnEngine dmnEngine;
+    private final WorkflowDataSchemaRegistry dataSchemas;
     private final Map<String, CatalogEntry> entries = new ConcurrentHashMap<>();
 
     public WorkflowCatalog(@Value("${w6w.workflows-dir}") String workflowsDir,
                            @Value("${w6w.runtime-mode:local-demo}") String runtimeMode,
                            WorkflowEnginePort engine, RepositoryService repository,
-                           ActionRegistry actions, ObjectMapper json, DmnEngine dmnEngine) {
+                           ActionRegistry actions, ObjectMapper json, DmnEngine dmnEngine,
+                           WorkflowDataSchemaRegistry dataSchemas) {
         this.workflowsRoot = Path.of(workflowsDir).toAbsolutePath().normalize();
         this.runtimeMode = runtimeMode;
         this.engine = engine;
@@ -55,6 +60,7 @@ public class WorkflowCatalog implements ApplicationRunner {
         this.actions = actions;
         this.json = json;
         this.dmnEngine = dmnEngine;
+        this.dataSchemas = dataSchemas;
     }
 
     @Override
@@ -109,10 +115,12 @@ public class WorkflowCatalog implements ApplicationRunner {
 
     private void register(Path file, boolean replaceExisting) throws Exception {
         WorkflowDefinition definition = CwmParser.parse(file.toFile());
+        JsonNode dataSchema = readDataSchema(file, definition);
         CwmLinter.LintResult lint = new CwmLinter().lint(definition, file);
         if (lint.hasErrors()) throw new IllegalArgumentException("Workflow " + definition.getMetadata().getKey() + " has lint errors: " + lint.getIssues());
         new StartupActionValidator(actions).validateWorkflowActions(definition);
         String bpm = new CwmToBpmnCompiler().compile(definition);
+        if (dataSchema != null) bpm = includeDataSchemaFingerprint(bpm, dataSchema);
         deployDecisionTables(file, definition);
         List<ProcessDefinition> existing = repository.createProcessDefinitionQuery()
                 .processDefinitionKey(definition.getMetadata().getKey()).orderByProcessDefinitionVersion().desc().list();
@@ -124,10 +132,41 @@ public class WorkflowCatalog implements ApplicationRunner {
         } else {
             log.info("Workflow '{}' already deployed as version {}; keeping existing deployment", definition.getMetadata().getKey(), existing.get(0).getVersion());
         }
-        CatalogEntry entry = new CatalogEntry(definition, file.toAbsolutePath().normalize());
+        ProcessDefinition deployed = repository.createProcessDefinitionQuery()
+                .processDefinitionKey(definition.getMetadata().getKey()).orderByProcessDefinitionVersion().desc().listPage(0, 1)
+                .stream().findFirst().orElseThrow(() -> new IllegalStateException("Workflow was not deployed: " + definition.getMetadata().getKey()));
+        if (dataSchema != null) dataSchemas.register(deployed.getId(), dataSchema);
+        CatalogEntry entry = new CatalogEntry(definition, file.toAbsolutePath().normalize(), deployed.getId());
         if (replaceExisting) entries.put(definition.getMetadata().getKey(), entry);
         else if (entries.putIfAbsent(definition.getMetadata().getKey(), entry) != null)
             throw new IllegalArgumentException("Duplicate workflow key: " + definition.getMetadata().getKey());
+    }
+
+    private JsonNode readDataSchema(Path workflowFile, WorkflowDefinition definition) throws IOException {
+        Object reference = definition.getData() == null ? null : definition.getData().get("schema");
+        if (reference == null || reference.toString().isBlank()) return null;
+        Path packageRoot = workflowFile.getParent().toAbsolutePath().normalize();
+        Path schemaPath = packageRoot.resolve(reference.toString()).normalize();
+        if (!schemaPath.startsWith(packageRoot) || !Files.isRegularFile(schemaPath))
+            throw new IllegalArgumentException("Workflow data schema is missing or escapes workflow package: " + reference);
+        JsonNode schema = json.readTree(schemaPath.toFile());
+        if (schema == null || !schema.isObject())
+            throw new IllegalArgumentException("Workflow data schema must contain a JSON object: " + reference);
+        return schema;
+    }
+
+    private String includeDataSchemaFingerprint(String bpmn, JsonNode schema) throws IOException {
+        byte[] canonicalSchema = json.writeValueAsBytes(schema);
+        String fingerprint;
+        try {
+            fingerprint = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(canonicalSchema));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 is unavailable", e);
+        }
+        int processStart = bpmn.indexOf(">", bpmn.indexOf("<process "));
+        if (processStart < 0) throw new IllegalArgumentException("Compiler output has no BPMN process element");
+        return bpmn.substring(0, processStart + 1) + "\n      <documentation>w6w-data-schema-sha256:" + fingerprint
+                + "</documentation>" + bpmn.substring(processStart + 1);
     }
 
     private void deployDecisionTables(Path workflowFile, WorkflowDefinition definition) throws Exception {
@@ -238,6 +277,14 @@ public class WorkflowCatalog implements ApplicationRunner {
         if (!errors.isEmpty()) throw new IllegalArgumentException("Form validation failed: " + String.join("; ", errors));
     }
 
+    public void validateWorkflowData(CatalogEntry entry, Map<String, ?> data) {
+        dataSchemas.validate(entry.processDefinitionId(), data);
+    }
+
+    public void validateWorkflowData(String processDefinitionId, Map<String, ?> data) {
+        dataSchemas.validate(processDefinitionId, data);
+    }
+
     private void validateObject(JsonNode schema, JsonNode value, String path, List<String> errors) {
         JsonNode required = schema.path("required");
         if (required.isArray()) for (JsonNode field : required) {
@@ -287,5 +334,5 @@ public class WorkflowCatalog implements ApplicationRunner {
     }
 
     private static String value(String value, String fallback) { return value == null || value.isBlank() ? fallback : value; }
-    public record CatalogEntry(WorkflowDefinition definition, Path file) {}
+    public record CatalogEntry(WorkflowDefinition definition, Path file, String processDefinitionId) {}
 }

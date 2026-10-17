@@ -29,6 +29,8 @@
 
 The linter rejects duplicate IDs, missing terminal resolutions and assignees, unsupported step types, invalid route targets, and unreachable steps. When given the workflow source path (CLI validation and application catalog loading), it also resolves condition field references against the package's declared JSON data schema.
 
+The local runtime loads each declared `data.schema` from inside its workflow package and associates it with the deployed Flowable process-definition version. Start variables, merged task submissions, and variables after service or decision actions are validated against that schema. The current runtime validator implements object/array/scalar types, required fields, enums, numeric bounds, string length and pattern, email format, and `additionalProperties: false`; it is not a complete JSON Schema 2020-12 implementation yet.
+
 ## Outcomes and expressions
 
 - Transitions use named outcome maps with target `next`, `stage:<stage-id>` or `end:<stage-id>` for a stage's implicit terminal event.
