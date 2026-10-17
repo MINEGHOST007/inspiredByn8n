@@ -150,3 +150,82 @@ Writing a "will not support" list is as valuable as the feature list.
 5. Write the Tier 1 vs Pega eligibility rubric and get it signed off.
 
 **What language and framework is your application built on (Java/Spring, .NET, Node, Python)?** That is the single biggest factor, and if it isn't JVM, I'd steer you toward Conductor OSS or a Serverless Workflow-based design instead of Flowable. I can then draft the canonical YAML schema and the mapping rules in detail.
+
+
+I'll dig into specific projects against your criteria (embeddable, Git-versioned, human tasks, open-source licence, easy to generate from a blueprint) and look for any existing Pega-migration precedent.# The best project for your problem: Flowable (if your app is on the JVM)
+
+I researched seven candidate projects and a Pega-to-open-source migration precedent. If you can tell me your application stack, I can firm up the recommendation, because it is the deciding factor.
+
+## Correction to my earlier answer
+
+I said a marketplace listing suggested Flowable 8 shipped in August 2026. That was wrong. Flowable 8.0.0 was released on 27 February 2026. It is based on Spring Framework 7 and Spring Boot 4, with no support for Spring Boot 3. It remains Apache 2.0. If your host application is on Spring Boot 3, you need to plan an upgrade or stay on the 7.2 line.
+
+## The shortlist, scored against your problem
+
+These ratings are my judgment against your five needs: embeddable, Git-friendly, human tasks/SLAs, a real open-source licence, and an easy target for a generator.
+
+| Project | Embeddable in app | Git-friendly definitions | Human tasks/SLA | Licence safety | Generator target | Verdict |
+|---|---|---|---|---|---|---|
+| **Flowable 8** (JVM) | Strong | XML (BPMN/CMMN/DMN) | Strong | Strong | Strong | **Best overall** |
+| **Elsa 3** (.NET) | Strong | JSON | Verify | Strong | Strong | Best if you're on .NET |
+| **Apache KIE (jBPM/SonataFlow)** | Medium | XML/YAML | Strong | Strong (but incubating) | Medium | Heavier alternative |
+| **Conductor OSS** | Weak (server) | JSON | Partial | Strong | Medium-strong | Best polyglot/non-embedded |
+| **Temporal** | Medium | Code | Build it | Strong | Weak | Wrong shape |
+| **Windmill** | Weak | Enterprise only | Partial | Complicated | Weak | Rule out |
+| **Camunda 8** | No | XML | Strong | Source-available | Strong | Rule out |
+
+## Why Flowable wins
+
+- **It matches the embedding requirement.** It is Apache 2.0 licensed and can run embedded in a Java application or as a service, with Spring integration.
+- **Its model maps to Pega's.** It runs BPMN 2.0 processes, CMMN 1.1 cases, and DMN decision tables. Stages and steps, user tasks, gateways, SLA timers, and decision tables all have direct equivalents.
+- **It is the closest to your "keep Pega for the hard cases" line.** CMMN lets you handle a small amount of case-like behavior in Tier 1 without recreating Pega.
+- **It has real migration precedent.** A Flowable forum answer on a Pega 7 migration says skip expressions can move process instances to the same activity state as the old system. They also describe two approaches for completed instances, both involving the history tables.
+- **The trade-off to accept:** the open-source distribution doesn't include the graphical UI apps or a modeller. You would build your own task UI, which is natural for an embedded utility anyway. Treat that as part of the cost estimate for the "days, not weeks" claim.
+
+## When to pick something else
+
+- **.NET stack → Elsa 3.** It's an open-source set of .NET libraries that you can integrate into existing apps or run as a standalone server, and workflows can be defined declaratively in JSON. The .NET Foundation lists it as MIT. I couldn't confirm first-class human-task and SLA support, so verify that before committing. An older README also noted that the designer was not yet fully embeddable. Check whether that still holds.
+- **Polyglot services, no embedding → Conductor OSS.** It's Apache 2.0, and its HUMAN task type pauses a workflow until an approval or input arrives via API. Workflow definitions are JSON and versioned. Expect to build worklists, routing, and SLAs yourself.
+- **Quarkus, spec-first, heavier platform → Apache KIE.** jBPM covers BPMN 2.0, case management, and human tasks, and SonataFlow implements the CNCF Serverless Workflow spec. It is still Apache incubating, and the 10.2 release removed the classic BPMN and DMN editors. That is churn you'd have to manage.
+- **Code-first reliability → Temporal.** Workflows are ordinary code. That makes a declarative migration generator harder to write, review, and let non-developers edit.
+
+**Why I'd rule out Windmill:** it advertises AGPLv3, and the Enterprise edition adds Git sync. The Community Edition also bundles proprietary, non-public code alongside the AGPL and Apache sources. One independent assessment calls the licensing complex and dependent on the specific file. That conflicts with your Git-versioning and licence-safety goals.
+
+## The migration utility has an existing precedent
+
+Camunda Consulting published a free Pega-to-BPMN converter. It is worth studying, but it also shows the limits.
+
+- **What it validates:** Pega process flows don't conform to any open standard, despite looking BPMN-like. Without a converter, teams redraw processes manually.
+- **What it admits:** its own readme says it is not a silver bullet, typically generates a BPMN file that retains the diagram's fidelity, and you still add code and scripts to make it executable.
+- **What users report:** one user said it converts only a minimal basic part, around 5%. Another hit a crash on an element type it doesn't support, a Data-MO-Connector-Transition.
+- **Cutover pattern:** most users run both installations in parallel, start new instances only in the new engine, and run Pega until existing cases finish.
+
+**Design lessons for your utility:**
+
+1. **Whitelist, don't convert everything.** Support a small set of Tier 1 constructs and fail loudly, with a report, on anything else. That is also your Tier 1 eligibility test.
+2. **Aim for a runnable skeleton, not a finished app.** Your target is "executes end to end with stub forms and routing", and humans finish it.
+3. **Cut over by new cases only.** Never migrate in-flight Pega cases for Tier 1 unless there is a compelling reason.
+4. **Check the licence and engine-specific output** of the Camunda tool before reusing any of its code.
+
+## The input problem
+
+The thread you attached confirms the earlier finding: the `.blueprint` format isn't publicly documented and appears proprietary. The workable inputs are:
+
+- **The `.blueprint` file itself**, which carries case types, life cycles, data models, and personas. You would reverse-engineer it, which is brittle and may raise legal and support questions. Ask your Pega account team whether a supported schema exists.
+- **The PDF representation** that Blueprint also generates. It is human-readable but lossy to parse.
+- **Pega process-flow XML**, the input the Camunda converter uses. It is better known, but it describes flows, not Blueprint's stage/step design.
+- **A hand-authored canonical YAML** that the migration utility also produces. I'd make this the system of record regardless.
+
+My recommendation is to make the canonical YAML primary and the Blueprint adapter an optional, versioned plug-in. Then a format change on Pega's side breaks only the adapter, not your engine.
+
+## Proposed two-week proof of concept
+
+1. Pick 3 to 5 real Tier 1 processes, covering a linear approval, a branch with rejection, and a timed escalation.
+2. Hand-build them on Flowable 8 embedded in a test app, with a generic schema-driven task form.
+3. Extract a canonical YAML schema from what you built.
+4. Write the generator (YAML to BPMN, plus form and routing stubs) and rebuild the same processes from YAML.
+5. Collect 5 to 10 real Blueprint exports and attempt the adapter.
+
+**Success criteria:** a new Tier 1 process goes from YAML to a running workflow in under a day, every definition diffs cleanly in Git, and the generator rejects out-of-scope input with a clear reason.
+
+What is the host application's language and framework (Java/Spring, .NET, Node, Python), and which Spring Boot version if it's Java? That decides between Flowable, Elsa, and Conductor, and whether you hit the Spring Boot 4 constraint.
