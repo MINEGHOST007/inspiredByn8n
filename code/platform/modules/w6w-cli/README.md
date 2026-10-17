@@ -16,5 +16,7 @@ against the repository at `W6W_ROOT`.
 ```
 
 `migrate-pdf` accepts PDF blueprints and writes reviewable draft packages. It
-supports `--out DIRECTORY` and `--dry-run`. It does not parse proprietary
+supports `--out DIRECTORY`, `--dry-run`, and `--rules RULES.yaml` for a
+versioned mapping-rule override. The default rules live in the migration
+module's `migration/blueprint-mappings-v1.yaml`. It does not parse proprietary
 `.blueprint` binaries. Generated workflow drafts are not deployed automatically.

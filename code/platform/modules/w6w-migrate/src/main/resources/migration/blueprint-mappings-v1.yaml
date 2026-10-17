@@ -1,0 +1,27 @@
+version: 1
+stepMappings:
+  userTask:
+    strategy: USER_TASK
+    targetType: userTask
+    confidence: medium
+    reason: Role and form fields require review.
+  approval:
+    strategy: APPROVAL
+    targetType: approval
+    confidence: medium
+    reason: Approval routing, outcomes and SLA are absent from the PDF semantics.
+  serviceTask:
+    strategy: SERVICE_TASK
+    targetType: serviceTask
+    confidence: low
+    reason: Action name is a stub; handler does not exist yet.
+  end:
+    strategy: END
+    targetType: end
+    confidence: high
+    reason: Explicit terminal step.
+  childWorkflow:
+    strategy: CHILD_WORKFLOW
+    targetType: childWorkflow
+    confidence: medium
+    reason: Child workflow requires target and completion behavior review.

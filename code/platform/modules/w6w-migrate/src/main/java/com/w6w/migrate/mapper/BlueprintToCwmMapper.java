@@ -11,6 +11,11 @@ import java.util.Locale;
 
 /** Maps only source facts that can be represented without guessing missing behavior. */
 public class BlueprintToCwmMapper {
+    private final BlueprintMappingRules rules;
+
+    public BlueprintToCwmMapper() { this(BlueprintMappingRules.defaults()); }
+
+    public BlueprintToCwmMapper(BlueprintMappingRules rules) { this.rules = rules; }
 
     public WorkflowDefinition mapToWorkflow(IntermediateCaseType caseType, String blueprintId, ConversionReport report) {
         WorkflowDefinition wf = new WorkflowDefinition();
@@ -63,44 +68,47 @@ public class BlueprintToCwmMapper {
                 StepDefinition step = new StepDefinition();
                 step.setId(slug(sourceStep.getName()));
                 step.setName(sourceStep.getName());
-                step.setType(sourceStep.getStepType());
+                BlueprintMappingRules.Rule rule = rules.forSourceType(sourceStep.getStepType());
+                step.setType(rule.targetType());
 
-                switch (safeType(sourceStep.getStepType())) {
-                    case "userTask" -> {
+                switch (rule.strategy().toUpperCase(Locale.ROOT)) {
+                    case "USER_TASK" -> {
                         step.setForm("forms/" + step.getId() + ".json");
                         report.incrementApproximated();
-                        report.recordElement(step.getId(), "APPROXIMATED", sourceStep.getConfidence(), "Role and form fields require review.");
+                        report.recordElement(step.getId(), "APPROXIMATED", rule.confidence(), rule.reason());
                         report.addActionItem("Assign an authorized role/user and review form fields for " + step.getId() + ".");
                     }
-                    case "approval" -> {
+                    case "APPROVAL" -> {
                         report.incrementApproximated();
-                        report.recordElement(step.getId(), "APPROXIMATED", sourceStep.getConfidence(), "Approval routing, outcomes and SLA are absent from the PDF semantics.");
+                        report.recordElement(step.getId(), "APPROXIMATED", rule.confidence(), rule.reason());
                         report.addActionItem("Confirm approver routing, approval outcomes and SLA for " + step.getId() + ".");
                     }
-                    case "serviceTask" -> {
+                    case "SERVICE_TASK" -> {
                         String actionName = key.replace('-', '.') + "." + camelCase(sourceStep.getName());
                         step.setAction(actionName);
                         report.incrementApproximated();
-                        report.recordElement(step.getId(), "APPROXIMATED", sourceStep.getConfidence(), "Action name is a stub; handler does not exist yet.");
+                        report.recordElement(step.getId(), "APPROXIMATED", rule.confidence(), rule.reason());
                         report.addActionItem("Register and implement action '" + actionName + "' for " + step.getId() + ".");
                     }
-                    case "end" -> {
+                    case "END" -> {
                         report.incrementConverted();
-                        report.recordElement(step.getId(), "CONVERTED", sourceStep.getConfidence(), "Explicit terminal step.");
+                        report.recordElement(step.getId(), "CONVERTED", rule.confidence(), rule.reason());
                     }
-                    case "childWorkflow" -> {
+                    case "CHILD_WORKFLOW" -> {
                         step.setChildWorkflowKey(sourceStep.getChildWorkflowKey());
                         step.setChildWorkflowDepth(sourceStep.getChildWorkflowKey() == null ? 0 : 1);
                         report.incrementApproximated();
-                        report.recordElement(step.getId(), "APPROXIMATED", sourceStep.getConfidence(), "Child workflow requires target and completion behavior review.");
+                        report.recordElement(step.getId(), "APPROXIMATED", rule.confidence(), rule.reason());
                         report.addActionItem("Verify child workflow key and callback behavior for " + step.getId() + ".");
                     }
                     default -> {
                         report.incrementUnsupported();
                         String reason = sourceStep.getManualReviewReason() == null
-                                ? "Source construct '" + sourceStep.getStepType() + "' needs an explicit CWM mapping."
+                                ? rule.reason() + " Source construct: '" + sourceStep.getStepType() + "'."
                                 : sourceStep.getManualReviewReason();
-                        report.recordElement(step.getId(), "UNSUPPORTED", sourceStep.getConfidence(), reason);
+                        // Preserve the source label for diagnostics; never invent an executable mapping.
+                        step.setType(sourceStep.getStepType());
+                        report.recordElement(step.getId(), "UNSUPPORTED", rule.confidence(), reason);
                         report.addActionItem("Resolve unsupported step " + step.getId() + ": " + reason);
                     }
                 }
@@ -110,8 +118,6 @@ public class BlueprintToCwmMapper {
         }
         return wf;
     }
-
-    private String safeType(String type) { return type == null ? "unknown" : type; }
 
     private String slug(String text) {
         return text == null ? "unnamed" : text.toLowerCase(Locale.ROOT)

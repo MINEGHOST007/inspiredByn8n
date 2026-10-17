@@ -81,9 +81,9 @@ GV-03,M,MVP,w6w-compiler; w6w-migrate,CwmLinterTest; CwmToBpmnCompilerTest,unit/
 GV-04,S,P2,w6w-governance,,not covered,Not implemented
 GV-05,C,P3,w6w-governance,,not covered,Not implemented
 MG-01,M,MVP,w6w-migrate; w6w-cli,PdfBlueprintExtractorTest; BlueprintMigrationServiceTest; W6wCliTest,PDF fixture and CLI output,Partial
-MG-02,M,MVP,w6w-migrate,PdfBlueprintExtractorTest,unit/fixture,Partial
+MG-02,M,MVP,w6w-migrate,PdfBlueprintExtractorTest; BlueprintMappingRulesTest,adapter and rules version tests,Partial
 MG-03,M,MVP,w6w-migrate,PdfBlueprintExtractorTest; BlueprintMigrationServiceTest; W6wCliTest,PDF fixture and generated package,Partial
-MG-04,M,MVP,w6w-migrate,,not covered,Not implemented
+MG-04,M,MVP,w6w-migrate,BlueprintMappingRulesTest,versioned YAML defaults and override,Partial
 MG-05,M,MVP,w6w-migrate; w6w-governance,EligibilityCheckerTest; BlueprintMigrationServiceTest; W6wCliTest,PDF fixture and CLI output,Partial
 MG-06,M,MVP,w6w-migrate; w6w-cli,BlueprintMigrationServiceTest; W6wCliTest,generated package files,Partial
 MG-07,M,MVP,w6w-migrate; w6w-cli,BlueprintMigrationServiceTest; W6wCliTest,conversion report in generated packages,Partial

@@ -169,10 +169,11 @@ Use dry-run to inspect cases and planned paths before writing generated files:
 ```powershell
 .\w6w.ps1 migrate-pdf "Pega Blueprint - Travel Management Customer Service.pdf" --dry-run
 .\w6w.ps1 migrate-pdf "Pega Blueprint - Travel Management Customer Service.pdf" --out code/workflows/domains/migrated/travel-management
+.\w6w.ps1 migrate-pdf "Pega Blueprint - Travel Management Customer Service.pdf" --rules .\mapping-overrides.yaml --dry-run
 ```
 
 Each case gets its own folder with a CWM draft (when eligible), form and data
 schema stubs, scenario stub, and migration report. Resolve manual actions,
 validate and scenario-test the CWM, then review and commit it. The adapter
-currently accepts Blueprint PDFs; it does not decode proprietary `.blueprint`
-binaries.
+currently accepts Blueprint PDFs; `--rules` can override the versioned default
+step mappings. It does not decode proprietary `.blueprint` binaries.

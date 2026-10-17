@@ -11,6 +11,9 @@ import com.w6w.test.ScenarioRunner;
 import com.w6w.migrate.BlueprintMigrationService;
 import com.w6w.migrate.MigrationFileWriter;
 import com.w6w.migrate.pdf.PdfBlueprintExtractor;
+import com.w6w.migrate.mapper.BlueprintMappingRules;
+import com.w6w.migrate.mapper.BlueprintToCwmMapper;
+import com.w6w.governance.EligibilityChecker;
 
 import java.io.File;
 import java.net.URI;
@@ -163,14 +166,17 @@ public final class W6wCli {
         if (args.length == 0) throw new IllegalArgumentException("Missing Blueprint PDF path");
         Path source = resolve(args[0]);
         Path output = root.resolve("code/workflows/domains/migrated").resolve(slug(source.getFileName().toString().replaceFirst("(?i)\\.pdf$", "")));
+        Path mappingRulesFile = null;
         boolean dryRun = false;
         for (int i = 1; i < args.length; i++) {
             if ("--dry-run".equals(args[i])) dryRun = true;
             else if ("--out".equals(args[i]) && i + 1 < args.length) output = resolve(args[++i]);
+            else if ("--rules".equals(args[i]) && i + 1 < args.length) mappingRulesFile = resolve(args[++i]);
             else throw new IllegalArgumentException("Unexpected migrate-pdf option: " + args[i]);
         }
+        BlueprintMappingRules rules = mappingRulesFile == null ? BlueprintMappingRules.defaults() : BlueprintMappingRules.fromFile(mappingRulesFile);
         var cases = new PdfBlueprintExtractor().extract(source.toFile()).getCaseTypes();
-        var migrations = new BlueprintMigrationService().migratePdf(source.toFile());
+        var migrations = new BlueprintMigrationService(new PdfBlueprintExtractor(), new BlueprintToCwmMapper(rules), new EligibilityChecker()).migratePdf(source.toFile());
         if (cases.size() != migrations.size()) throw new IllegalStateException("Migration adapter returned inconsistent case results");
         MigrationFileWriter writer = new MigrationFileWriter();
         int generated = 0;
@@ -222,6 +228,6 @@ public final class W6wCli {
                 + "  new --key KEY --template approval|intake-and-fulfil|multi-level-approval|request-with-sla [--name NAME --owner OWNER --domain DOMAIN]\n"
                 + "  validate WORKFLOW.yaml | compile WORKFLOW.yaml [OUTPUT.bpmn] | render WORKFLOW.yaml [OUTPUT.md]\n"
                 + "  test WORKFLOW.yaml [SCENARIOS_DIR] | deploy-local WORKFLOW_KEY | diff WORKFLOW.yaml\n"
-                + "  migrate-pdf BLUEPRINT.pdf [--out DIRECTORY] [--dry-run]");
+                + "  migrate-pdf BLUEPRINT.pdf [--out DIRECTORY] [--dry-run] [--rules RULES.yaml]");
     }
 }
