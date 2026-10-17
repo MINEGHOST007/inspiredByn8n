@@ -1,0 +1,53 @@
+name: "Standard Refund Approval Scenario"
+workflowKey: "refund-processing"
+initialData:
+  associatedComplaint: "CMP-90021"
+  guestName: "Alice Walker"
+  guestEmail: "alice.walker@example.com"
+  guestLoyaltyTier: "Gold"
+  refundAmount: 250.00
+  refundReason: "HVAC malfunction in room 402 during entire stay"
+  refundType: "OriginalPaymentMethod"
+
+steps:
+  - action: startWorkflow
+    expectedStage: "request-intake"
+
+  - action: completeTask
+    stepId: "receive-request"
+    user: "agent.smith"
+    formData:
+      associatedComplaint: "CMP-90021"
+      guestName: "Alice Walker"
+      guestEmail: "alice.walker@example.com"
+      guestLoyaltyTier: "Gold"
+      refundAmount: 250.00
+      refundReason: "HVAC malfunction in room 402 during entire stay"
+      refundType: "OriginalPaymentMethod"
+    expectedNextStage: "eligibility-check"
+
+  - action: completeTask
+    stepId: "review-eligibility-details"
+    user: "agent.smith"
+    outcome: "eligible"
+    formData:
+      policyAdherencePassed: true
+      calculatedRefundAmount: 250.00
+      compensationType: "BonusPoints"
+      reviewerComments: "Confirmed room temperature log exceeded SLA limits"
+    expectedNextStage: "refund-approval"
+
+  - action: completeApproval
+    stepId: "request-refund-approval"
+    user: "manager.jones"
+    outcome: "approve"
+    expectedNextStage: "disbursement"
+
+assertions:
+  finalResolution: "Approved"
+  completedStages:
+    - "request-intake"
+    - "eligibility-check"
+    - "refund-approval"
+    - "disbursement"
+    - "closure"

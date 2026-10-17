@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w6w.io/schemas/cwm/v1/form.schema.json",
+  "title": "W6W schema-driven form v1",
+  "type": "object",
+  "required": ["type", "properties"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "type": { "const": "object" },
+    "properties": { "type": "object", "additionalProperties": { "type": "object" } },
+    "required": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "ui": {
+      "type": "object",
+      "description": "W6W rendering hints; data validation remains standard JSON Schema.",
+      "properties": {
+        "layout": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } },
+        "labels": { "type": "object", "additionalProperties": { "type": "string" } },
+        "helpText": { "type": "object", "additionalProperties": { "type": "string" } },
+        "conditionalVisibility": { "type": "object" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

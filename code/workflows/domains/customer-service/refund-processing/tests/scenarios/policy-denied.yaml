@@ -1,0 +1,45 @@
+name: "Policy Denied Scenario"
+workflowKey: "refund-processing"
+initialData:
+  associatedComplaint: "CMP-90022"
+  guestName: "Bob Miller"
+  guestEmail: "bob.miller@example.com"
+  guestLoyaltyTier: "Standard"
+  refundAmount: 850.00
+  refundReason: "Non-refundable cancellation past 24h deadline"
+  refundType: "StatementCredit"
+
+steps:
+  - action: startWorkflow
+    expectedStage: "request-intake"
+
+  - action: completeTask
+    stepId: "receive-request"
+    user: "agent.smith"
+    formData:
+      associatedComplaint: "CMP-90022"
+      guestName: "Bob Miller"
+      guestEmail: "bob.miller@example.com"
+      guestLoyaltyTier: "Standard"
+      refundAmount: 850.00
+      refundReason: "Non-refundable cancellation past 24h deadline"
+      refundType: "StatementCredit"
+    expectedNextStage: "eligibility-check"
+
+  - action: completeTask
+    stepId: "review-eligibility-details"
+    user: "agent.smith"
+    formData:
+      policyAdherencePassed: false
+      calculatedRefundAmount: 0.00
+      compensationType: "None"
+      reviewerComments: "Booking was strictly non-refundable"
+    outcome: "ineligible"
+    expectedNextStage: "refund-denied"
+
+assertions:
+  finalResolution: "Denied"
+  completedStages:
+    - "request-intake"
+    - "eligibility-check"
+    - "refund-denied"

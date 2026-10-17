@@ -1,0 +1,36 @@
+name: Platform CI
+
+on:
+  push:
+    paths:
+      - 'code/platform/**'
+      - 'code/schema/**'
+  pull_request:
+    paths:
+      - 'code/platform/**'
+      - 'code/schema/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Verify Platform Modules
+        working-directory: code/platform
+        run: mvn --batch-mode verify
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-test-results
+          path: code/platform/**/target/surefire-reports/TEST-*.xml

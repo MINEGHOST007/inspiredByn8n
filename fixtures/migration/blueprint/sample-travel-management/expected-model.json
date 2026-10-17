@@ -1,0 +1,677 @@
+{
+  "blueprintId" : "BP-1766322",
+  "applicationName" : "Travel Management Customer Service",
+  "personas" : [ "Guest", "Service Agent", "Property Manager", "Compliance Officer", "Loyalty Member", "Property Partner" ],
+  "caseTypes" : [ {
+    "name" : "Complaint Resolution",
+    "description" : "This case manages the end-to-end tracking of guest issues, including SLA monitoring, root-cause analysis, and cross-departmental collaboration to ensure timely and effective resolutions, enhancing guest satisfaction and loyalty. It includes escalation paths and compensation alternatives to maintain guest satisfaction.",
+    "stages" : [ {
+      "name" : "Intake",
+      "alternate" : false,
+      "steps" : [ {
+        "name" : "Collect Complaint Details",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Summarize Complaint",
+        "stepType" : "parallel",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Determine Urgency",
+        "stepType" : "decision",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Investigate",
+      "alternate" : false,
+      "steps" : [ {
+        "name" : "Gather Supporting Evidence",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Interview Stakeholders",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Identify Root Cause",
+        "stepType" : "decision",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Propose Resolution",
+      "alternate" : false,
+      "steps" : [ {
+        "name" : "Propose Solutions",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Calculate Compensation",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Review Resolution",
+        "stepType" : "approval",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Fulfillment",
+      "alternate" : false,
+      "steps" : [ {
+        "name" : "Create Child Case - Refund Processing",
+        "stepType" : "childWorkflow",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : "refund-processing"
+      }, {
+        "name" : "Coordinate with Partners",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Update Guest Profile",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Draft Apology Letter",
+        "stepType" : "parallel",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Wrap Up",
+      "alternate" : true,
+      "steps" : [ {
+        "name" : "Acknowledge Receipt",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Verify Resolution",
+        "stepType" : "decision",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Trigger Satisfaction Survey",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Summarize Survey Feedback",
+        "stepType" : "parallel",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Address Remaining Concerns",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Close",
+      "alternate" : true,
+      "steps" : [ {
+        "name" : "Document Findings",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Update Case Status",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Create Resolution Report",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Send Closure Confirmation",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Reject Complaint",
+      "alternate" : true,
+      "steps" : [ {
+        "name" : "Define Actions",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Inform Guest",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Review Rejection Reason",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Notify Guest of Rejection",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    } ],
+    "dataFields" : [ {
+      "name" : "Complaint Description",
+      "description" : "Detailed description of the guest complaint.",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Guest Name",
+      "description" : "The full name of the guest involved in the complaint.",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Assigned Agent",
+      "description" : "The name of the agent assigned to handle the complaint.",
+      "type" : "User Reference",
+      "primary" : false
+    }, {
+      "name" : "Compensation Type",
+      "description" : "Type of compensation offered (e.g., Loyalty Points, Statement Credits, Meal Vouchers).",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Complaint Date",
+      "description" : "The date the guest lodged the complaint.",
+      "type" : "Date",
+      "primary" : false
+    }, {
+      "name" : "Complaint Status",
+      "description" : "Current status of the complaint (e.g., Open, In Progress, Resolved).",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Estimated Resolution",
+      "description" : "The expected resolution date for the complaint.",
+      "type" : "Date",
+      "primary" : false
+    }, {
+      "name" : "Guest Feedback",
+      "description" : "Feedback provided by the guest after resolution.",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Guest Satisfaction Sc",
+      "description" : "Score provided by the guest rating their satisfaction with the resolution.",
+      "type" : "Integer",
+      "primary" : false
+    }, {
+      "name" : "Resolution Summary",
+      "description" : "Summary of actions taken to resolve the complaint.",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "SLA Compliance",
+      "description" : "Indicates if the complaint was resolved within the SLA period.",
+      "type" : "Boolean",
+      "primary" : false
+    }, {
+      "name" : "Rejection Reason",
+      "description" : "Explanation for why the complaint was rejected.",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Reviewer Comments",
+      "description" : "Additional reviewer comments for complaint rejection.",
+      "type" : "Text",
+      "primary" : false
+    } ],
+    "businessRules" : [ ]
+  }, {
+    "name" : "Partner Onboarding",
+    "description" : "Handles the onboarding of property partners, managing the process from application intake through document collection, compliance checks, listing approval, and system activation.",
+    "stages" : [ {
+      "name" : "App Intake",
+      "alternate" : false,
+      "steps" : [ {
+        "name" : "Collect Partner Details",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Validate Application Data",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Send Confirmation",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Doc Verify",
+      "alternate" : false,
+      "steps" : [ {
+        "name" : "Request Documents",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Upload Partner Documents",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Check Document Completeness",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Verify Document Authenticity",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Compliance Check",
+      "alternate" : false,
+      "steps" : [ {
+        "name" : "Conduct Background Checks",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Review Legal Compliance",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Evaluate Business Suitability",
+        "stepType" : "decision",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Manager Approval",
+        "stepType" : "approval",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Contract Agree",
+      "alternate" : false,
+      "steps" : [ {
+        "name" : "Generate Partnership Agreement",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Review Contract Terms",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Partner Sign-off",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Legal Approval",
+        "stepType" : "approval",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Store Signed Agreement",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "System Activate",
+      "alternate" : false,
+      "steps" : [ {
+        "name" : "Summarize Document Insights",
+        "stepType" : "parallel",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Configure Partner Profile",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Integrate Property System",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Activate Property Listing",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Draft Welcome Email",
+        "stepType" : "parallel",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Send Activation Notification",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    } ],
+    "dataFields" : [ {
+      "name" : "Contact Person",
+      "description" : "The name of the contact person for the partner.",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Partner Name",
+      "description" : "The name of the partner undergoing the onboarding process.",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Application Date",
+      "description" : "The date when the partner's application was received.",
+      "type" : "Date",
+      "primary" : false
+    }, {
+      "name" : "Assigned Agent",
+      "description" : "The agent responsible for managing the partner's onboarding process.",
+      "type" : "User Reference",
+      "primary" : false
+    }, {
+      "name" : "Compliance Check St",
+      "description" : "Status of the compliance check for the partner.",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Contact Email",
+      "description" : "The email address of the contact person.",
+      "type" : "Email",
+      "primary" : false
+    }, {
+      "name" : "Contact Phone",
+      "description" : "The phone number of the contact person.",
+      "type" : "Phone",
+      "primary" : false
+    }, {
+      "name" : "Contract Signed",
+      "description" : "Indicates whether the contract has been signed.",
+      "type" : "Boolean",
+      "primary" : false
+    }, {
+      "name" : "Initial Inventory Synced",
+      "description" : "Indicates whether the initial inventory has been synced with the system.",
+      "type" : "Boolean",
+      "primary" : false
+    }, {
+      "name" : "Onboarding Completi",
+      "description" : "The date when the onboarding process was completed.",
+      "type" : "Date",
+      "primary" : false
+    }, {
+      "name" : "Case Label",
+      "description" : "Label for this individual case instance",
+      "type" : "Text",
+      "primary" : false
+    } ],
+    "businessRules" : [ ]
+  }, {
+    "name" : "Refund Processing",
+    "description" : "This workflow manages the validation, approval, and execution of refund requests resulting from complaint resolutions, ensuring timely and accurate reimbursement to customers.",
+    "stages" : [ {
+      "name" : "Request Intake",
+      "alternate" : false,
+      "steps" : [ {
+        "name" : "Receive Request",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Validate Request Data",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Generate Refund ID",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Eligibility Check",
+      "alternate" : false,
+      "steps" : [ {
+        "name" : "Retrieve Related Records",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Check Policy Adherence",
+        "stepType" : "decision",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Review Eligibility Details",
+        "stepType" : "userTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Refund Approval",
+      "alternate" : false,
+      "steps" : [ {
+        "name" : "Request Refund Approval",
+        "stepType" : "approval",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Send Approval Notification",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Disbursement",
+      "alternate" : false,
+      "steps" : [ {
+        "name" : "Initiate Refund Transaction",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Update Financial Records",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Closure",
+      "alternate" : true,
+      "steps" : [ {
+        "name" : "Send Intake Confirmation",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Generate Refund Confirmation",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Send Confirmation",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Close Refund Case",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    }, {
+      "name" : "Refund Denied",
+      "alternate" : true,
+      "steps" : [ {
+        "name" : "Record Denial Reason",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Generate Denial Letter",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      }, {
+        "name" : "Send Denial Notification",
+        "stepType" : "serviceTask",
+        "confidence" : "medium",
+        "manualReviewReason" : null,
+        "childWorkflowKey" : null
+      } ]
+    } ],
+    "dataFields" : [ {
+      "name" : "Approval Status",
+      "description" : "Indicates whether the refund request is pending, approved, or denied.",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Refund Amount",
+      "description" : "Total monetary value to be reimbursed to the guest for the complaint case.",
+      "type" : "Currency",
+      "primary" : false
+    }, {
+      "name" : "Refund Type",
+      "description" : "Defines method of refund such as cash, credit, loyalty points, or vouchers.",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Calculated Refund A",
+      "description" : "Amount automatically computed based on business rules and complaint severity.",
+      "type" : "Currency",
+      "primary" : false
+    }, {
+      "name" : "Guest Loyalty Tier",
+      "description" : "Level of guest loyalty (e.g., Silver, Gold, Platinum) used for decisioning and compensati…",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Refund Execution Date",
+      "description" : "Date on which refund processing was completed.",
+      "type" : "Date",
+      "primary" : false
+    }, {
+      "name" : "Refund Method Chan",
+      "description" : "Channel through which the guest requested or received refund (e.g., web, phone, chat,…",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Refund Request Date",
+      "description" : "Records the date when the refund request was initiated by the guest or agent.",
+      "type" : "Date",
+      "primary" : false
+    }, {
+      "name" : "Refund SLA Breached",
+      "description" : "Boolean indicator showing whether the refund processing exceeded SLA timelines.",
+      "type" : "Boolean",
+      "primary" : false
+    }, {
+      "name" : "Sentiment Score",
+      "description" : "Numeric score or keyword indicating guest sentiment at refund request, captured fro…",
+      "type" : "Decimal",
+      "primary" : false
+    }, {
+      "name" : "Associated Complaint",
+      "description" : "Links this refund process to the original guest issue/complaint case.",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Case ID",
+      "description" : "Unique identifier for this individual case instance",
+      "type" : "Text",
+      "primary" : false
+    }, {
+      "name" : "Case Label",
+      "description" : "Label for this individual case instance",
+      "type" : "Text",
+      "primary" : false
+    } ],
+    "businessRules" : [ {
+      "name" : "Check Policy Adheren",
+      "description" : "Automated decision to verify if the refund request aligns with company refund policies and resolution terms."
+    }, {
+      "name" : "Identify Missing Info",
+      "description" : "System or agent pinpoints specific missing or incorrect data required to proceed with the refund."
+    } ]
+  } ]
+}

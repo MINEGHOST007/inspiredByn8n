@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w6w.io/schemas/cwm/v1/rubric.schema.json",
+  "title": "W6W Tier eligibility rubric v1",
+  "type": "object",
+  "required": ["version", "limits", "rejectTypes"],
+  "properties": {
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "limits": {
+      "type": "object",
+      "required": ["primaryStages", "totalSteps", "roles", "childDepth"],
+      "properties": {
+        "primaryStages": { "type": "integer", "minimum": 1 },
+        "totalSteps": { "type": "integer", "minimum": 1 },
+        "roles": { "type": "integer", "minimum": 1 },
+        "childDepth": { "type": "integer", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "rejectTypes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "reviewTypes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+  },
+  "additionalProperties": false
+}

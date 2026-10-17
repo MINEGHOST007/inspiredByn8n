@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.w6w.platform</groupId>
+        <artifactId>w6w-platform-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>w6w-test</artifactId>
+    <name>W6W Test Harness</name>
+    <description>Scenario runner executing workflow YAML tests and emitting results.xml</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.w6w.platform</groupId>
+            <artifactId>w6w-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.w6w.platform</groupId>
+            <artifactId>w6w-compiler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.w6w.platform</groupId>
+            <artifactId>w6w-engine-port</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.w6w.platform</groupId>
+            <artifactId>w6w-engine-flowable</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.w6w.platform</groupId>
+            <artifactId>w6w-runtime-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <mainClass>com.w6w.test.ScenarioRunner</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

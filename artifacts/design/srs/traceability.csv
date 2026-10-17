@@ -1,0 +1,110 @@
+req_id,priority,phase,module,test_id,test_level,status
+WF-01,M,MVP,w6w-model; code/schema/cwm/v1,CwmParser; workflow.schema.json,unit/fixture,Partial
+WF-02,M,MVP,w6w-model / w6w-compiler,,not covered,Not implemented
+WF-03,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
+WF-04,M,MVP,w6w-compiler,CwmLinterTest; unsupported-step test,unit/fixture,Partial
+WF-05,S,MVP,w6w-model / w6w-compiler,,not covered,Not implemented
+WF-06,M,MVP,w6w-model; w6w-compiler,CwmLinterTest,unit/fixture,Partial
+WF-07,M,MVP,w6w-test,ScenarioRunnerTest,unit/fixture,Partial
+WF-08,M,MVP,w6w-model / w6w-compiler,,not covered,Not implemented
+EX-01,M,MVP,w6w-engine-port; w6w-engine-flowable,FlowableEngineIntegrationTest,unit/fixture,Partial
+EX-02,M,MVP,w6w-compiler; w6w-engine-flowable,CwmToBpmnCompilerTest,unit/fixture,Partial
+EX-03,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
+EX-04,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
+EX-05,M,MVP,w6w-engine-flowable,FlowableEngineIntegrationTest,integration,Partial
+EX-06,M,MVP,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
+EX-07,S,P2,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
+EX-08,S,P2,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
+EX-09,C,P3,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
+HT-01,M,MVP,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
+HT-02,M,MVP,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
+HT-03,S,P2,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
+HT-04,M,MVP,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
+HT-05,M,MVP,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
+HT-06,S,P2,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
+HT-07,M,MVP,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
+HT-08,C,P3,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
+DF-01,M,MVP,w6w-model / workflow forms,,not covered,Not implemented
+DF-02,M,MVP,w6w-model / workflow forms,,not covered,Not implemented
+DF-03,S,P2,w6w-model / workflow forms,,not covered,Not implemented
+DF-04,S,P2,w6w-model / workflow forms,,not covered,Not implemented
+DF-05,S,P2,w6w-model / workflow forms,,not covered,Not implemented
+DC-01,M,MVP,w6w-compiler,,not covered,Not implemented
+DC-02,M,MVP,w6w-compiler,,not covered,Not implemented
+DC-03,S,P2,w6w-compiler,,not covered,Not implemented
+IN-01,M,MVP,w6w-runtime-starter,,not covered,Not implemented
+IN-02,M,MVP,w6w-runtime-starter,,not covered,Not implemented
+IN-03,M,MVP,w6w-runtime-starter,,not covered,Not implemented
+IN-04,M,MVP,w6w-runtime-starter,,not covered,Not implemented
+IN-05,M,MVP,w6w-runtime-starter,,not covered,Not implemented
+IN-06,S,P2,w6w-runtime-starter,,not covered,Not implemented
+API-01,M,MVP,w6w-api (planned),,not covered,Not implemented
+API-02,M,MVP,w6w-api (planned),,not covered,Not implemented
+API-03,M,MVP,w6w-api (planned),,not covered,Not implemented
+API-04,S,P2,w6w-api (planned),,not covered,Not implemented
+API-05,S,P2,w6w-api (planned),,not covered,Not implemented
+UI-01,M,MVP,w6w-ui-kit (planned),,not covered,Not implemented
+UI-02,M,MVP,w6w-ui-kit (planned),,not covered,Not implemented
+UI-03,M,MVP,w6w-ui-kit (planned),,not covered,Not implemented
+UI-04,M,MVP,w6w-ui-kit (planned),,not covered,Not implemented
+UI-05,S,P2,w6w-ui-kit (planned),,not covered,Not implemented
+UI-06,S,P2,w6w-ui-kit (planned),,not covered,Not implemented
+UI-07,C,P3,w6w-ui-kit (planned),,not covered,Not implemented
+VD-01,M,MVP,CI/CD (partial),,not covered,Not implemented
+VD-02,M,MVP,CI/CD (partial),,not covered,Not implemented
+VD-03,C,P3,CI/CD (partial),,not covered,Not implemented
+VD-04,M,MVP,CI/CD (partial),,not covered,Not implemented
+VD-05,S,MVP,CI/CD (partial),,not covered,Not implemented
+AU-01,M,MVP,w6w-runtime-starter (partial),,not covered,Not implemented
+AU-02,M,MVP,w6w-runtime-starter (partial),,not covered,Not implemented
+AU-03,S,P2,w6w-runtime-starter (partial),,not covered,Not implemented
+AU-04,C,P3,w6w-runtime-starter (partial),,not covered,Not implemented
+SE-01,M,MVP,host integration (planned),,not covered,Not implemented
+SE-02,M,MVP,host integration (planned),,not covered,Not implemented
+SE-03,M,MVP,host integration (planned),,not covered,Not implemented
+SE-04,M,MVP,host integration (planned),,not covered,Not implemented
+SE-05,M,MVP,host integration (planned),,not covered,Not implemented
+SE-06,S,P2,host integration (planned),,not covered,Not implemented
+OP-01,M,MVP,ops (planned),,not covered,Not implemented
+OP-02,M,MVP,ops (planned),,not covered,Not implemented
+OP-03,M,MVP,ops (planned),,not covered,Not implemented
+OP-04,M,MVP,ops (planned),,not covered,Not implemented
+OP-05,S,P2,ops (planned),,not covered,Not implemented
+DX-01,M,MVP,w6w-cli (planned),,not covered,Not implemented
+DX-02,M,MVP,w6w-cli (planned),,not covered,Not implemented
+DX-03,M,MVP,run-local.ps1; w6w-test,run-local.ps1,unit/fixture,Partial
+DX-04,S,P2,w6w-cli (planned),,not covered,Not implemented
+DX-05,S,MVP,w6w-cli (planned),,not covered,Not implemented
+GV-01,M,MVP,w6w-governance,EligibilityCheckerTest,unit/fixture,Partial
+GV-02,M,MVP,w6w-governance; w6w-migrate,EligibilityCheckerTest; BlueprintMigrationServiceTest,unit/fixture,Partial
+GV-03,M,MVP,w6w-compiler; w6w-migrate,CwmLinterTest; CwmToBpmnCompilerTest,unit/fixture,Partial
+GV-04,S,P2,w6w-governance,,not covered,Not implemented
+GV-05,C,P3,w6w-governance,,not covered,Not implemented
+MG-01,M,MVP,w6w-migrate,PdfBlueprintExtractorTest; BlueprintMigrationServiceTest,unit/fixture,Partial
+MG-02,M,MVP,w6w-migrate,PdfBlueprintExtractorTest,unit/fixture,Partial
+MG-03,M,MVP,w6w-migrate,PdfBlueprintExtractorTest; BlueprintMigrationServiceTest,unit/fixture,Partial
+MG-04,M,MVP,w6w-migrate,,not covered,Not implemented
+MG-05,M,MVP,w6w-migrate; w6w-governance,EligibilityCheckerTest; BlueprintMigrationServiceTest,unit/fixture,Partial
+MG-06,M,MVP,w6w-migrate,BlueprintMigrationServiceTest,unit/fixture,Partial
+MG-07,M,MVP,w6w-migrate,BlueprintMigrationServiceTest,unit/fixture,Partial
+MG-08,S,MVP,w6w-migrate,,not covered,Not implemented
+MG-09,M,MVP,w6w-migrate,BlueprintMigrationServiceTest,unit/fixture,Partial
+MG-10,M,MVP,w6w-test; w6w-migrate,BlueprintMigrationServiceTest; ScenarioRunnerTest,unit/fixture,Partial
+MG-11,S,P2,w6w-migrate,,not covered,Not implemented
+MG-12,M,MVP,artifacts/design/architecture/agent-modes.md,documented,unit/fixture,Partial
+MG-13,C,P3,w6w-migrate,,not covered,Not implemented
+MG-14,M,MVP,w6w-migrate,BlueprintMigrationServiceTest,unit/fixture,Partial
+NF-01,NFR,MVP,platform-wide,,not covered,Not implemented
+NF-02,NFR,MVP,platform-wide,,not covered,Not implemented
+NF-03,NFR,MVP,platform-wide,,not covered,Not implemented
+NF-04,NFR,MVP,platform-wide,,not covered,Not implemented
+NF-05,NFR,MVP,platform-wide,,not covered,Not implemented
+NF-06,NFR,MVP,platform-wide,,not covered,Not implemented
+NF-07,NFR,MVP,w6w-compiler; w6w-migrate,Maven unit/fixture suite,unit/fixture,Partial
+NF-08,NFR,MVP,platform-wide,,not covered,Not implemented
+NF-09,NFR,MVP,.github/workflows/; code/platform/pom.xml,,not covered,Not implemented
+NF-10,NFR,MVP,platform-wide,,not covered,Not implemented
+NF-11,NFR,MVP,platform-wide,,not covered,Not implemented
+NF-12,NFR,MVP,platform-wide,,not covered,Not implemented
+NF-13,NFR,MVP,platform-wide,,not covered,Not implemented
+NF-14,NFR,MVP,code/schema/cwm/v1/workflow.schema.json,,not covered,Partial

@@ -230,15 +230,15 @@ My recommendation is to make the canonical YAML primary and the Blueprint adapte
 
 What is the host application's language and framework (Java/Spring, .NET, Node, Python), and which Spring Boot version if it's Java? That decides between Flowable, Elsa, and Conductor, and whether you hit the Spring Boot 4 constraint.
 
-# Software Requirements Specification: Tier-1 Workflow Utility (T1WU)
+# Software Requirements Specification: Tier-1 Workflow Utility (W6W)
 
-Version 0.1 (Draft for review) · 17 October 2026 · Working title: T1WU
+Version 0.1 (Draft for review) · 17 October 2026 · Working title: W6W
 
 ## 1. Introduction
 
 ### 1.1 Purpose
 
-This SRS defines the requirements for T1WU, an in-application, Git-versioned workflow orchestration utility for low-complexity (Tier 1) business processes, plus a migration utility that converts simplified Pega Blueprint workflows into running T1WU workflows. Pega remains the platform for complex case management. T1WU covers the long tail of simple workflows.
+This SRS defines the requirements for W6W, an in-application, Git-versioned workflow orchestration utility for low-complexity (Tier 1) business processes, plus a migration utility that converts simplified Pega Blueprint workflows into running W6W workflows. Pega remains the platform for complex case management. W6W covers the long tail of simple workflows.
 
 ### 1.2 Scope
 
@@ -277,7 +277,7 @@ Targets are proposals and shall be validated in the proof of concept (Section 12
 | --- | --- | --- |
 | O1 | Fast delivery | A whitelisted Tier 1 process goes from approved spec to running workflow in 2 working days or less |
 | O2 | Git as source of truth | 100% of workflow definitions, forms, and decision tables versioned in Git and deployed only through CI/CD |
-| O3 | Cost containment | No per-case or per-user licence cost for T1WU runtime; only infrastructure and staff cost |
+| O3 | Cost containment | No per-case or per-user licence cost for W6W runtime; only infrastructure and staff cost |
 | O4 | Embedded utility | Runs inside the host application process, or as a sidecar owned by the same team, with no separate platform team required |
 | O5 | Migration acceleration | Migration utility produces a runnable skeleton for at least 70% of Tier 1 candidate blueprints, with an explicit report for the rest |
 | O6 | Protect Pega scope | Published eligibility rubric; ineligible processes are rejected with reasons, not partially converted |
@@ -286,23 +286,23 @@ Targets are proposals and shall be validated in the proof of concept (Section 12
 
 ### 3.1 Product perspective
 
-T1WU is a utility inside the application ecosystem, not a standalone BPM suite. It has four deliverables:
+W6W is a utility inside the application ecosystem, not a standalone BPM suite. It has four deliverables:
 
-1. **T1WU Runtime**: embeddable library (Spring Boot starter assumed) wrapping an open-source engine.
-2. **T1WU Toolkit**: CLI, schema, validator, scaffolder and Git/CI templates.
-3. **T1WU UI Kit**: reusable worklist, task form, case timeline and admin components.
-4. **T1WU Migrate**: Blueprint/Pega-flow adapter, canonical model generator and engine generators.
+1. **W6W Runtime**: embeddable library (Spring Boot starter assumed) wrapping an open-source engine.
+2. **W6W Toolkit**: CLI, schema, validator, scaffolder and Git/CI templates.
+3. **W6W UI Kit**: reusable worklist, task form, case timeline and admin components.
+4. **W6W Migrate**: Blueprint/Pega-flow adapter, canonical model generator and engine generators.
 
 ```
   Git repo (CWM YAML, forms, DMN)
         |  CI: validate, compile, test, package
         v
   Host application  <----------------------------------+
-   +-- T1WU Runtime (Engine Port -> Flowable) --> RDBMS |
-   +-- T1WU UI Kit (worklist, forms, admin)             |
+   +-- W6W Runtime (Engine Port -> Flowable) --> RDBMS |
+   +-- W6W UI Kit (worklist, forms, admin)             |
    +-- Integrations (REST, events, email, identity)     |
                                                         |
-  Pega .blueprint / flow XML --> T1WU Migrate -- PR ----+
+  Pega .blueprint / flow XML --> W6W Migrate -- PR ----+
 ```
 
 ### 3.2 User classes
@@ -342,7 +342,7 @@ JVM (Java 17 or later, confirm against chosen engine release), Spring Boot, Post
 | Option | Description | Assessment |
 | --- | --- | --- |
 | Fork and modify | Clone the OSS engine repository, change its internals | Rejected. Creates a permanent merge burden and security-patch lag; negates the speed objective |
-| **Wrap (recommended)** | Depend on released, unmodified engine artifacts; build T1WU as a thin layer above an Engine Port | Fastest, lowest maintenance. Engine upgrades are dependency bumps |
+| **Wrap (recommended)** | Depend on released, unmodified engine artifacts; build W6W as a thin layer above an Engine Port | Fastest, lowest maintenance. Engine upgrades are dependency bumps |
 | Scratch (own engine) | Write a new engine, using OSS only as a design reference | Rejected for Tier 1. Durable timers, transactions, history and concurrency are where homemade engines fail; weeks become quarters |
 
 ### 4.2 Decision rule
@@ -351,11 +351,11 @@ Wrap by default. Fork only if a defect or missing capability blocks a Must requi
 
 ### 4.3 Reference engine and alternates
 
-Reference engine: **Flowable (open-source edition)** for JVM stacks. It runs embedded or as a service, executes BPMN 2.0, CMMN 1.1 and DMN, and is Apache 2.0 licensed. The open-source distribution has no graphical modeller or UI apps, which T1WU supplies. Alternates behind the same Engine Port: Elsa 3 for .NET (MIT), Conductor OSS for polyglot non-embedded use (Apache 2.0). The engine decision shall be reconfirmed in the proof of concept.
+Reference engine: **Flowable (open-source edition)** for JVM stacks. It runs embedded or as a service, executes BPMN 2.0, CMMN 1.1 and DMN, and is Apache 2.0 licensed. The open-source distribution has no graphical modeller or UI apps, which W6W supplies. Alternates behind the same Engine Port: Elsa 3 for .NET (MIT), Conductor OSS for polyglot non-embedded use (Apache 2.0). The engine decision shall be reconfirmed in the proof of concept.
 
-### 4.4 What comes from open source and what T1WU adds
+### 4.4 What comes from open source and what W6W adds
 
-| Capability | From OSS engine | Added by T1WU |
+| Capability | From OSS engine | Added by W6W |
 | --- | --- | --- |
 | Process execution, timers, gateways, user tasks, history | Yes | Configuration and hardening only |
 | Decision tables | Yes (DMN) | Authoring conventions and validation |
@@ -363,7 +363,7 @@ Reference engine: **Flowable (open-source edition)** for JVM stacks. It runs emb
 | Git lifecycle | No | Schema, linter, CI templates, deploy-on-merge, diff-friendly rendering |
 | Worklist, task forms, admin screens | No | UI Kit with schema-driven forms |
 | Routing, SLA policy, escalation, delegation | Primitives only | Policy layer and standard patterns |
-| Embedding API and events | Java API/REST | Stable T1WU facade, versioned contract |
+| Embedding API and events | Java API/REST | Stable W6W facade, versioned contract |
 | Tier governance | No | Eligibility checker and report |
 | Pega migration | No | Adapter, mapper, generators, reports |
 | Observability, audit export | Basic history tables | Metrics, traces, audit views and export |
@@ -536,14 +536,14 @@ Reference engine: **Flowable (open-source edition)** for JVM stacks. It runs emb
 | MG-09 | Dry-run mode that parses and reports without writing files | M | MVP |
 | MG-10 | Generated skeleton shall compile and start, and complete a smoke test with simulated users | M | MVP |
 | MG-11 | Traceability: every generated element carries the source element identifier as metadata | S | P2 |
-| MG-12 | Cutover guidance: new cases start in T1WU while existing Pega cases run to completion; in-flight migration out of scope by default | M | MVP |
+| MG-12 | Cutover guidance: new cases start in W6W while existing Pega cases run to completion; in-flight migration out of scope by default | M | MVP |
 | MG-13 | Optional LLM-assisted drafting of form labels and descriptions from Blueprint text, always as reviewable suggestions, never as unreviewed deployment | C | P3 |
 | MG-14 | Handling of unknown or new element types by reporting, not crashing | M | MVP |
 
 ## 6. Canonical Workflow Model (illustrative sample)
 
 ```yaml
-apiVersion: t1wu/v1
+apiVersion: w6w/v1
 kind: Workflow
 metadata:
   key: leave-request
@@ -627,24 +627,24 @@ Targets are proposed and shall be load-tested in the proof of concept.
 
 | Module | Responsibility |
 | --- | --- |
-| t1wu-model | CWM types, JSON Schema, validation |
-| t1wu-compiler | CWM to BPMN/DMN generators, linter, renderer |
-| t1wu-engine-port | Interface plus Flowable implementation (alternate implementations later) |
-| t1wu-runtime-starter | Spring Boot starter: auto-configuration, action registry, policy layer (routing, SLA, escalation) |
-| t1wu-api | Facade, REST controllers, OpenAPI, events |
-| t1wu-ui-kit | Worklist, forms, timeline, admin components |
-| t1wu-cli | Scaffold, validate, compile, render, test, deploy |
-| t1wu-migrate | Adapters, intermediate model, mapper, generators, reports |
-| t1wu-governance | Eligibility rubric and checker |
-| t1wu-test | Test harness, simulated clock and users |
+| w6w-model | CWM types, JSON Schema, validation |
+| w6w-compiler | CWM to BPMN/DMN generators, linter, renderer |
+| w6w-engine-port | Interface plus Flowable implementation (alternate implementations later) |
+| w6w-runtime-starter | Spring Boot starter: auto-configuration, action registry, policy layer (routing, SLA, escalation) |
+| w6w-api | Facade, REST controllers, OpenAPI, events |
+| w6w-ui-kit | Worklist, forms, timeline, admin components |
+| w6w-cli | Scaffold, validate, compile, render, test, deploy |
+| w6w-migrate | Adapters, intermediate model, mapper, generators, reports |
+| w6w-governance | Eligibility rubric and checker |
+| w6w-test | Test harness, simulated clock and users |
 
 ### 9.2 Key design decisions
 
 1. CWM is the system of record; engine files are build outputs.
 2. Engine Port prevents engine types leaking into host code.
-3. Policy (routing, SLA, escalation) lives in T1WU, not in engine-specific extensions, so patterns stay uniform.
+3. Policy (routing, SLA, escalation) lives in W6W, not in engine-specific extensions, so patterns stay uniform.
 4. Migration adapters are plug-ins with version tags and fixture suites.
-5. One database schema owned by the engine; T1WU tables prefixed and migrated with a standard tool (Flyway or Liquibase).
+5. One database schema owned by the engine; W6W tables prefixed and migrated with a standard tool (Flyway or Liquibase).
 
 ## 10. Out of scope (explicit non-goals)
 
@@ -699,7 +699,7 @@ Durations are estimates and shall be re-baselined after Phase 0.
 ## 13. Open questions
 
 1. What is the host application stack: language, framework, Spring Boot version, database, hosting (Kubernetes or VMs)?
-2. Which identity provider and role model will T1WU use?
+2. Which identity provider and role model will W6W use?
 3. Which Pega inputs are available and legally usable: .blueprint files, PDFs, flow XML, or application exports?
 4. What are the official Tier 1 eligibility thresholds and who owns the rubric?
 5. Audit retention periods and data residency requirements?
@@ -740,7 +740,7 @@ The "days not weeks" promise depends on a standing team: roadmap, on-call, secur
 
 **4. Be clear about what the migration utility can do.**
 - A Blueprint is a design artifact, not the logic of a running Pega app. Existing Pega applications hold most of their behavior in rules, so the utility gets you a skeleton, not a replica.
-- It is likely most valuable for new Tier 1 work. Design in Blueprint, generate the skeleton, finish it in T1WU. Check Pega's terms of use before building that into a standard process.
+- It is likely most valuable for new Tier 1 work. Design in Blueprint, generate the skeleton, finish it in W6W. Check Pega's terms of use before building that into a standard process.
 - Don't promise stakeholders that existing apps will convert automatically.
 
 **5. Get the people side right early.**
@@ -763,9 +763,9 @@ At the end of that, you'll have evidence for a go/no-go decision.
 
 I can turn the SRS into an epic-level backlog or a day-by-day Phase 0 plan next. Or send me your stack details and I'll draft the workflow definition schema. Your answers to the open questions in Section 13 of the SRS would sharpen all three.
 
-# End-to-End Research, Implementation and Verification Plan: T1WU
+# End-to-End Research, Implementation and Verification Plan: W6W
 
-Version 0.1 (Draft) · 17 October 2026 · Companion to the SRS: Tier-1 Workflow Utility (T1WU)
+Version 0.1 (Draft) · 17 October 2026 · Companion to the SRS: Tier-1 Workflow Utility (W6W)
 
 ## 1. How to use this plan
 
@@ -818,7 +818,7 @@ Each track has a timebox, an output, and a way to prove it is finished.
 | R2 | Tier 1 portfolio | How many workflows are simple? What volumes, users, integrations, audit needs? | Inventory of Pega apps (template in 4.3), process owner interviews | Scored inventory and a candidate list of 10 to 20 workflows | Every candidate scored and reviewed by the Pega architect |
 | R3 | Blueprint and flow formats | What is in a .blueprint file? Which elements are stable? How does it relate to the PDF? Is Pega flow XML usable? | Sample .blueprint plus PDF files (Pega Academy), your own exports, Pega community threads, Camunda Pega converter source | Format notes, element catalog, fixture set of at least 5 files | Parser spike (S5) reads all fixtures |
 | R4 | Engine evaluation | Does the reference engine meet the SRS criteria better than alternates? | Documentation, release notes, hands-on spikes S1 to S3, community health (releases, issues, maintainers) | Weighted scorecard (4.4) and written recommendation | Scorecard reviewed by tech lead and security |
-| R5 | Host integration | How will T1WU embed (library or sidecar)? Which services must it call? Which events must it publish? | Architecture review with host team, API catalog | Integration sketch and interface list | Host team agrees on embedding model |
+| R5 | Host integration | How will W6W embed (library or sidecar)? Which services must it call? Which events must it publish? | Architecture review with host team, API catalog | Integration sketch and interface list | Host team agrees on embedding model |
 | R6 | Security, audit, compliance | Which audit, retention, segregation-of-duties and data-residency rules apply to Tier 1 workflows? | Compliance policies, audit team, existing Pega audit configuration | Control matrix mapped to SE and AU requirements | Compliance reviewer signs off |
 | R7 | Legal and licensing | May we parse and process exported Blueprint files? Are all dependency licenses acceptable? Are sample files usable as fixtures? | Pega terms of use, Academy terms, legal review, license scan | Written legal opinion and approved dependency list | Opinion filed in decision log |
 | R8 | UX and forms | What do task users need on a worklist and form? Which existing UI framework applies? | Observation of current Pega usage, host UI standards | UI Kit scope and packaging decision | Design sign-off on wireframes |
@@ -963,7 +963,7 @@ Pick 2 or 3 from the inventory: low business risk, real users, moderate volume, 
 
 1. Build or generate, finish, and review each pilot workflow through the normal pull request flow.
 2. UAT with process owners using scripted scenarios; fix defects.
-3. Run in shadow mode for one week where practical: T1WU processes copies of real requests without business effect, and results are compared with Pega.
+3. Run in shadow mode for one week where practical: W6W processes copies of real requests without business effect, and results are compared with Pega.
 4. Go live for new cases with a feature flag at 5%, then 25%, then 100%, with a daily check of errors, SLA breaches and user feedback.
 5. Existing Pega cases run to completion; no in-flight migration (MG-12).
 6. Hold a retrospective at the end of week 18.
@@ -991,7 +991,7 @@ Deliver P2 requirements by value: routing policies, working calendars, attachmen
 5. Enable for new cases in stages (5%, 25%, 100%) with monitoring.
 6. Keep Pega case type active for existing cases until the last case closes; track remaining count.
 7. Decommission the Pega case type after a defined quiet period and archive its history.
-8. Rollback at any stage: switch the flag so new cases go to Pega; cases already in T1WU finish there; export their data if needed; record the reason in the decision log.
+8. Rollback at any stage: switch the flag so new cases go to Pega; cases already in W6W finish there; export their data if needed; record the reason in the decision log.
 
 ### 9.3 Gate G4
 
@@ -1049,13 +1049,13 @@ This plan assumes answers to SRS Section 13 by the end of week 1: host stack, id
 
 # End-to-End Research, Implementation and Verification Plan: W6W
 
-Version 0.1 (Draft) · 17 October 2026 · Companion to the SRS: Tier-1 Workflow Utility (the SRS title says T1WU; renamed W6W)
+Version 0.1 (Draft) · 17 October 2026 · Companion to the SRS: Tier-1 Workflow Utility (the SRS title says W6W; renamed W6W)
 
 ## 1. How to use this plan
 
 This plan turns the SRS into a sequence of phases. Each phase ends in a go/no-go gate with named evidence, so the project can stop or change course cheaply. Requirement IDs (WF, EX, HT, MG, NF and so on) refer to the SRS. Durations assume a core team of about seven people and are estimates to be re-baselined at Gate G1.
 
-**Name.** The working name is W6W: the first and last letters of workflow with the six letters between them counted, the same convention n8n (short for nodemation) uses, and that i18n and k8s use for their words. Say it as double-u six double-u. Two alternates in the same style are p5s (process) and o9e (orchestrate). Before adopting any name, check it against internal trademark rules and the package, repository and domain names you will publish under. The SRS still carries the old working title T1WU; read T1WU as W6W there, and the rename can be applied to the SRS the same way.
+**Name.** The working name is W6W: the first and last letters of workflow with the six letters between them counted, the same convention n8n (short for nodemation) uses, and that i18n and k8s use for their words. Say it as double-u six double-u. Two alternates in the same style are p5s (process) and o9e (orchestrate). Before adopting any name, check it against internal trademark rules and the package, repository and domain names you will publish under. The SRS still carries the old working title W6W; read W6W as W6W there, and the rename can be applied to the SRS the same way.
 
 ## 2. Plan on a page
 
@@ -1104,7 +1104,7 @@ Each track has a timebox, an output, and a way to prove it is finished.
 | R2 | Tier 1 portfolio | How many workflows are simple? What volumes, users, integrations, audit needs? | Inventory of Pega apps (template in 4.3), process owner interviews | Scored inventory and a candidate list of 10 to 20 workflows | Every candidate scored and reviewed by the Pega architect |
 | R3 | Blueprint and flow formats | What is in a .blueprint file? Which elements are stable? How does it relate to the PDF? Is Pega flow XML usable? | Sample .blueprint plus PDF files (Pega Academy), your own exports, Pega community threads, Camunda Pega converter source | Format notes, element catalog, fixture set of at least 5 files | Parser spike (S5) reads all fixtures |
 | R4 | Engine evaluation | Does the reference engine meet the SRS criteria better than alternates? | Documentation, release notes, hands-on spikes S1 to S3, community health (releases, issues, maintainers) | Weighted scorecard (4.4) and written recommendation | Scorecard reviewed by tech lead and security |
-| R5 | Host integration | How will T1WU embed (library or sidecar)? Which services must it call? Which events must it publish? | Architecture review with host team, API catalog | Integration sketch and interface list | Host team agrees on embedding model |
+| R5 | Host integration | How will W6W embed (library or sidecar)? Which services must it call? Which events must it publish? | Architecture review with host team, API catalog | Integration sketch and interface list | Host team agrees on embedding model |
 | R6 | Security, audit, compliance | Which audit, retention, segregation-of-duties and data-residency rules apply to Tier 1 workflows? | Compliance policies, audit team, existing Pega audit configuration | Control matrix mapped to SE and AU requirements | Compliance reviewer signs off |
 | R7 | Legal and licensing | May we parse and process exported Blueprint files? Are all dependency licenses acceptable? Are sample files usable as fixtures? | Pega terms of use, Academy terms, legal review, license scan | Written legal opinion and approved dependency list | Opinion filed in decision log |
 | R8 | UX and forms | What do task users need on a worklist and form? Which existing UI framework applies? | Observation of current Pega usage, host UI standards | UI Kit scope and packaging decision | Design sign-off on wireframes |
@@ -1249,7 +1249,7 @@ Pick 2 or 3 from the inventory: low business risk, real users, moderate volume, 
 
 1. Build or generate, finish, and review each pilot workflow through the normal pull request flow.
 2. UAT with process owners using scripted scenarios; fix defects.
-3. Run in shadow mode for one week where practical: T1WU processes copies of real requests without business effect, and results are compared with Pega.
+3. Run in shadow mode for one week where practical: W6W processes copies of real requests without business effect, and results are compared with Pega.
 4. Go live for new cases with a feature flag at 5%, then 25%, then 100%, with a daily check of errors, SLA breaches and user feedback.
 5. Existing Pega cases run to completion; no in-flight migration (MG-12).
 6. Hold a retrospective at the end of week 18.
@@ -1277,7 +1277,7 @@ Deliver P2 requirements by value: routing policies, working calendars, attachmen
 5. Enable for new cases in stages (5%, 25%, 100%) with monitoring.
 6. Keep Pega case type active for existing cases until the last case closes; track remaining count.
 7. Decommission the Pega case type after a defined quiet period and archive its history.
-8. Rollback at any stage: switch the flag so new cases go to Pega; cases already in T1WU finish there; export their data if needed; record the reason in the decision log.
+8. Rollback at any stage: switch the flag so new cases go to Pega; cases already in W6W finish there; export their data if needed; record the reason in the decision log.
 
 ### 9.3 Gate G4
 
@@ -1397,41 +1397,7 @@ Lead time from approved spec to production; hand-build effort per workflow; migr
 
 This plan assumes answers to SRS Section 13 by the end of week 1: host stack, identity provider, available Pega inputs and legal use, Tier 1 thresholds and rubric owner, audit retention, UI framework, expected volumes, and whether in-flight migration is ever needed. Unanswered items extend Phase R and should be tracked as risks.
 
-{
-  "container": {
-    "id": "43f32a19-e7f2-4c58-9edf-5e90092e43d2",
-    "kind": "project"
-  },
-  "engine": "prose",
-  "payload": "{\"ops\": [{\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"t1wu/v1\"}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"w6w/v1\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"t1wu-model\"}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"w6w-model\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"t1wu-compiler\"}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"w6w-compiler\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"t1wu-engine-port\"}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"w6w-engine-port\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"t1wu-runtime-starter\"}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"w6w-runtime-starter\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"t1wu-api\"}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"w6w-api\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"t1wu-ui-kit\"}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"w6w-ui-kit\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"t1wu-cli\"}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"w6w-cli\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"t1wu-migrate\"}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"w6w-migrate\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"t1wu-governance\"}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"w6w-governance\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"t1wu-test\"}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"w6w-test\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"Software Requirements Specification: Tier-1 Workflow Utility (T1WU)\"}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W: Software Requirements Specification and Implementation Plan\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"replace\", \"target\": {\"kind\": \"find\", \"text\": \"T1WU\", \"nth\": 1}, \"with\": {\"from\": {\"kind\": \"inline\", \"content\": \"W6W\"}, \"as\": \"text\"}}, {\"op\": \"insert\", \"target\": {\"kind\": \"blocks\", \"ids\": [\"mybve51yyh2.68\"]}, \"side\": \"after\", \"source\": {\"from\": {\"kind\": \"inline\", \"content\": \"Part I (sections 1 to 14) is the requirements specification. Part II (sections P1 to P14) is the research, implementation and verification plan, including the repository layout. W6W is the working name: workflow with its first and last letters kept and the six letters between them counted, the same convention n8n uses for nodemation. Earlier drafts called it T1WU.\"}, \"as\": \"markdown\"}}, {\"op\": \"insert\", \"target\": {\"kind\": \"blocks\", \"ids\": [\"mybve51yyh2.23579\"]}, \"side\": \"after\", \"source\": {\"from\": {\"kind\": \"inline\", \"content\": \"### 9.3 Repository structure\\n\\nW6W lives in one repository with two top-level folders: platform/ (the product modules above, UI kit, fixtures, deployment files) and workflows/ (the workflow definitions teams edit), plus shared schema/, docs/ and tools/ folders. The full layout, ownership rules and pipeline behavior are in Part II, section P9.2.\"}, \"as\": \"markdown\"}}]}",
-  "ref": {
-    "id": "b91a6b01-7691",
-    "object": "node"
-  }
-}
-Response
-
-{"verdict":"allow","rev":33,"session":"mybve51yyh2","xml":"<doc op='0'><codeBlock id='mybve51yyh2.19035' h='358eac8c' language='yaml'><text id='.19036'>apiVersion: </text><text id='.29082'>w6w</text><text id='.19052'>/v1\nkind: …</text></codeBlock></doc><doc op='1'><table id='.22850' h='8def5c8e'><row id='.22876' h='b62d2f9d'><cell id='.22877' h='5a952a9f'><paragraph id='.22878' h='92527431'><text id='.29085'>w6w</text><text id='.22883'>-model</text></paragraph></cell></row></table></doc><doc op='2'><table id='.22850' h='8def5c8e'><row id='.22925' h='08a22fcd'><cell id='.22926' h='db33a944'><paragraph id='.22927' h='11ce001f'><text id='.29088'>w6w</text><text id='.22932'>-compiler</text></paragraph></cell></row></table></doc><doc op='3'><table id='.22850' h='8def5c8e'><row id='.22987' h='1e088ff1'><cell id='.22988' h='6bef4cf2'><paragraph id='.22989' h='8ef3cb88'><text id='.29091'>w6w</text><text id='.22994'>-engine-port</text></paragraph></cell></row></table></doc><doc op='4'><table id='.22850' h='8def5c8e'><row id='.23080' h='c3f7c002'><cell id='.23081' h='479393f1'><paragraph id='.23082' h='32372e8d'><text id='.29094'>w6w</text><text id='.23087'>-runtime-s…</text></paragraph></cell></row></table></doc><doc op='5'><table id='.22850' h='8def5c8e'><row id='.23202' h='e5a116c1'><cell id='.23203' h='4cec9742'><paragraph id='.23204' h='24d80b0f'><text id='.29097'>w6w</text><text id='.23209'>-api</text></paragraph></cell></row></table></doc><doc op='6'><table id='.22850' h='8def5c8e'><row id='.23256' h='60f4193f'><cell id='.23257' h='4e4689ae'><paragraph id='.23258' h='5a0900ec'><text id='.29100'>w6w</text><text id='.23263'>-ui-kit</text></paragraph></cell></row></table></doc><doc op='7'><table id='.22850' h='8def5c8e'><row id='.23315' h='3d364caa'><cell id='.23316' h='a63eace8'><paragraph id='.23317' h='a5175c44'><text id='.29103'>w6w</text><text id='.23322'>-cli</text></paragraph></cell></row></table></doc><doc op='8'><table id='.22850' h='8def5c8e'><row id='.23377' h='e051fac1'><cell id='.23378' h='7291d787'><paragraph id='.23379' h='30f52fb5'><text id='.29106'>w6w</text><text id='.23384'>-migrate</text></paragraph></cell></row></table></doc><doc op='9'><table id='.22850' h='8def5c8e'><row id='.23451' h='879906f6'><cell id='.23452' h='44b83331'><paragraph id='.23453' h='a1b98907'><text id='.29109'>w6w</text><text id='.23458'>-governance</text></paragraph></cell></row></table></doc><doc op='10'><table id='.22850' h='8def5c8e'><row id='.23501' h='f6ae96ed'><cell id='.23502' h='90526894'><paragraph id='.23503' h='a04749e9'><text id='.29112'>w6w</text><text id='.23508'>-test</text></paragraph></cell></row></table></doc><doc op='11'><paragraph id='.0' h='a8b38efe' heading='1'><text id='.29115'>W6W: Softw…</text></paragraph></doc><doc op='12'><paragraph id='.68' h='52fed845'><text id='.69'>Version 0.…</text><text id='.29179'>W6W</text></paragraph></doc><doc op='13'><paragraph id='.167' h='5e54f972'><text id='.168'>This SRS d…</text><text id='.29182'>W6W</text><text id='.210'>, an in-ap…</text><text id='.29185'>W6W</text><text id='.416'> workflows…</text><text id='.29188'>W6W</text><text id='.487'> covers th…</text></paragraph></doc><doc op='14'><paragraph id='.167' h='5e54f972'><text id='.168'>This SRS d…</text><text id='.29182'>W6W</text><text id='.210'>, an in-ap…</text><text id='.29185'>W6W</text><text id='.416'> workflows…</text><text id='.29188'>W6W</text><text id='.487'> covers th…</text></paragraph></doc><doc op='15'><paragraph id='.167' h='5e54f972'><text id='.168'>This SRS d…</text><text id='.29182'>W6W</text><text id='.210'>, an in-ap…</text><text id='.29185'>W6W</text><text id='.416'> workflows…</text><text id='.29188'>W6W</text><text id='.487'> covers th…</text></paragraph></doc><doc op='16'><table id='.2645' h='b7af6899'><row id='.2935' h='6ec28706'><cell id='.2958' h='c2ffa569'><paragraph id='.2959' h='db69c590'><text id='.2960'>No per-cas…</text><text id='.29191'>W6W</text><text id='.3005'> runtime; …</text></paragraph></cell></row></table></doc><doc op='17'><paragraph id='.3533' h='1640ccae'><text id='.29194'>W6W</text><text id='.3538'> is a util…</text></paragraph></doc><doc op='18'><list id='.3639' h='f58bd29d' kind='ordered'><listItem id='.3640' h='d7ae5bf0'><paragraph id='.3641' h='89f4257e'><text id='.29197'><bold>W6W</bold></text><text id='.3646'><bold> Runtime</bold></text><text id='.3654'>: embeddab…</text></paragraph></listItem></list></doc><doc op='19'><list id='.3639' h='f58bd29d' kind='ordered'><listItem id='.3736' h='20cd4849'><paragraph id='.3737' h='f5ab6047'><text id='.29200'><bold>W6W</bold></text><text id='.3742'><bold> Toolkit</bold></text><text id='.3750'>: CLI, sch…</text></paragraph></listItem></list></doc><doc op='20'><list id='.3639' h='f58bd29d' kind='ordered'><listItem id='.3808' h='d37fa07c'><paragraph id='.3809' h='88844e1b'><text id='.29203'><bold>W6W</bold></text><text id='.3814'><bold> UI Kit</bold></text><text id='.3821'>: reusable…</text></paragraph></listItem></list></doc><doc op='21'><list id='.3639' h='f58bd29d' kind='ordered'><listItem id='.3888' h='99b2350c'><paragraph id='.3889' h='10260e5d'><text id='.29206'><bold>W6W</bold></text><text id='.3894'><bold> Migrate</bold></text><text id='.3902'>: Blueprin…</text></paragraph></listItem></list></doc><doc op='22'><codeBlock id='.3981' h='d0963326'><text id='.3982'>  Git repo…</text><text id='.29209'>W6W</text><text id='.4142'> Runtime (…</text><text id='.29212'>W6W</text><text id='.4200'> UI Kit (w…</text><text id='.29215'>W6W</text><text id='.4400'> Migrate -…</text></codeBlock></doc><doc op='23'><codeBlock id='.3981' h='d0963326'><text id='.3982'>  Git repo…</text><text id='.29209'>W6W</text><text id='.4142'> Runtime (…</text><text id='.29212'>W6W</text><text id='.4200'> UI Kit (w…</text><text id='.29215'>W6W</text><text id='.4400'> Migrate -…</text></codeBlock></doc><doc op='24'><codeBlock id='.3981' h='d0963326'><text id='.3982'>  Git repo…</text><text id='.29209'>W6W</text><text id='.4142'> Runtime (…</text><text id='.29212'>W6W</text><text id='.4200'> UI Kit (w…</text><text id='.29215'>W6W</text><text id='.4400'> Migrate -…</text></codeBlock></doc><doc op='25'><table id='.6191' h='fc45ab76'><row id='.6395' h='7cb43c1d'><cell id='.6416' h='3b81c7cd'><paragraph id='.6417' h='fd1e6fd4'><text id='.6418'>Depend on …</text><text id='.29218'>W6W</text><text id='.6477'> as a thin…</text></paragraph></cell></row></table></doc><doc op='26'><paragraph id='.7104' h='ac11b91b'><text id='.7105'>Reference …</text><text id='.7123'><bold>Flowable (…</bold></text><text id='.7153'> for JVM s…</text><text id='.29221'>W6W</text><text id='.7346'> supplies.…</text></paragraph></doc><doc op='27'><paragraph id='.7543' h='08355b84' heading='3'><text id='.7544'>4.4 What c…</text><text id='.29224'>W6W</text><text id='.7589'> adds</text></paragraph></doc><doc op='28'><table id='.7594' h='ae74f2ed'><row id='.7595' h='0c4f6264'><cell id='.7625' h='5450f315' header='true'><paragraph id='.7626' h='21f14d34'><text id='.7627'>Added by </text><text id='.29227'>W6W</text></paragraph></cell></row></table></doc><doc op='29'><table id='.7594' h='ae74f2ed'><row id='.8178' h='8c6db517'><cell id='.8220' h='35edeec5'><paragraph id='.8221' h='d4d04d34'><text id='.8222'>Stable </text><text id='.29230'>W6W</text><text id='.8233'> facade, v…</text></paragraph></cell></row></table></doc><doc op='30'><table id='.17303' h='c5e6052e'><row id='.18587' h='45b656c8'><cell id='.18595' h='49f88ce9'><paragraph id='.18596' h='92e004c7'><text id='.18597'>Cutover gu…</text><text id='.29233'>W6W</text><text id='.18638'> while exi…</text></paragraph></cell></row></table></doc><doc op='31'><list id='.23579' h='022422c2' kind='ordered'><listItem id='.23701' h='7ac440a7'><paragraph id='.23702' h='0d884fe4'><text id='.23703'>Policy (ro…</text><text id='.29944'>W6W</text><text id='.23750'>, not in e…</text></paragraph></listItem></list></doc><doc op='32'><paragraph id='.29236' h='bc0cdee0'>Part I (se…</paragraph></doc><doc op='33'><paragraph id='.29603' h='c0fb6e02' heading='3'>9.3 Reposi…</paragraph><paragraph id='.29628' h='ce9a52d5'>W6W lives …</paragraph></doc>"}
-Tracing edits across revisions and paragraph changes in the document.
-Request
-
-{
-  "container": {
-    "id": "43f32a19-e7f2-4c58-9edf-5e90092e43d2",
-    "kind": "project"
-  },
-  "engine": "prose",
-  "payload": "{\"kind\":\"search\",\"text\":\"T1WU\"}",
-  "ref": {
-    "id": "b91a6b01-7691",
-    "object": "node"
-  }
-}
-Response
-
-{"verdict":"allow","rev":33,"data":{"rev":33,"xml":"<doc node='b91a6b01-7691' rev='33' hits='3'><gap blocks='2'/><paragraph id='mybve51yyh2.29236' rev='33' h='bc0cdee0'><text id='.29237'>Part I (sections 1 to 14) is the requirements specification. Part II (sections P1 to P14) is the research, implementation and verification plan, including the repository layout. W6W is the working name: workflow with its first and last letters kept and the six letters between them counted, the same convention n8n uses for nodemation. Earlier drafts called it <hit n='1' start='mybve51yyh2.29598' end='mybve51yyh2.29601'>T1WU</hit>.</text></paragraph><gap blocks='80'/><list id='.23579' h='022422c2' kind='ordered'><gap blocks='4'/><listItem id='.23883' rev='1' h='5afb51f5'><paragraph id='.23884' h='12f18aee'><text id='.23885'>One database schema owned by the engine; <hit n='2' start='mybve51yyh2.23926' end='mybve51yyh2.23929'>T1WU</hit> tables prefixed and migrated with a standard tool (Flyway or Liquibase).</text></paragraph></listItem></list><gap blocks='13'/><list id='.27638' h='500ea0f3' kind='ordered'><gap blocks='1'/><listItem id='.27757' h='4783211a'><paragraph id='.27758' h='9d02cf0e'><text id='.27759'>Which identity provider and role model will <hit n='3' start='mybve51yyh2.27803' end='mybve51yyh2.27806'>T1WU</hit> use?</text></paragraph></listItem><gap blocks='6'/></list><gap blocks='2'/></doc>","complete":true,"hits":3},"frame":{"slug":"43f32a19-e7f2-4c58-9edf-5e90092e43d2","url":"https://claude.ai/code/artifact/43f32a19-e7f2-4c58-9edf-5e90092e43d2","artifactUrl":"https://claude.ai/code/artifact/43f32a19-e7f2-4c58-9edf-5e90092e43d2"}}
-
-Understood. The folder structure in your screenshot will remain the parent structure, and I’ll fit the W6W modules, Java source code, workflow definitions, and testing layout underneath it according to the SRS. I won’t replace your existing `artifacts/`, `code/`, `prompts/`, `README.md`, or `RULES.md`.
+This folder map preserves the existing top-level project directories and places W6W modules, workflow assets and test locations beneath them.
 
 ## Updated folder structure
 
@@ -1627,7 +1593,7 @@ Each section below names a gap in the current plan, then supplies the missing co
 
 | # | Issue | Fix |
 |---|---|---|
-| 1 | Rename incomplete: the plan still says T1WU in R5, section 8.2 step 3 and section 9.2 step 8; the SRS has leftovers in section 9.2 item 5 and open question 2 | Run a global replace T1WU -> W6W, then search to confirm zero hits |
+| 1 | Rename incomplete: the plan still says W6W in R5, section 8.2 step 3 and section 9.2 step 8; the SRS has leftovers in section 9.2 item 5 and open question 2 | Run a global replace W6W -> W6W, then search to confirm zero hits |
 | 2 | Repository layout in the plan (`w6w/platform`, `w6w/workflows`) does not match your actual folder structure (`code/platform`, `code/workflows`, plus `artifacts/`, `prompts/`) | Adopt the mapping in G2 and update CI path filters and CODEOWNERS |
 | 3 | `code/src/` and `code/tests/` exist beside the Maven modules, with no defined role | Define them as in G2 (host demo app and cross-module acceptance tests only) |
 | 4 | Plan says "Java 17 or later" but Flowable 8 sits on Spring Boot 4 | Pin the baseline at G0 (see G11) |
@@ -1866,3 +1832,39 @@ Your structure includes `artifacts/demo_presentation/` and `prompts/`, which the
 1. Apply G1 (rename cleanup, repository mapping, CI path filters).
 2. Confirm the host stack (open question 1) and record ADRs 0001 and 0002.
 3. Write the CWM v1 specification (G4) and build the walking skeleton (G6).
+# Run the current implementation locally
+
+The platform is an embedded Java workflow engine: Flowable runs in-process and
+the demo stores engine state in a local H2 file database. The Blueprint PDF
+path uses Apache PDFBox; there is no hosted inference or embedding service in
+the current implementation.
+
+Requirements: Windows, PowerShell, and a Java 17+ JDK. Maven 3.9.9 is included
+under `code/platform/.maven/`; Maven downloads project dependencies the first
+time it runs. From the repository root:
+
+```powershell
+.\run-local.ps1
+```
+
+This builds and verifies the Maven modules, runs the refund approval and policy
+denial scenarios locally, and writes:
+
+- `data/w6w-demo.mv.db` — persistent embedded H2 SQL database
+- `artifacts/test_results/results.xml` — JUnit-compatible scenario report
+
+The generated database and test report are local runtime outputs and are
+ignored by Git. To run only the automated Maven verification suite:
+
+```powershell
+.\code\platform\mvnw.cmd -f .\code\platform\pom.xml verify
+```
+
+## Implementation companion documents
+
+The complete SRS and plan remain in this file. Current repository responsibilities and ownership are documented in [repository-structure.md](artifacts/design/architecture/repository-structure.md); the CWM v1 contract is in [cwm-v1.md](artifacts/design/architecture/cwm-v1.md); authoring and assistant modes are in [agent-modes.md](artifacts/design/architecture/agent-modes.md). [traceability.csv](artifacts/design/srs/traceability.csv) tracks all 95 functional and 14 non-functional requirements against current code and test evidence. `RULES.md` lists contribution and safety rules.
+
+The traceability matrix intentionally distinguishes partial implementation from complete acceptance. The current project is a local, embedded workflow proof of concept with a working PDF extraction path. The REST/OpenAPI surface, full UI Kit, CLI, complete SRS step-type support, PostgreSQL production profile, identity/security controls, observability stack, and CI quality gates remain open requirements; do not treat the current local demo as production complete.
+
+---
+

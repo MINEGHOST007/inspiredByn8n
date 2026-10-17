@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Review Refund Eligibility Details",
+  "type": "object",
+  "required": ["policyAdherencePassed"],
+  "properties": {
+    "policyAdherencePassed": {
+      "type": "boolean",
+      "title": "Confirmed Policy Adherence",
+      "description": "Check true if refund complies with standard terms and booking cancellation policy"
+    },
+    "calculatedRefundAmount": {
+      "type": "number",
+      "title": "Approved Refund Amount ($)"
+    },
+    "compensationType": {
+      "type": "string",
+      "title": "Additional Goodwill Compensation",
+      "enum": ["None", "MealVoucher", "RoomUpgrade", "BonusPoints"]
+    },
+    "reviewerComments": {
+      "type": "string",
+      "title": "Agent Review Notes",
+      "ui:widget": "textarea"
+    }
+  }
+}

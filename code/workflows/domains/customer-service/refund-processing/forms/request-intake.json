@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Refund Request Intake Form",
+  "type": "object",
+  "required": ["associatedComplaint", "guestName", "refundAmount", "refundReason", "refundType"],
+  "properties": {
+    "associatedComplaint": {
+      "type": "string",
+      "title": "Associated Complaint ID",
+      "ui:placeholder": "e.g. CMP-10829"
+    },
+    "guestName": {
+      "type": "string",
+      "title": "Guest Name"
+    },
+    "guestEmail": {
+      "type": "string",
+      "format": "email",
+      "title": "Guest Contact Email"
+    },
+    "guestLoyaltyTier": {
+      "type": "string",
+      "title": "Loyalty Tier",
+      "enum": ["Standard", "Silver", "Gold", "Platinum"],
+      "default": "Standard"
+    },
+    "refundAmount": {
+      "type": "number",
+      "title": "Requested Refund Amount ($)",
+      "minimum": 0.01
+    },
+    "refundReason": {
+      "type": "string",
+      "title": "Reason for Refund",
+      "ui:widget": "textarea"
+    },
+    "refundType": {
+      "type": "string",
+      "title": "Refund Disbursement Method",
+      "enum": ["OriginalPaymentMethod", "StatementCredit", "LoyaltyPoints", "Voucher"]
+    }
+  }
+}

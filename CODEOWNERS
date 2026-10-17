@@ -1,0 +1,11 @@
+# Platform core and shared contracts
+/code/platform/ @platform-team
+/code/schema/ @platform-team
+/artifacts/design/architecture/ @tech-lead
+/artifacts/design/srs/ @product-owner
+/artifacts/design/rubric/ @product-owner @pega-architect
+
+# Domain workflow ownership
+/code/workflows/domains/customer-service/ @customer-service-team
+
+/artifacts/design/adr/ @tech-lead @pega-architect

@@ -1,0 +1,28 @@
+# Target build directories
+target/
+**/target/
+build/
+**/build/
+data/
+**/data/
+*.mv.db
+*.trace.db
+/artifacts/test_results/*.xml
+
+# Maven wrapper distribution
+code/platform/.maven/
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE & Editor files
+.idea/
+*.iml
+.vscode/
+*.swp
+*.DS_Store
+
+# Logs
+*.log
+
+# Sensitive environment configuration
+**/*secret*
+**/*credential*

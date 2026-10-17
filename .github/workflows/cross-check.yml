@@ -1,0 +1,26 @@
+name: Platform Cross-Check
+
+on:
+  pull_request:
+    paths:
+      - 'code/platform/**'
+      - 'code/schema/**'
+      - 'code/workflows/**'
+
+jobs:
+  cross-check-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Compile and Run All Workflow Tests Against Current Platform Commit
+        working-directory: code/platform
+        run: mvn --batch-mode verify

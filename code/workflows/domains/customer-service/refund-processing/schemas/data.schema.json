@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w6w.io/schemas/domains/customer-service/refund-processing/data.schema.json",
+  "title": "Refund Processing Case Data Schema",
+  "type": "object",
+  "required": ["associatedComplaint", "guestName", "refundAmount", "refundReason", "refundType"],
+  "properties": {
+    "caseId": {
+      "type": "string",
+      "description": "Unique identifier for this refund case instance"
+    },
+    "associatedComplaint": {
+      "type": "string",
+      "description": "Links this refund process to the original guest issue/complaint case"
+    },
+    "guestName": {
+      "type": "string",
+      "description": "Full name of the guest"
+    },
+    "guestEmail": {
+      "type": "string",
+      "format": "email"
+    },
+    "guestLoyaltyTier": {
+      "type": "string",
+      "enum": ["Standard", "Silver", "Gold", "Platinum"],
+      "default": "Standard"
+    },
+    "refundAmount": {
+      "type": "number",
+      "minimum": 0.01,
+      "description": "Total monetary value to be reimbursed to the guest"
+    },
+    "calculatedRefundAmount": {
+      "type": "number",
+      "minimum": 0.0,
+      "description": "Amount computed based on business policy rules and complaint severity"
+    },
+    "refundReason": {
+      "type": "string",
+      "description": "Detailed rationale for the refund request"
+    },
+    "refundType": {
+      "type": "string",
+      "enum": ["OriginalPaymentMethod", "StatementCredit", "LoyaltyPoints", "Voucher"]
+    },
+    "compensationType": {
+      "type": "string",
+      "enum": ["None", "MealVoucher", "RoomUpgrade", "BonusPoints"],
+      "default": "None"
+    },
+    "policyAdherencePassed": {
+      "type": "boolean",
+      "default": false
+    },
+    "approvalStatus": {
+      "type": "string",
+      "enum": ["Pending", "Approved", "Denied"],
+      "default": "Pending"
+    },
+    "rejectionReason": {
+      "type": "string"
+    },
+    "reviewerComments": {
+      "type": "string"
+    },
+    "disbursementTransactionId": {
+      "type": "string"
+    }
+  }
+}

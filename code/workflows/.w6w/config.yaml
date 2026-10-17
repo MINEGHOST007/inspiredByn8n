@@ -1,0 +1,15 @@
+version: 1
+platformVersion: "0.1.0-SNAPSHOT"
+rubricVersion: "v1"
+schemaVersion: "v1"
+
+environments:
+  dev:
+    engineUrl: "http://localhost:8080/api/v1/w6w"
+    mockActions: true
+  test:
+    engineUrl: "https://test.internal.app/api/v1/w6w"
+    mockActions: false
+  prod:
+    engineUrl: "https://app.internal.app/api/v1/w6w"
+    mockActions: false

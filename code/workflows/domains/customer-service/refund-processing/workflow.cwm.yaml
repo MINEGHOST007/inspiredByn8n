@@ -1,0 +1,149 @@
+apiVersion: w6w/v1
+kind: Workflow
+metadata:
+  key: refund-processing
+  name: "Refund Processing"
+  version: 1.0.0
+  tier: 1
+  owner: customer-service-ops
+  dataClassification: confidential
+  source: "blueprint:BP-1766322:RefundProcessing"
+  description: "Manages the validation, approval, and execution of guest refund requests resulting from complaint resolutions."
+
+data:
+  schema: schemas/data.schema.json
+
+roles:
+  - guest
+  - service_agent
+  - property_manager
+  - finance_operator
+
+stages:
+  - id: request-intake
+    name: "Request Intake"
+    steps:
+      - id: receive-request
+        name: "Receive Request"
+        type: userTask
+        assignee:
+          role: service_agent
+        form: forms/request-intake.json
+
+      - id: validate-request-data
+        name: "Validate Request Data"
+        type: serviceTask
+        action: refund.validateRequest
+
+      - id: generate-refund-id
+        name: "Generate Refund ID"
+        type: serviceTask
+        action: refund.generateId
+
+      - id: send-intake-confirmation
+        name: "Send Intake Confirmation"
+        type: serviceTask
+        action: notify.email
+
+  - id: eligibility-check
+    name: "Eligibility Check"
+    steps:
+      - id: retrieve-related-records
+        name: "Retrieve Related Records"
+        type: serviceTask
+        action: refund.retrieveRecords
+
+      - id: check-policy-adherence
+        name: "Check Policy Adherence"
+        type: serviceTask
+        action: refund.checkPolicyAdherence
+
+      - id: review-eligibility-details
+        name: "Review Eligibility Details"
+        type: userTask
+        assignee:
+          role: service_agent
+        form: forms/review-eligibility.json
+        condition:
+          field: data.policyAdherencePassed
+          operator: eq
+          value: true
+        outcomes:
+          eligible: next
+          ineligible: stage:refund-denied
+
+  - id: refund-approval
+    name: "Refund Approval"
+    steps:
+      - id: request-refund-approval
+        name: "Request Refund Approval"
+        type: approval
+        assignee:
+          lookup: managerOfRequester
+        sla:
+          goal: PT4H
+          deadline: PT24H
+          onDeadline: "escalate:property_manager"
+        outcomes:
+          approve: next
+          reject: stage:refund-denied
+
+      - id: send-approval-notification
+        name: "Send Approval Notification"
+        type: serviceTask
+        action: notify.email
+
+  - id: disbursement
+    name: "Disbursement"
+    steps:
+      - id: initiate-refund-transaction
+        name: "Initiate Refund Transaction"
+        type: serviceTask
+        action: refund.initiateTransaction
+        onError:
+          retries: 3
+          backoff: PT1M
+          onFailure: deadLetter
+
+      - id: update-financial-records
+        name: "Update Financial Records"
+        type: serviceTask
+        action: refund.updateLedger
+
+  - id: closure
+    name: "Closure"
+    resolution: Approved
+    steps:
+      - id: generate-refund-confirmation
+        name: "Generate Refund Confirmation"
+        type: serviceTask
+        action: refund.generateReceipt
+
+      - id: send-confirmation
+        name: "Send Confirmation"
+        type: serviceTask
+        action: notify.email
+
+      - id: close-refund-case
+        name: "Close Refund Case"
+        type: end
+
+  - id: refund-denied
+    name: "Refund Denied"
+    alternate: true
+    resolution: Denied
+    steps:
+      - id: record-denial-reason
+        name: "Record Denial Reason"
+        type: serviceTask
+        action: refund.recordDenial
+
+      - id: generate-denial-letter
+        name: "Generate Denial Letter"
+        type: serviceTask
+        action: refund.generateDenialLetter
+
+      - id: send-denial-notification
+        name: "Send Denial Notification"
+        type: serviceTask
+        action: notify.email

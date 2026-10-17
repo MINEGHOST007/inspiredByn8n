@@ -1,0 +1,30 @@
+# W6W Role Mapping Catalog
+# Maps CWM workflow roles / Pega Blueprint personas to enterprise IdP groups
+
+roles:
+  guest:
+    description: "External customer / traveler initiating requests"
+    idpGroup: "ROLE_CUSTOMER"
+    autoAssignRequester: true
+
+  service_agent:
+    description: "Front-line support representative handling intake and reviews"
+    idpGroup: "SUPPORT_TIER_1_AGENTS"
+
+  property_manager:
+    description: "Local property or branch manager responsible for property-level approvals"
+    idpGroup: "PROPERTY_MANAGERS"
+
+  compliance_officer:
+    description: "Legal and compliance specialists reviewing regulatory adherence"
+    idpGroup: "COMPLIANCE_OFFICERS"
+
+  finance_operator:
+    description: "Finance and disbursement team processing transactions and adjustments"
+    idpGroup: "FINANCE_DISBURSEMENTS"
+
+lookups:
+  managerOfRequester:
+    description: "Resolves direct manager of the user who initiated the workflow"
+    serviceBean: "employeeDirectoryLookup"
+    method: "findManagerUsername"
