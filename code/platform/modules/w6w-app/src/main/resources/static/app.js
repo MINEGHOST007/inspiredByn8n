@@ -32,7 +32,7 @@ function renderForm(schema, host, initial={}) {
 function formData(host) { const result={}; for(const input of $$('input,select,textarea',host)){if(!input.name||input.disabled)continue;if(input.type==='checkbox'){result[input.name]=input.checked;continue}if(input.value==='')continue;if(input.dataset.valueType==='object'||input.dataset.valueType==='array'){try{result[input.name]=JSON.parse(input.value);input.setCustomValidity('')}catch{input.setCustomValidity('Enter valid JSON for this field.')}continue}result[input.name]=input.type==='number'?Number(input.value):input.value;}return result; }
 async function init(){
   bindUiEvents();
-  try { state.workflows=await api('/api/workflows'); renderWorkflows(); await refreshOverview(); }
+  try { state.workflows=await api('/api/workflows'); renderIdentityOptions(); renderWorkflows(); await refreshOverview(); }
   catch(e){toast(`Could not connect to the local workflow service: ${e.message}`,true)}
 }
 function bindUiEvents(){
@@ -49,6 +49,16 @@ function bindUiEvents(){
   $('#task-count').textContent='0';
 }
 function renderWorkflows(){ $('#workflow-list').innerHTML=state.workflows.length?state.workflows.map(w=>`<div class="workflow-option" data-start="${esc(w.key)}"><div class="workflow-icon">◇</div><div><strong>${esc(w.name)}</strong><small>${w.stages.length} stages · ${esc(w.description||'')}</small></div><button aria-label="Start ${esc(w.name)}">→</button></div>`).join(''):'<div class="empty">No workflows found. Add a workflow definition to code/workflows.</div>'; $$('.workflow-option').forEach(x=>x.onclick=()=>openStart(x.dataset.start)); }
+function renderIdentityOptions(){
+  const select=$('#identity'); const existing=new Set([...select.options].map(option=>option.value.split('|')[1]));
+  const roles=new Set(state.workflows.flatMap(workflow=>workflow.stages.flatMap(stage=>stage.steps.map(step=>step.assignee?.role).filter(Boolean))));
+  for(const role of [...roles].sort((a,b)=>a.localeCompare(b))){
+    if(existing.has(role))continue;
+    const label=role.replace(/[_-]+/g,' ').replace(/\b\w/g,char=>char.toUpperCase());
+    const user=`demo.${role.toLowerCase().replace(/[^a-z0-9]+/g,'.').replace(/^\.|\.$/g,'')}`;
+    select.add(new Option(`${label} · ${role}`,`${user}|${role}`));
+  }
+}
 async function refreshOverview(){const {user,role}=identity();try{const [tasks,instances]=await Promise.all([api(`/api/tasks?user=${encodeURIComponent(user)}&roles=${encodeURIComponent(role)}`),api('/api/instances?limit=200')]);$('#metric-tasks').textContent=tasks.length;$('#task-count').textContent=tasks.length;$('#metric-open').textContent=instances.filter(x=>x.status==='RUNNING').length;$('#metric-completed').textContent=instances.filter(x=>x.status==='COMPLETED').length;$('#overview-tasks').innerHTML=tasks.slice(0,4).map(task=>`<div class="preview-item"><span class="task-dot"></span><div class="task-main"><strong>${esc(task.name)}</strong><small>${esc(task.workflowName)} · ${esc(task.businessKey)}</small></div><button class="text-button" data-task="${esc(task.id)}">Open →</button></div>`).join('')||'<div class="empty">You are all caught up. New tasks will appear here.</div>';$$('[data-task]').forEach(b=>b.onclick=()=>openTask(b.dataset.task));$('#recent-instances').innerHTML=instances.slice(0,5).map(instanceRow).join('')||'<tr><td colspan="5" class="empty">No workflow activity yet.</td></tr>';bindInstanceRows();}catch(e){toast(e.message,true)}}
 async function openStart(key){const dialog=$('#start-dialog');$('#workflow-select').innerHTML=state.workflows.map(w=>`<option value="${esc(w.key)}">${esc(w.name)}</option>`).join('');if(key)$('#workflow-select').value=key;await startFormChanged();dialog.showModal()}
 async function startFormChanged(){const w=state.workflows.find(x=>x.key===$('#workflow-select').value);renderForm(w?.startForm,$('#start-fields'));}

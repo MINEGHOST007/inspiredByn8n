@@ -44,7 +44,7 @@ API-03,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 API-04,S,P2,w6w-api (planned),,not covered,Not implemented
 API-05,S,P2,w6w-api (planned),,not covered,Not implemented
 UI-01,M,MVP,w6w-app,"WorkflowApiControllerTest; manual Playwright: sort asc/desc, preserve selection, filter/search, select and claim",API integration and browser end-to-end,Implemented
-UI-02,M,MVP,w6w-app,WorkflowApiControllerTest; Playwright workflow-lifecycle.spec.js,API integration and browser form lifecycle (attachments remain unsupported),Partial
+UI-02,M,MVP,w6w-app,WorkflowApiControllerTest; Playwright workflow-lifecycle.spec.js; workflow-identity.spec.js,API integration and browser form lifecycle (attachments remain unsupported),Partial
 UI-03,M,MVP,w6w-app,WorkflowApiControllerTest; Playwright workflow-lifecycle.spec.js,API integration and browser timeline evidence (SLA visualization remains incomplete),Partial
 UI-04,M,MVP,w6w-app,WorkflowApiControllerTest.servesWorkspaceRunsApprovalWorkflowAndExposesDeadLetterQueueApi; FlowableEngineIntegrationTest.failedServiceTaskRetriesThenAppearsInDeadLetterQueueAndCanBeReplayed,api and engine integration,Partial
 UI-05,S,P2,w6w-ui-kit (planned),,not covered,Not implemented

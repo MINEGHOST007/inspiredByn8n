@@ -38,12 +38,30 @@ public final class BlueprintMappingRules {
     }
 
     public static BlueprintMappingRules fromFile(Path path) throws IOException {
-        try (InputStream input = java.nio.file.Files.newInputStream(path)) { return read(input); }
+        try (InputStream input = java.nio.file.Files.newInputStream(path)) {
+            RuleFile overrides = readFile(input);
+            BlueprintMappingRules defaults = defaults();
+            if (overrides.version != defaults.version)
+                throw new IllegalArgumentException("Unsupported Blueprint mapping rules version: " + overrides.version);
+            Map<String, Rule> merged = new LinkedHashMap<>(defaults.stepMappings);
+            if (overrides.stepMappings != null) {
+                overrides.stepMappings.forEach((source, rule) -> {
+                    if (source == null || source.isBlank() || rule == null || rule.strategy() == null || rule.targetType() == null)
+                        throw new IllegalArgumentException("Every step mapping needs a source, strategy, and targetType");
+                    merged.put(source.toLowerCase(Locale.ROOT), rule);
+                });
+            }
+            return new BlueprintMappingRules(overrides.version, merged);
+        }
     }
 
     private static BlueprintMappingRules read(InputStream input) throws IOException {
-        RuleFile config = new ObjectMapper(new YAMLFactory()).readValue(input, RuleFile.class);
+        RuleFile config = readFile(input);
         return new BlueprintMappingRules(config.version, config.stepMappings);
+    }
+
+    private static RuleFile readFile(InputStream input) throws IOException {
+        return new ObjectMapper(new YAMLFactory()).readValue(input, RuleFile.class);
     }
 
     public Rule forSourceType(String sourceType) {

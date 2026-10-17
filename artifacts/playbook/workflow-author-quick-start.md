@@ -176,6 +176,7 @@ Use dry-run to inspect cases and planned paths before writing generated files:
 .\w6w.ps1 migrate-pdf "Pega Blueprint - Travel Management Customer Service.pdf" --dry-run
 .\w6w.ps1 migrate-pdf "Pega Blueprint - Travel Management Customer Service.pdf" --out code/workflows/domains/migrated/travel-management
 .\w6w.ps1 migrate-pdf "Pega Blueprint - Travel Management Customer Service.pdf" --rules .\mapping-overrides.yaml --dry-run
+.\w6w.ps1 migrate-pdf "Pega Blueprint - Travel Management Customer Service.pdf" --rules artifacts/playbook/blueprint-manual-review-overrides.yaml --out data/blueprint-review
 ```
 
 Each case gets its own folder with a CWM draft (when eligible), form and data
@@ -183,6 +184,15 @@ schema stubs, scenario stub, and migration report. Resolve manual actions,
 validate and scenario-test the CWM, then review and commit it. The adapter
 currently accepts Blueprint PDFs; `--rules` can override the versioned default
 step mappings. It does not decode proprietary `.blueprint` binaries.
+
+An override file is a **partial overlay** on the packaged v1 mappings: only the
+listed source types change, and all other default mappings remain active. The
+manual-review example maps decision, parallel, and child-workflow constructs to reviewer tasks
+so a simple skeleton can run while the real decision logic and branch behavior
+are authored. This is an explicit approximation, not a semantic conversion;
+the conversion report retains the low-confidence reason and follow-up action.
+Do not promote such a draft until those tasks have been replaced with the
+approved decision and branch design.
 
 ## Decision table files
 

@@ -46,6 +46,20 @@ class BlueprintMappingRulesTest {
     }
 
     @Test
+    void partialOverrideRetainsOtherPackagedMappings() throws Exception {
+        Path override = temp.resolve("partial-override.yaml");
+        Files.writeString(override, "version: 1\nstepMappings:\n  decision:\n    strategy: USER_TASK\n    targetType: userTask\n    confidence: low\n    reason: Manual review until decision logic is authored.\n");
+
+        BlueprintMappingRules rules = BlueprintMappingRules.fromFile(override);
+
+        assertThat(rules.forSourceType("decision").strategy()).isEqualTo("USER_TASK");
+        assertThat(rules.forSourceType("userTask").targetType()).isEqualTo("userTask");
+        assertThat(rules.forSourceType("serviceTask").strategy()).isEqualTo("SERVICE_TASK");
+        assertThat(rules.forSourceType("approval").strategy()).isEqualTo("APPROVAL");
+        assertThat(rules.forSourceType("unknownFutureType").strategy()).isEqualTo("UNSUPPORTED");
+    }
+
+    @Test
     void unsupportedMappingVersionsAreRejected() throws Exception {
         Path override = temp.resolve("future-version.yaml");
         Files.writeString(override, "version: 2\nstepMappings:\n  task:\n    strategy: USER_TASK\n    targetType: userTask\n");

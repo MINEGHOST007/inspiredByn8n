@@ -1,0 +1,20 @@
+# Optional overlay for a Blueprint whose unsupported constructs are accepted
+# as explicit manual review work during skeleton generation. This changes the
+# workflow behavior and must not be treated as a production mapping.
+version: 1
+stepMappings:
+  decision:
+    strategy: USER_TASK
+    targetType: userTask
+    confidence: low
+    reason: Decision logic is not extracted; route to a reviewer until a tested decision table replaces this manual task.
+  parallel:
+    strategy: USER_TASK
+    targetType: userTask
+    confidence: low
+    reason: Parallel execution is not extracted; use a reviewer task until the branches are modeled explicitly.
+  childWorkflow:
+    strategy: USER_TASK
+    targetType: userTask
+    confidence: low
+    reason: Child workflow invocation is not executable in CWM v1; use a reviewer task pending decomposition.
