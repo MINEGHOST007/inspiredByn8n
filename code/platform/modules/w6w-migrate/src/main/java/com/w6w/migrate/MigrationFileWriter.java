@@ -32,10 +32,10 @@ public class MigrationFileWriter {
 
         planned.put("workflow.cwm.yaml", yaml.writeValueAsString(migration.draft()));
         planned.put("schemas/data.schema.json", json.writeValueAsString(dataSchema(sourceCase)));
-        planned.put("tests/scenarios/migration-smoke.json", json.writeValueAsString(smokeScenario(migration.draft().getMetadata().getKey())));
+        planned.put("tests/scenarios/migration-smoke.yaml", yaml.writeValueAsString(smokeScenario(migration.draft())));
         for (var stage : migration.draft().getStages()) {
             for (var step : stage.getSteps()) {
-                if ("userTask".equals(step.getType())) {
+                if ("userTask".equals(step.getType()) || "approval".equals(step.getType())) {
                     planned.put(step.getForm(), json.writeValueAsString(dataSchema(sourceCase)));
                 }
             }
@@ -78,11 +78,34 @@ public class MigrationFileWriter {
         };
     }
 
-    private Map<String, Object> smokeScenario(String key) {
+    private Map<String, Object> smokeScenario(com.w6w.model.WorkflowDefinition workflow) {
         Map<String, Object> scenario = new LinkedHashMap<>();
-        scenario.put("workflow", key);
-        scenario.put("mode", "manual-review-required");
-        scenario.put("description", "Complete generated user tasks with simulated users after role bindings and service actions are implemented.");
+        scenario.put("name", "Generated migration smoke scenario");
+        scenario.put("workflowKey", workflow.getMetadata().getKey());
+        scenario.put("initialData", Map.of());
+        java.util.List<Map<String, Object>> steps = new java.util.ArrayList<>();
+        steps.add(Map.of("action", "startWorkflow"));
+        for (var stage : workflow.getStages()) for (var step : stage.getSteps()) {
+            if (!"userTask".equals(step.getType()) && !"approval".equals(step.getType())) continue;
+            Map<String, Object> complete = new LinkedHashMap<>();
+            complete.put("action", "approval".equals(step.getType()) ? "completeApproval" : "completeTask");
+            complete.put("stepId", step.getId());
+            complete.put("user", "migration.reviewer");
+            complete.put("formData", Map.of());
+            if (step.getOutcomes() != null && !step.getOutcomes().isEmpty())
+                complete.put("outcome", step.getOutcomes().keySet().iterator().next());
+            steps.add(complete);
+        }
+        scenario.put("steps", steps);
+        Map<String, Object> assertions = new LinkedHashMap<>();
+        for (int i = workflow.getStages().size() - 1; i >= 0; i--) {
+            var stage = workflow.getStages().get(i);
+            if (!stage.isAlternate() && stage.getResolution() != null && !stage.getResolution().isBlank()) {
+                assertions.put("finalResolution", stage.getResolution());
+                break;
+            }
+        }
+        scenario.put("assertions", assertions);
         return scenario;
     }
 }

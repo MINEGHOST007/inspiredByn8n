@@ -118,6 +118,7 @@ public class WorkflowCatalog implements ApplicationRunner {
         JsonNode dataSchema = readDataSchema(file, definition);
         CwmLinter.LintResult lint = new CwmLinter().lint(definition, file);
         if (lint.hasErrors()) throw new IllegalArgumentException("Workflow " + definition.getMetadata().getKey() + " has lint errors: " + lint.getIssues());
+        if ("local-demo".equalsIgnoreCase(runtimeMode)) registerMigrationActionStubs(definition);
         new StartupActionValidator(actions).validateWorkflowActions(definition);
         String bpm = new CwmToBpmnCompiler().compile(definition);
         if (dataSchema != null) bpm = includeDataSchemaFingerprint(bpm, dataSchema);
@@ -140,6 +141,18 @@ public class WorkflowCatalog implements ApplicationRunner {
         if (replaceExisting) entries.put(definition.getMetadata().getKey(), entry);
         else if (entries.putIfAbsent(definition.getMetadata().getKey(), entry) != null)
             throw new IllegalArgumentException("Duplicate workflow key: " + definition.getMetadata().getKey());
+    }
+
+    private void registerMigrationActionStubs(WorkflowDefinition definition) {
+        for (StageDefinition stage : definition.getStages()) for (StepDefinition step : stage.getSteps()) {
+            String action = step.getAction();
+            if (!"serviceTask".equals(step.getType()) || action == null || !action.startsWith("migration.stub.")) continue;
+            if (actions.hasHandler(action)) continue;
+            actions.register(action, context -> {
+                log.warn("Executing migration no-op '{}' for local review; implement the integration before production promotion", action);
+                return ActionResult.success();
+            });
+        }
     }
 
     private JsonNode readDataSchema(Path workflowFile, WorkflowDefinition definition) throws IOException {

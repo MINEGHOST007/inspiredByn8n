@@ -30,6 +30,12 @@
             <artifactId>w6w-compiler</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.w6w.platform</groupId>
+            <artifactId>w6w-test</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
         </dependency>

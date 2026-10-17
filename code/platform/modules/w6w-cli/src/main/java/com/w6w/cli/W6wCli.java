@@ -201,6 +201,15 @@ public final class W6wCli {
                     + (dryRun ? " (dry run)" : "") + ": " + planned.keySet());
             if (migration.generated()) generatedDrafts++;
             else rejectedCases++;
+            if (migration.generated() && !dryRun) {
+                File workflowFile = caseOutput.resolve("workflow.cwm.yaml").toFile();
+                File scenarioFile = caseOutput.resolve("tests/scenarios/migration-smoke.yaml").toFile();
+                var smoke = new ScenarioRunner().runScenario(scenarioFile, workflowFile);
+                System.out.println("  Migration smoke scenario: " + (smoke.passed ? "PASS" : "FAIL")
+                        + (smoke.errorMessage == null ? "" : " - " + smoke.errorMessage));
+                if (!smoke.passed) throw new IllegalStateException("Generated workflow smoke scenario failed for "
+                        + cases.get(i).getName() + ": " + smoke.errorMessage);
+            }
         }
         System.out.println("Migration complete: " + generatedDrafts + " reviewable draft(s), "
                 + rejectedCases + " rejected case(s) out of " + migrations.size()

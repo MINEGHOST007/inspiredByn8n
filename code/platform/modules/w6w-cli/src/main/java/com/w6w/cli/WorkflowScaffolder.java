@@ -95,7 +95,7 @@ final class WorkflowScaffolder {
         outcomes.put("approve", "next"); outcomes.put("reject", "stage:rejected");
         approval.setOutcomes(outcomes);
         if (deadline != null) {
-            SlaDefinition sla = new SlaDefinition(); sla.setGoal("PT4H"); sla.setDeadline(deadline); sla.setOnDeadline("notify:approver");
+            SlaDefinition sla = new SlaDefinition(); sla.setGoal("PT4H"); sla.setDeadline(deadline); sla.setOnDeadline("escalate:senior_approver");
             approval.setSla(sla);
         }
         stage.getSteps().add(approval);

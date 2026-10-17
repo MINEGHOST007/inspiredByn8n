@@ -2,7 +2,12 @@ package com.w6w.migrate;
 
 import com.w6w.migrate.pdf.PdfBlueprintExtractor;
 import com.w6w.migrate.mapper.BlueprintToCwmMapper;
+import com.w6w.migrate.model.BlueprintIntermediateModel;
+import com.w6w.migrate.model.BlueprintIntermediateModel.IntermediateCaseType;
+import com.w6w.migrate.model.BlueprintIntermediateModel.IntermediateStage;
+import com.w6w.migrate.model.BlueprintIntermediateModel.IntermediateStep;
 import com.w6w.governance.EligibilityChecker;
+import com.w6w.test.ScenarioRunner;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -50,5 +55,43 @@ class BlueprintMigrationServiceTest {
         assertThatThrownBy(() -> new BlueprintMigrationService().migratePdf(unsupportedBinary))
                 .isInstanceOf(UnsupportedOperationException.class)
                 .hasMessageContaining("Proprietary .blueprint binaries are not decoded");
+    }
+
+    @Test
+    void supportedBlueprintSkeletonGeneratesCompilablePackageAndCompletesSmokeScenario() throws Exception {
+        BlueprintIntermediateModel model = new BlueprintIntermediateModel();
+        model.setBlueprintId("BP-SIMPLE-001");
+        model.getPersonas().add("Service Agent");
+        model.getPersonas().add("Property Manager");
+        IntermediateCaseType caseType = new IntermediateCaseType();
+        caseType.setName("Simple Purchase Request");
+        caseType.setDescription("A low-complexity request workflow.");
+        IntermediateStage stage = new IntermediateStage();
+        stage.setName("Request");
+        stage.getSteps().add(new IntermediateStep("Submit Request", "userTask"));
+        stage.getSteps().add(new IntermediateStep("Validate Request", "serviceTask"));
+        stage.getSteps().add(new IntermediateStep("Complete Request", "end"));
+        caseType.getStages().add(stage);
+        model.getCaseTypes().add(caseType);
+
+        var migration = new BlueprintMigrationService(null, new BlueprintToCwmMapper(), new EligibilityChecker())
+                .migrateModel(model).get(0);
+        assertThat(migration.generated()).isTrue();
+        assertThat(migration.draft().getRoles()).contains("service-agent", "property-manager", "migration_reviewer");
+        assertThat(migration.draft().getMetadata().getDataClassification()).isEqualTo("restricted");
+        assertThat(migration.report().toMarkdown()).contains("provisional restricted", "migration_reviewer", "no-op stub");
+
+        Path target = temp.resolve("simple-purchase-request");
+        var packageFiles = new MigrationFileWriter().write(migration, caseType, target, false);
+        Path workflowFile = target.resolve("workflow.cwm.yaml");
+        Path scenarioFile = target.resolve("tests/scenarios/migration-smoke.yaml");
+        assertThat(packageFiles).containsKeys("workflow.cwm.yaml", "schemas/data.schema.json",
+                "forms/submit-request.json", "tests/scenarios/migration-smoke.yaml", "migration-report.md");
+        assertThat(new com.w6w.compiler.CwmLinter().lint(com.w6w.model.CwmParser.parse(workflowFile.toFile()), workflowFile).hasErrors()).isFalse();
+        assertThat(new com.w6w.compiler.CwmToBpmnCompiler().compile(com.w6w.model.CwmParser.parse(workflowFile.toFile())))
+                .contains("migration.stub.simple-purchase-request.validate-request");
+
+        var smoke = new ScenarioRunner().runScenario(scenarioFile.toFile(), workflowFile.toFile());
+        assertThat(smoke.passed).withFailMessage("Smoke scenario failed: %s", smoke.errorMessage).isTrue();
     }
 }

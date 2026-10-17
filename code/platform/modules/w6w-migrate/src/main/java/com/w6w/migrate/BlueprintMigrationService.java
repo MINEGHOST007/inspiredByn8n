@@ -41,11 +41,16 @@ public class BlueprintMigrationService {
                     + "; this build accepts Blueprint PDF files. Proprietary .blueprint binaries are not decoded.");
         }
         BlueprintIntermediateModel model = pdfExtractor.extract(source);
-        if (model.getCaseTypes().isEmpty()) throw new IllegalArgumentException("No supported case types were found in the Blueprint PDF");
+        return migrateModel(model);
+    }
+
+    public List<CaseMigration> migrateModel(BlueprintIntermediateModel model) {
+        if (model == null) throw new IllegalArgumentException("Blueprint intermediate model is required");
+        if (model.getCaseTypes().isEmpty()) throw new IllegalArgumentException("No supported case types were found in the Blueprint model");
         List<CaseMigration> results = new ArrayList<>();
         for (var caseType : model.getCaseTypes()) {
             ConversionReport report = new ConversionReport(model.getBlueprintId(), caseType.getName());
-            WorkflowDefinition draft = mapper.mapToWorkflow(caseType, model.getBlueprintId(), report);
+            WorkflowDefinition draft = mapper.mapToWorkflow(caseType, model.getBlueprintId(), report, model.getPersonas());
             EligibilityScorecard scorecard = eligibilityChecker.check(draft);
             if (report.getUnsupportedCount() > 0) {
                 scorecard.upgradeTo(EligibilityScorecard.TierDecision.REJECT,

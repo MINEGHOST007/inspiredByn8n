@@ -53,6 +53,7 @@ public class ScenarioRunner {
 
         ActionRegistry actionRegistry = new ActionRegistry();
         registerMockHandlers(actionRegistry);
+        registerMigrationActionStubs(actionRegistry, workflow);
         new StartupActionValidator(actionRegistry).validateWorkflowActions(workflow);
 
         FlowableActionExecutor actionExecutor = new FlowableActionExecutor(actionRegistry);
@@ -200,6 +201,14 @@ public class ScenarioRunner {
         actionRegistry.register("refund.generateReceipt", ctx -> ActionResult.success());
         actionRegistry.register("refund.recordDenial", ctx -> ActionResult.success());
         actionRegistry.register("refund.generateDenialLetter", ctx -> ActionResult.success());
+    }
+
+    private void registerMigrationActionStubs(ActionRegistry actionRegistry, WorkflowDefinition workflow) {
+        for (var stage : workflow.getStages()) for (var step : stage.getSteps()) {
+            String action = step.getAction();
+            if (!"serviceTask".equals(step.getType()) || action == null || !action.startsWith("migration.stub.")) continue;
+            actionRegistry.register(action, ctx -> ActionResult.success());
+        }
     }
 
     public static void writeJunitXml(List<TestExecutionResult> results, File outputFile) throws IOException {
