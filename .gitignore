@@ -11,6 +11,8 @@ data/
 **/node_modules/
 **/test-results/
 **/playwright-report/
+/.playwright-cli/
+/tmp/
 
 # Maven wrapper distribution
 code/platform/.maven/

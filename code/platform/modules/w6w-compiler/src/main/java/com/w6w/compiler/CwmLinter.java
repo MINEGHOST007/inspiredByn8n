@@ -244,6 +244,9 @@ public class CwmLinter {
         if (step.getSla() != null) lintSla(step, workflowRoles, result);
         if ("serviceTask".equals(type) && isBlank(step.getAction()))
             result.addError("Service task '" + step.getId() + "' in stage '" + stage.getId() + "' has no registered action name");
+        if (step.getConfig() != null && !"serviceTask".equals(type))
+            result.addError("Step '" + step.getId() + "' can declare config only when it is a serviceTask");
+        if (step.getConfig() != null) lintSecretReferences(step.getConfig(), "steps." + step.getId() + ".config", result);
         if ("timer".equals(type)) lintTimer(step, result);
         if ("waitEvent".equals(type)) lintWaitEvent(step, result);
         lintErrorPolicy(step, result);
@@ -285,6 +288,27 @@ public class CwmLinter {
                 result.addError("Step '" + step.getId() + "' outcome '" + outcome + "' has invalid target '" + target + "'");
             }
         });
+    }
+
+    private void lintSecretReferences(Object value, String path, LintResult result) {
+        if (value instanceof Map<?, ?> map) {
+            if (map.size() == 1 && map.get("secretRef") instanceof String reference
+                    && reference.matches("[A-Za-z][A-Za-z0-9_.-]{0,127}")) return;
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                String key = String.valueOf(entry.getKey());
+                Object child = entry.getValue();
+                if (key.matches("(?i).*(password|secret|token|api.?key|credential|authorization).*")
+                        && !(child instanceof Map<?, ?> reference && reference.size() == 1
+                        && reference.get("secretRef") instanceof String secret && secret.matches("[A-Za-z][A-Za-z0-9_.-]{0,127}"))) {
+                    result.addError("Sensitive action config '" + path + "." + key
+                            + "' must use a host secret reference: {secretRef: NAME}");
+                    continue;
+                }
+                lintSecretReferences(child, path + "." + key, result);
+            }
+        } else if (value instanceof List<?> list) {
+            for (int i = 0; i < list.size(); i++) lintSecretReferences(list.get(i), path + "[" + i + "]", result);
+        }
     }
 
     private void lintSla(StepDefinition step, List<String> workflowRoles, LintResult result) {

@@ -1,9 +1,13 @@
 package com.w6w.compiler;
 
 import com.w6w.model.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import java.util.*;
 
 public class CwmToBpmnCompiler {
+    private static final ObjectMapper JSON = new ObjectMapper().enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
 
     public String compile(WorkflowDefinition workflow) {
         StringBuilder xml = new StringBuilder();
@@ -141,6 +145,7 @@ public class CwmToBpmnCompiler {
                .append("        <flowable:failedJobRetryTimeCycle>").append(failedJobRetryTimeCycle(step)).append("</flowable:failedJobRetryTimeCycle>\n")
                .append("        <flowable:field name=\"actionName\" stringValue=\"").append(escape(step.getAction() != null ? step.getAction() : "")).append("\" />\n")
                .append("        <flowable:field name=\"stepId\" stringValue=\"").append(escape(step.getId())).append("\" />\n")
+               .append("        <flowable:field name=\"actionConfig\" stringValue=\"").append(escape(actionConfig(step.getConfig()))).append("\" />\n")
                .append("      </extensionElements>\n")
                .append("    </serviceTask>\n");
 
@@ -370,5 +375,11 @@ public class CwmToBpmnCompiler {
     private String escape(String str) {
         if (str == null) return "";
         return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+    }
+
+    private String actionConfig(Map<String, Object> config) {
+        if (config == null || config.isEmpty()) return "{}";
+        try { return JSON.writeValueAsString(config); }
+        catch (JsonProcessingException e) { throw new IllegalArgumentException("Service action configuration is not valid JSON", e); }
     }
 }

@@ -11,6 +11,7 @@ public class StepDefinition {
     private AssigneeDefinition assignee;
     private String form;
     private String action;
+    private Map<String, Object> config;
     private String duration;
     private String eventName;
     private String childWorkflowKey;
@@ -39,6 +40,9 @@ public class StepDefinition {
 
     public String getAction() { return action; }
     public void setAction(String action) { this.action = action; }
+
+    public Map<String, Object> getConfig() { return config; }
+    public void setConfig(Map<String, Object> config) { this.config = config; }
 
     public String getDuration() { return duration; }
     public void setDuration(String duration) { this.duration = duration; }

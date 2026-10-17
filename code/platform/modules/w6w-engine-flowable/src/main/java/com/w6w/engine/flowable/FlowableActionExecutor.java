@@ -5,6 +5,8 @@ import com.w6w.port.action.ActionResult;
 import com.w6w.port.action.WorkflowActionHandler;
 import com.w6w.runtime.ActionRegistry;
 import com.w6w.runtime.WorkflowDataSchemaRegistry;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.flowable.engine.RepositoryService;
 import org.flowable.engine.repository.ProcessDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import java.util.Map;
 @Component("w6wActionExecutor")
 public class FlowableActionExecutor implements JavaDelegate {
     private static final Logger log = LoggerFactory.getLogger(FlowableActionExecutor.class);
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     private final ActionRegistry actionRegistry;
     private final WorkflowDataSchemaRegistry dataSchemas;
@@ -27,6 +30,7 @@ public class FlowableActionExecutor implements JavaDelegate {
 
     private Expression actionName;
     private Expression stepId;
+    private Expression actionConfig;
 
     @Autowired
     public FlowableActionExecutor(ActionRegistry actionRegistry, WorkflowDataSchemaRegistry dataSchemas,
@@ -56,7 +60,9 @@ public class FlowableActionExecutor implements JavaDelegate {
             throw new IllegalStateException("No registered WorkflowActionHandler for action: '" + resolvedAction + "'");
         }
 
-        ActionContext ctx = new ActionContext(execution.getProcessInstanceId(), resolvedStep, execution.getVariables());
+        Map<String, Object> configuration = readConfiguration(execution);
+        ActionContext ctx = new ActionContext(execution.getProcessInstanceId(), resolvedStep,
+                execution.getVariables(), configuration);
         log.info("Executing action '{}' with IdempotencyKey='{}'", resolvedAction, ctx.getIdempotencyKey());
 
         try {
@@ -75,6 +81,15 @@ public class FlowableActionExecutor implements JavaDelegate {
             log.error("Error executing action '{}' for instance '{}': {}", resolvedAction, execution.getProcessInstanceId(), e.getMessage(), e);
             throw new RuntimeException("Workflow action execution failed: " + e.getMessage(), e);
         }
+    }
+
+    private Map<String, Object> readConfiguration(DelegateExecution execution) {
+        if (actionConfig == null) return Map.of();
+        Object value = actionConfig.getValue(execution);
+        if (value == null || value.toString().isBlank()) return Map.of();
+        try { return JSON.readValue(value.toString(), new TypeReference<>() {}); }
+        catch (Exception e) { throw new IllegalStateException("Invalid action configuration for step "
+                + execution.getCurrentActivityId(), e); }
     }
 
     private void validateWorkflowData(DelegateExecution execution) {

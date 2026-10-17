@@ -353,6 +353,42 @@ class FlowableEngineIntegrationTest {
     }
 
     @Test
+    void serviceTaskReceivesVersionedWorkflowActionConfiguration() throws Exception {
+        actionRegistry.register("test.configured", ctx -> {
+            assertThat(ctx.getConfiguration()).containsEntry("message", "hello")
+                    .containsEntry("attempt", 3);
+            return ActionResult.success(Map.of("configuredValue", ctx.getConfiguration().get("message")));
+        });
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: configured-action-test
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                roles: []
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: configured-action
+                        type: serviceTask
+                        action: test.configured
+                        config:
+                          message: hello
+                          attempt: 3
+                """);
+        adapter.deploy("configured-action-test", "Configured action test", new CwmToBpmnCompiler().compile(workflow));
+
+        WorkflowInstance instance = adapter.startInstance("configured-action-test", "CONFIG-CASE-001", Map.of());
+        WorkflowInstance completed = await(() -> adapter.getInstance(instance.getId()),
+                item -> "COMPLETED".equals(item.getStatus()), "configured service task");
+        assertThat(completed.getVariables().get("configuredValue")).isEqualTo("hello");
+        assertThat(completed.getResolution()).isEqualTo("Done");
+    }
+
+    @Test
     void timerStepWaitsThenAllowsTheNextHumanTask() throws Exception {
         WorkflowDefinition workflow = CwmParser.parse("""
                 apiVersion: w6w/v1

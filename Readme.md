@@ -579,6 +579,36 @@ stages:
     resolution: Rejected
 ```
 
+### Configuring standard service actions
+
+Service actions keep the workflow in reviewable YAML while the host application supplies integrations and secrets. Put non-secret settings under `config`; use `{from: data.path}` to read workflow data and `{secretRef: NAME}` for host-managed credentials. The runtime starter currently provides:
+
+| Action | Required config | Behavior |
+| --- | --- | --- |
+| `w6w.http.request` | `method`, `url` | Sends an HTTP(S) request; supports optional headers/body, timeout, response/status output variables. Responses are limited to 1 MiB. |
+| `w6w.email.send` | `to`, `subject`, `body` | Sends through a host registered `WorkflowEmailGateway`; optional `from` and `cc`. |
+| `w6w.events.publish` | `eventName` | Publishes an application event; optional `payload`. |
+| `w6w.data.set` | `values` object | Sets workflow output fields from constants or existing variables. |
+
+Example action step:
+
+```yaml
+- id: send-confirmation
+  type: serviceTask
+  action: w6w.http.request
+  config:
+    method: POST
+    url: https://case-api.example.test/refunds
+    headers:
+      Authorization: { secretRef: REFUND_API_TOKEN }
+    body:
+      caseId: { from: caseId }
+      status: approved
+    responseBodyVariable: refundApiResponse
+```
+
+The default local secret provider reads `w6w.secrets.NAME` or `W6W_SECRET_NAME` from the process environment; production hosts should bind their secret manager. Validate the workflow before deployment so the linter can reject credentials embedded as plain values. Email requires a host gateway implementation, and a workflow with an unconfigured secret reference fails at runtime.
+
 ## 7. Pega to CWM to engine mapping (initial)
 
 | Pega concept | CWM element | Flowable artifact |
@@ -592,7 +622,7 @@ stages:
 | Approval step | approval | User task plus exclusive gateway |
 | Automation step | serviceTask | Service task bound to action registry |
 | Routing to work group or user | assignee | Candidate groups or assignee expression |
-| SLA goal and deadline | sla | Timer boundary events: notify at goal, escalate at deadline |
+| SLA goal and deadline | sla | Deadline escalation timer routes to the configured role; goal notification and business calendars are not currently executable |
 | Persona | roles | Groups and access policy |
 | Data object | data.schema | Process variables validated against JSON Schema |
 | Decision table | Decision file | DMN decision table |

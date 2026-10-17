@@ -285,4 +285,39 @@ class CwmLinterTest {
                 .anyMatch(message -> message.contains("backoff must be an ISO-8601 duration"))
                 .anyMatch(message -> message.contains("onFailure must be 'deadLetter'"));
     }
+
+    @Test
+    void sensitiveActionValuesMustReferenceHostSecrets() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: secure-action
+                  version: 1.0.0
+                  owner: platform
+                  dataClassification: internal
+                roles: []
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: request
+                        type: serviceTask
+                        action: w6w.http.request
+                        config:
+                          headers:
+                            Authorization:
+                              secretRef: PAYMENT_API_TOKEN
+                      - id: finish
+                        type: end
+                """);
+        CwmLinter linter = new CwmLinter();
+        CwmLinter.LintResult valid = linter.lint(workflow);
+        assertThat(valid.hasErrors()).withFailMessage("Expected secret reference to pass lint: " + valid.getIssues()).isFalse();
+
+        workflow.getStages().get(0).getSteps().get(0).getConfig().put("accessToken", "do-not-store-this");
+        CwmLinter.LintResult invalid = linter.lint(workflow);
+        assertThat(invalid.hasErrors()).isTrue();
+        assertThat(invalid.getIssues().toString()).contains("must use a host secret reference");
+    }
 }

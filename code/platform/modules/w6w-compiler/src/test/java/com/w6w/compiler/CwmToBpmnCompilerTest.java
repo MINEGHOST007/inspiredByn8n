@@ -62,6 +62,41 @@ class CwmToBpmnCompilerTest {
     }
 
     @Test
+    void serviceActionConfigurationIsCompiledAsDeterministicJson() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: configured-action
+                  version: 1.0.0
+                  owner: platform
+                  dataClassification: internal
+                roles: []
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: notify
+                        type: serviceTask
+                        action: w6w.events.publish
+                        config:
+                          payload:
+                            z-last: done
+                            a-first:
+                              from: caseId
+                          eventName: request.completed
+                      - id: finish
+                        type: end
+                """);
+
+        String first = new CwmToBpmnCompiler().compile(workflow);
+        String second = new CwmToBpmnCompiler().compile(workflow);
+
+        assertThat(first).isEqualTo(second)
+                .contains("<flowable:field name=\"actionConfig\" stringValue=\"{&quot;eventName&quot;:&quot;request.completed&quot;,&quot;payload&quot;:{&quot;a-first&quot;:{&quot;from&quot;:&quot;caseId&quot;},&quot;z-last&quot;:&quot;done&quot;}}\" />");
+    }
+
+    @Test
     void conditionCompilesToAnExplicitRunOrSkipGateway() throws Exception {
         WorkflowDefinition workflow = CwmParser.parse("""
                 apiVersion: w6w/v1

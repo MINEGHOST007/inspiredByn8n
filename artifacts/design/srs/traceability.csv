@@ -33,10 +33,10 @@ DC-01,M,MVP,w6w-model; w6w-compiler; w6w-cli,DecisionTableCompilerTest; W6wCliTe
 DC-02,M,MVP,w6w-compiler; w6w-engine-flowable,CwmToBpmnCompilerTest; FlowableEngineIntegrationTest,compiler and engine integration,Implemented
 DC-03,S,P2,w6w-compiler,,not covered,Not implemented
 IN-01,M,MVP,w6w-runtime-starter; w6w-app,WorkflowApiControllerTest,api integration,Partial
-IN-02,M,MVP,w6w-runtime-starter,,not covered,Not implemented
+IN-02,M,MVP,w6w-runtime-starter,StandardWorkflowActionsTest; FlowableEngineIntegrationTest.serviceTaskReceivesVersionedWorkflowActionConfiguration,standard handlers and end-to-end config execution; email delivery requires host WorkflowEmailGateway,Partial
 IN-03,M,MVP,w6w-engine-port; w6w-engine-flowable; w6w-app,WorkflowApiControllerTest.inboundSignalApiResumesOnlyTheWorkflowMatchingItsBusinessKey; FlowableEngineIntegrationTest.inboundSignalResumesOnlyTheInstanceWithTheMatchingBusinessKey,API and Flowable integration (business-key correlation and schema-validated payload),Implemented
 IN-04,M,MVP,w6w-runtime-starter,,not covered,Not implemented
-IN-05,M,MVP,w6w-runtime-starter,,not covered,Not implemented
+IN-05,M,MVP,w6w-runtime-starter,CwmLinterTest.sensitiveActionValuesMustReferenceHostSecrets; StandardWorkflowActionsTest.httpRequestUsesConfiguredMethodSecretAndWritesResponseVariables,secret references are enforced and resolved; default provider reads local environment and production secret-store adapter is host supplied,Partial
 IN-06,S,P2,w6w-runtime-starter,,not covered,Not implemented
 API-01,M,MVP,w6w-app; w6w-engine-port,WorkflowApiControllerTest,api integration,Partial
 API-02,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial

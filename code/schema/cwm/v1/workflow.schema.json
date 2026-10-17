@@ -146,6 +146,11 @@
           "type": "string",
           "description": "Registered action name for serviceTask, e.g. refund.initiateTransaction"
         },
+        "config": {
+          "type": "object",
+          "description": "Non-secret configuration for the registered service action. Secret values must be referenced through the host secret provider.",
+          "additionalProperties": true
+        },
         "duration": {
           "type": "string",
           "pattern": "^P.*",

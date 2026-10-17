@@ -9,18 +9,27 @@ public class ActionContext {
     private final String stepId;
     private final String idempotencyKey;
     private final Map<String, Object> variables;
+    private final Map<String, Object> configuration;
 
     public ActionContext(String instanceId, String stepId, Map<String, Object> variables) {
+        this(instanceId, stepId, variables, Map.of());
+    }
+
+    public ActionContext(String instanceId, String stepId, Map<String, Object> variables,
+                         Map<String, Object> configuration) {
         this.instanceId = instanceId;
         this.stepId = stepId;
         this.idempotencyKey = (instanceId != null && stepId != null) ? (instanceId + ":" + stepId) : "";
         this.variables = variables != null ? new HashMap<>(variables) : new HashMap<>();
+        this.configuration = configuration != null ? new HashMap<>(configuration) : new HashMap<>();
     }
 
     public String getInstanceId() { return instanceId; }
     public String getStepId() { return stepId; }
     public String getIdempotencyKey() { return idempotencyKey; }
     public Map<String, Object> getVariables() { return Collections.unmodifiableMap(variables); }
+    public Map<String, Object> getConfiguration() { return Collections.unmodifiableMap(configuration); }
+    public Object getConfig(String name) { return configuration.get(name); }
 
     public Object getVariable(String name) {
         return variables.get(name);
