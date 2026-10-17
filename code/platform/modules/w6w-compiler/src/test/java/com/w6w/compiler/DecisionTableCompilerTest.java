@@ -20,7 +20,7 @@ class DecisionTableCompilerTest {
         String first = compiler.compile(table);
         String second = compiler.compile(table);
         assertThat(first).isEqualTo(second)
-                .contains("<decision id=\"refund-eligibility\"", "hitPolicy=\"FIRST\"", "purchaseAmount", "&lt;= 500", "&gt; 500", "<text>false</text>");
+                .contains("<decision id=\"refund-eligibility\"", "http://www.omg.org/spec/DMN/20151101", "hitPolicy=\"FIRST\"", "purchaseAmount", "&lt;= 500", "&gt; 500", "<text>false</text>");
         var factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
         factory.newDocumentBuilder().parse(new ByteArrayInputStream(first.getBytes(StandardCharsets.UTF_8)));

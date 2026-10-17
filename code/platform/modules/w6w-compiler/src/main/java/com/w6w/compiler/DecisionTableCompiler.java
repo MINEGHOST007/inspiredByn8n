@@ -20,9 +20,9 @@ public class DecisionTableCompiler {
     public String compile(DecisionTableDefinition table) {
         table.validate();
         StringBuilder xml = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-                .append("<definitions xmlns=\"https://www.omg.org/spec/DMN/20191111/MODEL/\" ")
+                .append("<definitions xmlns=\"http://www.omg.org/spec/DMN/20151101\" ")
                 .append("id=\"definitions_").append(escape(table.getKey())).append("\" name=\"W6W Decisions\" ")
-                .append("namespace=\"https://w6w.io/decisions\">\n")
+                .append("namespace=\"http://www.flowable.org/dmn\">\n")
                 .append("  <decision id=\"").append(escape(table.getKey())).append("\" name=\"").append(escape(table.getName())).append("\">\n")
                 .append("    <decisionTable id=\"table_").append(escape(table.getKey())).append("\" hitPolicy=\"")
                 .append(table.getHitPolicy().toUpperCase()).append("\">\n");
@@ -37,8 +37,12 @@ public class DecisionTableCompiler {
         }
         for (DecisionTableDefinition.Rule rule : table.getRules()) {
             xml.append("      <rule id=\"").append(escape(rule.getId())).append("\">\n");
-            for (String input : rule.getInputEntries()) xml.append("        <inputEntry><text>").append(escape(input)).append("</text></inputEntry>\n");
-            for (String output : rule.getOutputEntries()) xml.append("        <outputEntry><text>").append(escape(output)).append("</text></outputEntry>\n");
+            for (int i = 0; i < rule.getInputEntries().size(); i++)
+                xml.append("        <inputEntry id=\"inputEntry_").append(escape(rule.getId())).append('_').append(i + 1).append("\"><text>")
+                        .append(escape(rule.getInputEntries().get(i))).append("</text></inputEntry>\n");
+            for (int i = 0; i < rule.getOutputEntries().size(); i++)
+                xml.append("        <outputEntry id=\"outputEntry_").append(escape(rule.getId())).append('_').append(i + 1).append("\"><text>")
+                        .append(escape(rule.getOutputEntries().get(i))).append("</text></outputEntry>\n");
             xml.append("      </rule>\n");
         }
         return xml.append("    </decisionTable>\n  </decision>\n</definitions>\n").toString();
