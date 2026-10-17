@@ -2,7 +2,7 @@ req_id,priority,phase,module,test_id,test_level,status
 WF-01,M,MVP,w6w-model; code/schema/cwm/v1,CwmParser; workflow.schema.json,unit/fixture,Partial
 WF-02,M,MVP,w6w-model; code/workflows,WorkflowApiControllerTest,api integration,Partial
 WF-03,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
-WF-04,M,MVP,w6w-compiler,CwmLinterTest; unsupported-step test,unit/fixture,Partial
+WF-04,M,MVP,w6w-compiler,CwmLinterTest,lint fixture: assignees; resolutions; executable types; route targets; reachability; data schema references,Implemented
 WF-05,S,MVP,w6w-cli,W6wCliTest,unit/fixture,Partial
 WF-06,M,MVP,w6w-model; w6w-compiler,CwmLinterTest,unit/fixture,Partial
 WF-07,M,MVP,w6w-test,ScenarioRunnerTest,unit/fixture,Partial

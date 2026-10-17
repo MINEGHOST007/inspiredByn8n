@@ -14,7 +14,7 @@
 
 | Type | Required data | v1 handling |
 |---|---|---|
-| `userTask` | `assignee` (role or user), optional `form`, outcomes | BPMN user task; linter requires assignee. |
+| `userTask` | `assignee` (role or user), optional `form`, outcomes and condition | BPMN user task; linter requires assignee and compiles conditions to a run-or-skip gateway. |
 | `approval` | assignee and explicit outcomes | BPMN user task and outcome gateway. SLA/routing are represented only when authored. |
 | `serviceTask` | registered `action` name | BPMN service task; action is resolved by the host registry. |
 | `decision` | explicit decision/table reference and outcomes | Supported when the referenced YAML decision table compiles to a version-pinned DMN table whose single output is a declared string `outcome`. BPMN invokes the Flowable DMN executor and routes that outcome through the generated gateway. |
@@ -27,11 +27,13 @@
 
 `parallel`, `subStage`, `waitEvent`, `timer` and `childWorkflow` are not executable in v1. The compiler rejects them; migration must report and reject the affected case rather than writing an invalid runnable-looking workflow package. Unknown types are schema/linter errors and compiler errors. Never default an unknown construct to a human task.
 
+The linter rejects duplicate IDs, missing terminal resolutions and assignees, unsupported step types, invalid route targets, and unreachable steps. When given the workflow source path (CLI validation and application catalog loading), it also resolves condition field references against the package's declared JSON data schema.
+
 ## Outcomes and expressions
 
-- Transitions use named outcome maps with target `next`, `stage:<stage-id>` or `end:<resolution>`.
+- Transitions use named outcome maps with target `next`, `stage:<stage-id>` or `end:<stage-id>` for a stage's implicit terminal event.
+- Step conditions use a restricted tree of `and`, `or`, `not`, and top-level data-field comparisons (`eq`, `ne`, `lt`, `lte`, `gt`, `gte`, `in`, `exists`). The compiler emits an explicit run-or-skip gateway; field references must exist in the local data schema.
 - `decision`/`parallel` require explicit outgoing targets before compilation. No free-form Java, reflection, method invocation or arbitrary bean access is allowed in CWM.
-- Expression evaluation is not yet implemented as an executable CWM feature. Until a reviewed restricted expression language is added, use explicit role/user assignments and action handlers; treat any expression-bearing definition as unsupported.
 
 ## Data, forms, actions and errors
 

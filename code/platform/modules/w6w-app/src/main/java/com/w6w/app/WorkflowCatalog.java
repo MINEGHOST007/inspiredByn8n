@@ -109,7 +109,7 @@ public class WorkflowCatalog implements ApplicationRunner {
 
     private void register(Path file, boolean replaceExisting) throws Exception {
         WorkflowDefinition definition = CwmParser.parse(file.toFile());
-        CwmLinter.LintResult lint = new CwmLinter().lint(definition);
+        CwmLinter.LintResult lint = new CwmLinter().lint(definition, file);
         if (lint.hasErrors()) throw new IllegalArgumentException("Workflow " + definition.getMetadata().getKey() + " has lint errors: " + lint.getIssues());
         new StartupActionValidator(actions).validateWorkflowActions(definition);
         String bpm = new CwmToBpmnCompiler().compile(definition);

@@ -59,7 +59,7 @@ public class CwmToBpmnCompiler {
 
     private String getFirstNodeRef(WorkflowDefinition workflow) {
         if (!workflow.getStages().isEmpty() && !workflow.getStages().get(0).getSteps().isEmpty()) {
-            return "step_" + sanitize(workflow.getStages().get(0).getSteps().get(0).getId());
+            return entryNodeRef(workflow.getStages().get(0).getSteps().get(0));
         }
         return "end_default";
     }
@@ -74,13 +74,14 @@ public class CwmToBpmnCompiler {
             String nextRef = null;
 
             if (i + 1 < steps.size()) {
-                nextRef = "step_" + sanitize(steps.get(i + 1).getId());
+                nextRef = entryNodeRef(steps.get(i + 1));
             } else if (nextStage != null && !nextStage.getSteps().isEmpty()) {
-                nextRef = "step_" + sanitize(nextStage.getSteps().get(0).getId());
+                nextRef = entryNodeRef(nextStage.getSteps().get(0));
             } else {
                 nextRef = "end_" + sanitize(stage.getId());
             }
 
+            compileConditionGate(xml, step, stepRef, nextRef);
             compileStep(xml, step, stepRef, nextRef, stage, workflow);
         }
 
@@ -182,7 +183,7 @@ public class CwmToBpmnCompiler {
             String stageId = target.substring(6);
             for (StageDefinition st : workflow.getStages()) {
                 if (stageId.equalsIgnoreCase(st.getId()) && !st.getSteps().isEmpty()) {
-                    return "step_" + sanitize(st.getSteps().get(0).getId());
+                    return entryNodeRef(st.getSteps().get(0));
                 }
             }
         }
@@ -191,6 +192,75 @@ public class CwmToBpmnCompiler {
         }
         return defaultRef;
     }
+
+    private void compileConditionGate(StringBuilder xml, StepDefinition step, String stepRef, String defaultNextRef) {
+        if (step.getCondition() == null) return;
+        String gateId = conditionGatewayId(step);
+        String skipFlowId = "flow_" + gateId + "_skip";
+        xml.append("    <exclusiveGateway id=\"").append(gateId).append("\" name=\"Condition: ")
+                .append(escape(step.getName() != null ? step.getName() : step.getId()))
+                .append("\" default=\"").append(skipFlowId).append("\" />\n")
+                .append("    <sequenceFlow id=\"flow_").append(gateId).append("_run\" sourceRef=\"")
+                .append(gateId).append("\" targetRef=\"").append(stepRef).append("\">\n")
+                .append("      <conditionExpression xsi:type=\"tFormalExpression\"><![CDATA[${")
+                .append(compileCondition(step.getCondition())).append("}]]></conditionExpression>\n")
+                .append("    </sequenceFlow>\n")
+                .append("    <sequenceFlow id=\"").append(skipFlowId).append("\" sourceRef=\"")
+                .append(gateId).append("\" targetRef=\"").append(defaultNextRef).append("\" />\n");
+    }
+
+    private String compileCondition(com.w6w.model.ConditionDefinition condition) {
+        if (condition == null) throw new IllegalArgumentException("Condition expression is missing");
+        List<String> groups = new ArrayList<>();
+        if (condition.getAnd() != null && !condition.getAnd().isEmpty())
+            groups.add("(" + String.join(" && ", condition.getAnd().stream().map(this::compileCondition).toList()) + ")");
+        if (condition.getOr() != null && !condition.getOr().isEmpty())
+            groups.add("(" + String.join(" || ", condition.getOr().stream().map(this::compileCondition).toList()) + ")");
+        if (condition.getNot() != null) groups.add("!(" + compileCondition(condition.getNot()) + ")");
+        if (condition.getField() != null && !condition.getField().isBlank()) groups.add(compileFieldCondition(condition));
+        if (groups.isEmpty()) throw new IllegalArgumentException("Condition must declare a field or a non-empty and/or/not group");
+        if (groups.size() > 1) throw new IllegalArgumentException("A condition cannot combine a field with and/or/not at the same level");
+        return groups.get(0);
+    }
+
+    private String compileFieldCondition(com.w6w.model.ConditionDefinition condition) {
+        String field = condition.getField().replaceFirst("^(data|variables)\\.", "");
+        if (!field.matches("[A-Za-z_][A-Za-z0-9_]*"))
+            throw new IllegalArgumentException("Condition field must reference a top-level data property: " + condition.getField());
+        String value = "execution.getVariable('" + field + "')";
+        String operator = condition.getOperator();
+        Object expected = condition.getValue();
+        return switch (operator == null ? "" : operator) {
+            case "exists" -> value + " != null";
+            case "eq" -> value + " == " + expressionLiteral(expected);
+            case "ne" -> value + " != " + expressionLiteral(expected);
+            case "lt" -> value + " < " + expressionLiteral(expected);
+            case "lte" -> value + " <= " + expressionLiteral(expected);
+            case "gt" -> value + " > " + expressionLiteral(expected);
+            case "gte" -> value + " >= " + expressionLiteral(expected);
+            case "in" -> compileIn(value, expected);
+            default -> throw new IllegalArgumentException("Unsupported condition operator: " + operator);
+        };
+    }
+
+    private String compileIn(String fieldExpression, Object expected) {
+        if (!(expected instanceof List<?> values) || values.isEmpty())
+            throw new IllegalArgumentException("Condition operator 'in' requires a non-empty array value");
+        return "(" + String.join(" || ", values.stream()
+                .map(value -> fieldExpression + " == " + expressionLiteral(value)).toList()) + ")";
+    }
+
+    private String expressionLiteral(Object value) {
+        if (value instanceof String string) return "'" + string.replace("\\", "\\\\").replace("'", "\\'") + "'";
+        if (value instanceof Number || value instanceof Boolean) return value.toString();
+        throw new IllegalArgumentException("Condition value must be a string, number, or boolean");
+    }
+
+    private String entryNodeRef(StepDefinition step) {
+        return step.getCondition() == null ? "step_" + sanitize(step.getId()) : conditionGatewayId(step);
+    }
+
+    private String conditionGatewayId(StepDefinition step) { return "gw_condition_" + sanitize(step.getId()); }
 
     private String sanitize(String id) {
         return id != null ? id.replace("-", "_").replace(".", "_") : "node";

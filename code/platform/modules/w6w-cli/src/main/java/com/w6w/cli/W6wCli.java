@@ -71,7 +71,7 @@ public final class W6wCli {
 
     private void validate(Path file) throws Exception {
         WorkflowDefinition workflow = CwmParser.parse(file.toFile());
-        CwmLinter.LintResult result = new CwmLinter().lint(workflow);
+        CwmLinter.LintResult result = new CwmLinter().lint(workflow, file);
         result.getIssues().forEach(System.out::println);
         if (result.hasErrors()) throw new IllegalArgumentException("Validation failed for " + file);
         new CwmToBpmnCompiler().compile(workflow);
@@ -210,7 +210,7 @@ public final class W6wCli {
 
     private WorkflowDefinition checked(Path file) throws Exception {
         WorkflowDefinition workflow = CwmParser.parse(file.toFile());
-        CwmLinter.LintResult lint = new CwmLinter().lint(workflow);
+        CwmLinter.LintResult lint = new CwmLinter().lint(workflow, file);
         lint.getIssues().forEach(System.out::println);
         if (lint.hasErrors()) throw new IllegalArgumentException("Workflow validation failed");
         new CwmToBpmnCompiler().compile(workflow);

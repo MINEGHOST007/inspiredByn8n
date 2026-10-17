@@ -55,4 +55,40 @@ class CwmToBpmnCompilerTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("refusing to emit a user task as a fallback");
     }
+
+    @Test
+    void conditionCompilesToAnExplicitRunOrSkipGateway() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: conditional-workflow
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: conditional-review
+                        name: Conditional review
+                        type: userTask
+                        assignee:
+                          role: operations
+                        condition:
+                          field: data.needsReview
+                          operator: eq
+                          value: true
+                      - id: finish
+                        type: end
+                """);
+
+        String bpmn = new CwmToBpmnCompiler().compile(workflow);
+
+        assertThat(bpmn).contains("targetRef=\"gw_condition_conditional_review\"")
+                .contains("<exclusiveGateway id=\"gw_condition_conditional_review\"")
+                .contains("default=\"flow_gw_condition_conditional_review_skip\"")
+                .contains("${execution.getVariable('needsReview') == true}")
+                .contains("targetRef=\"step_finish\"");
+    }
 }

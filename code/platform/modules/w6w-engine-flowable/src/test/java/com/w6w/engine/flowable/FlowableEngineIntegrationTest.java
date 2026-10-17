@@ -173,6 +173,47 @@ class FlowableEngineIntegrationTest {
     }
 
     @Test
+    void conditionGatewayRunsOrSkipsTheStepFromWorkflowData() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: conditional-test
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                stages:
+                  - id: review
+                    resolution: Done
+                    steps:
+                      - id: optional-review
+                        name: Optional review
+                        type: userTask
+                        assignee:
+                          role: operations
+                        condition:
+                          field: data.needsReview
+                          operator: eq
+                          value: true
+                      - id: finish-review
+                        name: Finish review
+                        type: userTask
+                        assignee:
+                          role: operations
+                """);
+        adapter.deploy("conditional-test", "Conditional test", new CwmToBpmnCompiler().compile(workflow));
+
+        WorkflowInstance skipped = adapter.startInstance("conditional-test", "CASE-SKIP", Map.of("needsReview", false));
+        WorkflowInstance selected = adapter.startInstance("conditional-test", "CASE-RUN", Map.of("needsReview", true));
+
+        List<TaskInstance> tasks = adapter.getTasksForUser(null, List.of());
+        assertThat(tasks).filteredOn(task -> task.getInstanceId().equals(skipped.getId()))
+                .extracting(TaskInstance::getName).containsExactly("Finish review");
+        assertThat(tasks).filteredOn(task -> task.getInstanceId().equals(selected.getId()))
+                .extracting(TaskInstance::getName).containsExactly("Optional review");
+    }
+
+    @Test
     void testRefundProcessingEndToEnd() throws Exception {
         // 1. Compile CWM to BPMN
         File cwmFile = new File("../../../workflows/domains/customer-service/refund-processing/workflow.cwm.yaml");
