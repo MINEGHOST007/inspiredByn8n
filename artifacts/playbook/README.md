@@ -4,11 +4,13 @@ The phased implementation plan and SRS are maintained in the root [Readme.md](..
 
 ## Learn to author and maintain workflows
 
-Start with the [workflow quick start](quick-start.md) for the beginner-friendly
-path through the current local project. Before editing a definition, complete
-the [workflow intake worksheet](workflow-intake-template.md) with the process
-owner. The quick start explains the example folder, supported task types,
-scenario testing, local commands, maintenance, and current product limits.
+Start with the beginner-friendly [workflow quick start](quick-start.md), then
+use the [workflow author quick start](workflow-author-quick-start.md) for the
+current commands and CWM details. Before editing a definition, complete the
+[workflow intake worksheet](workflow-intake-template.md) with the process
+owner. The author guide documents the current CLI, workflow runtime, PDF
+migration path, and decision tables; the beginner guide explains the process
+words and review steps.
 
 ## Local developer run
 

@@ -197,5 +197,8 @@ deterministic DMN XML with:
 
 The command writes generated DMN under the Git-ignored `code/workflows/build/decisions/` folder. A workflow decision step must
 reference its table in the `decision` field and declare outcomes. Decision
-execution and BPMN routing through compiled DMN are not wired into the local
-runtime yet.
+execution and BPMN routing are supported when the table has one declared
+string `outcome` output. The Flowable runtime evaluates the version-pinned DMN
+table asynchronously and routes the result through the declared outcome. Other
+table shapes fail validation; decision-table test rows are not yet run as a
+separate CI gate.

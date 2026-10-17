@@ -30,7 +30,7 @@ This document maps the parent folder structure supplied with the project to the 
 | `code/workflows/domains/customer-service/refund-processing/` | Example workflow package | CWM, data schema, form, scenarios and migration report. |
 | `code/workflows/shared/` | Shared workflow assets | Reserved; populate when reused assets exist. |
 | `code/src/` | Thin host-app/demo entry points only | No duplicate production classes. |
-| `code/tests/acceptance/` | Public-API black-box acceptance tests | Reserved; public API module is not implemented. |
+| `code/tests/acceptance/` | Playwright browser acceptance tests for the local UI | Start-form cancellation and an approval case through task routing to final timeline resolution. |
 | `code/integration-tests/` | Database, timer and restart tests | Reserved; PostgreSQL/Testcontainers suite is not implemented. |
 | `code/tools/` | Coverage, SBOM and license tools | Reserved; required CI gates remain. |
 | `code/workflows/build/` | Generated BPMN/DMN | Git-ignored build output; never the source of truth. |

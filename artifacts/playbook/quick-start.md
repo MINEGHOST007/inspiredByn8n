@@ -2,8 +2,10 @@
 
 This guide is for people who need to describe, build, test, or maintain a small
 workflow in W6W. You can understand the process before you read any YAML. The
-current project is operated from the repository and PowerShell; it does not yet
-have a visual workflow builder or a guided authoring screen.
+current authoring path uses repository files and PowerShell. W6W has a local
+runtime workspace for starting cases, working tasks, and operations; visual
+workflow editing is not available. For the exact current commands and supported
+features, continue with the [workflow author quick start](workflow-author-quick-start.md).
 
 ## The short version
 
@@ -119,11 +121,10 @@ records the intended final resolution. Use the two refund scenarios as examples:
 Use invented sample data. Include at least one scenario for every important
 outcome, especially rejection. The current runner uses registered mock actions,
 so scenarios demonstrate local execution, not live integration with payment,
-email, or other production systems. It currently selects the first active task
-and only checks that the workflow completes when a `finalResolution` is present;
-it does not yet verify `stepId`, `expectedNextStage`, or that the actual final
-resolution matches the scenario's stated value. Treat those fields as review
-guidance until the scenario assertions are strengthened.
+email, or other production systems. It waits for each declared `stepId`, applies
+its sample form data and outcome, and checks the final status and exact
+`finalResolution` when one is specified. It does not yet assert an intermediate
+`expectedNextStage`.
 
 ### 5. Run the local demo and checks
 
@@ -182,9 +183,10 @@ field and step support, use the [CWM v1 contract](../design/architecture/cwm-v1.
 
 ## Current limits to keep in mind
 
-This is a developer-facing local proof of concept, not yet a no-code authoring
-product. The current local workflow path is CWM YAML + forms + scenarios and an
-embedded H2 database. The README's SRS tracks requirements that are not yet
-implemented, including the full UI, REST API, general-purpose workflow CLI,
-identity/security controls, production database profile, and several advanced
-workflow step types. Do not promise these capabilities based on this guide.
+This is a developer-facing local workflow utility, not a no-code authoring
+product. The current local path combines CWM YAML, forms, scenarios, a CLI,
+workspace UI, REST API, and an embedded H2 database. The README's SRS tracks
+remaining requirements, including host authentication and authorization,
+production database/deployment controls, several integrations, and advanced
+workflow step types. The local-demo identity selector is not a security
+boundary.
