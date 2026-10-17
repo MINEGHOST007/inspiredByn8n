@@ -8,7 +8,7 @@ WF-06,M,MVP,w6w-model; w6w-compiler,CwmLinterTest,unit/fixture,Partial
 WF-07,M,MVP,w6w-test,ScenarioRunnerTest,unit/fixture,Partial
 WF-08,M,MVP,code/workflows; .gitignore,repository inspection,source-of-truth review,Partial
 EX-01,M,MVP,w6w-engine-port; w6w-engine-flowable,FlowableEngineIntegrationTest,unit/fixture,Partial
-EX-02,M,MVP,w6w-compiler; w6w-engine-flowable,CwmToBpmnCompilerTest,unit/fixture,Partial
+EX-02,M,MVP,w6w-compiler; w6w-engine-flowable,CwmToBpmnCompilerTest.timerStepCompilesToDurableBpmnTimerCatchEvent; FlowableEngineIntegrationTest.timerStepWaitsThenAllowsTheNextHumanTask,compiler and Flowable timer integration,Partial
 EX-03,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
 EX-04,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
 EX-05,M,MVP,w6w-engine-flowable,FlowableEngineIntegrationTest,integration,Partial

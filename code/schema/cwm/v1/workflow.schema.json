@@ -146,6 +146,11 @@
           "type": "string",
           "description": "Registered action name for serviceTask, e.g. refund.initiateTransaction"
         },
+        "duration": {
+          "type": "string",
+          "pattern": "^P.*",
+          "description": "Positive ISO-8601 duration required for a timer step"
+        },
         "childWorkflowKey": {
           "type": "string",
           "description": "Key of child workflow for childWorkflow step type"

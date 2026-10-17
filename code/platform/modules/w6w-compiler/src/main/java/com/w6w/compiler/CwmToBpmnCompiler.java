@@ -147,6 +147,17 @@ public class CwmToBpmnCompiler {
                     .append("      </extensionElements>\n")
                     .append("    </serviceTask>\n");
 
+        } else if ("timer".equals(step.getType())) {
+            try {
+                java.time.Duration duration = java.time.Duration.parse(step.getDuration());
+                if (duration.isZero() || duration.isNegative()) throw new IllegalArgumentException("Timer duration must be greater than zero");
+            } catch (java.time.format.DateTimeParseException | NullPointerException e) {
+                throw new IllegalArgumentException("Timer step '" + step.getId() + "' needs a positive ISO-8601 duration", e);
+            }
+            xml.append("    <intermediateCatchEvent id=\"").append(stepRef).append("\" name=\"").append(escape(name)).append("\">\n")
+               .append("      <timerEventDefinition><timeDuration>").append(escape(step.getDuration())).append("</timeDuration></timerEventDefinition>\n")
+               .append("    </intermediateCatchEvent>\n");
+
         } else if ("end".equals(step.getType())) {
             String resolution = stage.getResolution();
             String endName = resolution == null || resolution.isBlank() ? name : "Resolution: " + resolution;

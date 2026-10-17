@@ -73,6 +73,32 @@ class CwmLinterTest {
     }
 
     @Test
+    void timerRequiresPositiveIso8601Duration() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: bad-timer
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                roles: [operations]
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: wait
+                        type: timer
+                        duration: PT0S
+                """);
+
+        CwmLinter.LintResult result = new CwmLinter().lint(workflow);
+
+        assertThat(result.getIssues()).extracting(CwmLinter.LintIssue::getMessage)
+                .anyMatch(message -> message.contains("Timer step 'wait' duration must be greater than zero"));
+    }
+
+    @Test
     void invalidOutcomeTargetsAndUnreachableStepsAreErrors() throws Exception {
         WorkflowDefinition workflow = CwmParser.parse("""
                 apiVersion: w6w/v1

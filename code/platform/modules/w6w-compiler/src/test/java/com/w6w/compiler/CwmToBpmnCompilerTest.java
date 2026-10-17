@@ -93,4 +93,37 @@ class CwmToBpmnCompilerTest {
                 .contains("${execution.getVariable('needsReview') == true}")
                 .contains("targetRef=\"step_finish\"");
     }
+
+    @Test
+    void timerStepCompilesToDurableBpmnTimerCatchEvent() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: timer-workflow
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                roles: [operations]
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: wait-before-review
+                        name: Wait before review
+                        type: timer
+                        duration: PT30S
+                      - id: review
+                        type: userTask
+                        assignee:
+                          role: operations
+                """);
+
+        String bpmn = new CwmToBpmnCompiler().compile(workflow);
+
+        assertThat(bpmn).contains("<intermediateCatchEvent id=\"step_wait_before_review\" name=\"Wait before review\">")
+                .contains("<timerEventDefinition><timeDuration>PT30S</timeDuration></timerEventDefinition>")
+                .contains("sourceRef=\"step_wait_before_review\" targetRef=\"step_review\"");
+        assertThat(new CwmLinter().lint(workflow).hasErrors()).isFalse();
+    }
 }

@@ -352,6 +352,39 @@ class FlowableEngineIntegrationTest {
         assertThat(adapter.getDeadLetterJobs()).noneMatch(job -> failure.id().equals(job.id()));
     }
 
+    @Test
+    void timerStepWaitsThenAllowsTheNextHumanTask() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: timer-runtime-test
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                roles: [operations]
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: wait-before-review
+                        name: Wait before review
+                        type: timer
+                        duration: PT2S
+                      - id: review
+                        name: Review after wait
+                        type: userTask
+                        assignee:
+                          role: operations
+                """);
+        adapter.deploy("timer-runtime-test", "Timer runtime test", new CwmToBpmnCompiler().compile(workflow));
+        WorkflowInstance instance = adapter.startInstance("timer-runtime-test", "TIMER-" + System.nanoTime(), Map.of());
+
+        assertThat(adapter.getTasksForUser(null, List.of())).noneMatch(task -> instance.getId().equals(task.getInstanceId()));
+        TaskInstance review = awaitTask(instance.getId(), "Review after wait", null, List.of());
+        assertThat(review.getStepId()).isEqualTo("step_review");
+    }
+
     private TaskInstance awaitTask(String instanceId, String taskName, String user, List<String> roles) throws Exception {
         return await(() -> adapter.getTasksForUser(user, roles).stream()
                         .filter(task -> instanceId.equals(task.getInstanceId()) && taskName.equals(task.getName()))

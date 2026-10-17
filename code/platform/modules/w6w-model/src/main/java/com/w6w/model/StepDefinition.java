@@ -11,6 +11,7 @@ public class StepDefinition {
     private AssigneeDefinition assignee;
     private String form;
     private String action;
+    private String duration;
     private String childWorkflowKey;
     private int childWorkflowDepth;
     private String subStage;
@@ -37,6 +38,9 @@ public class StepDefinition {
 
     public String getAction() { return action; }
     public void setAction(String action) { this.action = action; }
+
+    public String getDuration() { return duration; }
+    public void setDuration(String duration) { this.duration = duration; }
 
     public String getChildWorkflowKey() { return childWorkflowKey; }
     public void setChildWorkflowKey(String childWorkflowKey) { this.childWorkflowKey = childWorkflowKey; }

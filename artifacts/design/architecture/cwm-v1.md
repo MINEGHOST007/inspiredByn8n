@@ -21,11 +21,11 @@
 | `parallel` | explicit branch and join definition | Model field exists; compiler does not yet generate split/join semantics. Fails compilation pending full support. |
 | `subStage` | nested stage reference | Reserved; not yet executable. |
 | `waitEvent` | event name/correlation key | Reserved; not yet executable. |
-| `timer` | ISO-8601 duration and timer outcome | Reserved; not yet executable. |
+| `timer` | Positive ISO-8601 duration | BPMN intermediate timer catch event; Flowable persists the timer job and continues to the next step when due. |
 | `end` | explicit resolution | Compiles to BPMN end event. |
 | `childWorkflow` | child workflow key and completion mapping | Draft-only; runtime callback is not implemented. |
 
-`parallel`, `subStage`, `waitEvent`, `timer` and `childWorkflow` are not executable in v1. The compiler rejects them; migration must report and reject the affected case rather than writing an invalid runnable-looking workflow package. Unknown types are schema/linter errors and compiler errors. Never default an unknown construct to a human task.
+`parallel`, `subStage`, `waitEvent` and `childWorkflow` are not executable in v1. The compiler rejects them; migration must report and reject the affected case rather than writing an invalid runnable-looking workflow package. Timer steps are executable, but SLA escalation and timer outcomes are not modeled yet. Unknown types are schema/linter errors and compiler errors. Never default an unknown construct to a human task.
 
 The linter rejects duplicate IDs, missing terminal resolutions and assignees, unsupported step types, invalid route targets, and unreachable steps. When given the workflow source path (CLI validation and application catalog loading), it also resolves condition field references against the package's declared JSON data schema.
 
