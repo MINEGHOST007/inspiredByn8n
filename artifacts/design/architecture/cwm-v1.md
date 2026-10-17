@@ -39,7 +39,7 @@ The local runtime loads each declared `data.schema` from inside its workflow pac
 
 ## Data, forms, actions and errors
 
-- Data schemas are local JSON Schema files. Remote `$ref` is forbidden. Field types derive from JSON Schema; UI hints are separate form files.
+- Data schemas are local JSON Schema files. Remote `$ref` is forbidden. Field types derive from JSON Schema; UI hints are separate form files. The local renderer supports form layout rows, custom labels/help text, and conditional visibility (`eq`, `ne`, `in`, `exists`) with hidden values excluded from submission. Attachments and host reference-data lookups remain unsupported.
 - The local PDF migration writer creates draft form/data-schema files but extracted field names can be truncated by source PDF rendering and require review.
 - Service actions are registry names only. Secrets stay in the host secret store, never in CWM.
 - Every generated service/decision task uses a durable Flowable async job. By default the engine attempts the job three times with a one-minute delay, then moves it to the dead-letter queue. A service task may override `retries` (1-100) and `backoff` (positive ISO-8601 duration) in `onError`. CWM v1 currently supports only `onFailure: deadLetter`; other failure policies are rejected by the linter rather than silently ignored.

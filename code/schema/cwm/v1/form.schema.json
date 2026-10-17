@@ -18,7 +18,24 @@
         "layout": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } },
         "labels": { "type": "object", "additionalProperties": { "type": "string" } },
         "helpText": { "type": "object", "additionalProperties": { "type": "string" } },
-        "conditionalVisibility": { "type": "object" }
+        "conditionalVisibility": {
+          "type": "object",
+          "description": "Map field names to a visibility condition using another form field and a bounded operator.",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["field"],
+            "properties": {
+              "field": { "type": "string", "minLength": 1 },
+              "operator": { "enum": ["eq", "ne", "in", "exists"], "default": "eq" },
+              "value": {}
+            },
+            "additionalProperties": false,
+            "allOf": [
+              { "if": { "properties": { "operator": { "const": "in" } }, "required": ["operator"] }, "then": { "required": ["value"], "properties": { "value": { "type": "array" } } } },
+              { "if": { "properties": { "operator": { "enum": ["eq", "ne"] } }, "required": ["operator"] }, "then": { "required": ["value"] } }
+            ]
+          }
+        }
       },
       "additionalProperties": false
     }

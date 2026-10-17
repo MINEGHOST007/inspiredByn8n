@@ -76,20 +76,26 @@ stages:
         type: end
 ```
 
-Supported executable steps are currently human tasks, approvals, service tasks,
-and terminal steps. The CWM model reserves other step types, but they must not
-be used until their compiler/runtime behavior is implemented. The checker fails
-closed for unsupported types. SLA `deadline` becomes the task due date; goal
-notifications, escalation, and business-calendar timing are not implemented.
+Supported executable steps are currently user tasks, approvals, service tasks,
+decision tables, inbound `waitEvent` signals, timers, and terminal steps. The
+CWM model reserves other step types, but they must not be used until their
+compiler/runtime behavior is implemented. The checker fails closed for
+unsupported types. SLA `deadline` becomes the task due date, and
+`onDeadline: "escalate:<role>"` moves overdue work into the declared role queue
+and records an audit event. Goal notifications and business-calendar timing are
+not implemented.
 
 ## 3. Edit the form
 
 Add fields under the form's JSON Schema `properties`; list mandatory fields in
 `required`. The renderer supports common string, number, integer, boolean,
 enum, and nested object fields, and validates required values, number bounds,
-enums, and email format. Add `title`, `description`, and `enum` labels so the
-form reads clearly to the person doing the work. Attachments, conditional
-visibility, and host application lookups are not available in this local slice.
+enums, and email format. Use `ui.labels`, `ui.helpText`, and `ui.layout` to make
+the form easier to scan. Use `ui.conditionalVisibility` to show a field when a
+peer field satisfies `eq`, `ne`, `in`, or `exists`; hidden values are omitted
+from submission and hidden required fields do not block completion. Attachments
+and host application reference-data lookups are not available in this local
+slice.
 
 ## 4. Validate and run locally
 
