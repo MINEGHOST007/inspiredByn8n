@@ -161,7 +161,7 @@ public class CwmLinter {
             if (stage == null || stage.getSteps() == null) continue;
             for (StepDefinition step : stage.getSteps()) {
                 if (step == null || step.getId() == null || step.getId().isBlank()) continue;
-                lintStep(step, stage, stagesById, result);
+                lintStep(step, stage, stagesById, workflow.getRoles(), result);
             }
         }
 
@@ -227,6 +227,7 @@ public class CwmLinter {
     }
 
     private void lintStep(StepDefinition step, StageDefinition stage, Map<String, StageDefinition> stagesById,
+                          List<String> workflowRoles,
                           LintResult result) {
         String type = step.getType();
         if (type == null || !KNOWN_TYPES.contains(type)) {
@@ -240,6 +241,7 @@ public class CwmLinter {
                 result.addError("Human task '" + step.getId() + "' in stage '" + stage.getId() + "' has no assignee (role/user/lookup)");
             if (step.getForm() == null) result.addWarning("Human task '" + step.getId() + "' has no form schema reference");
         }
+        if (step.getSla() != null) lintSla(step, workflowRoles, result);
         if ("serviceTask".equals(type) && isBlank(step.getAction()))
             result.addError("Service task '" + step.getId() + "' in stage '" + stage.getId() + "' has no registered action name");
         if ("timer".equals(type)) lintTimer(step, result);
@@ -282,6 +284,39 @@ public class CwmLinter {
                 result.addError("Step '" + step.getId() + "' outcome '" + outcome + "' has invalid target '" + target + "'");
             }
         });
+    }
+
+    private void lintSla(StepDefinition step, List<String> workflowRoles, LintResult result) {
+        if (!"userTask".equals(step.getType()) && !"approval".equals(step.getType())) {
+            result.addError("SLA configuration is supported only on userTask and approval steps ('" + step.getId() + "')");
+            return;
+        }
+        var sla = step.getSla();
+        lintPositiveDuration(sla.getGoal(), "goal", step.getId(), result, false);
+        lintPositiveDuration(sla.getDeadline(), "deadline", step.getId(), result, !isBlank(sla.getOnDeadline()));
+        if (!isBlank(sla.getOnGoal()))
+            result.addError("SLA onGoal for step '" + step.getId() + "' is not executable in CWM v1");
+        if (!isBlank(sla.getOnDeadline())) {
+            String action = sla.getOnDeadline().trim();
+            if (!action.matches("escalate:[a-z0-9_]+"))
+                result.addError("SLA onDeadline for step '" + step.getId() + "' must use 'escalate:<role>' in CWM v1");
+            else if (workflowRoles == null || !workflowRoles.contains(action.substring("escalate:".length())))
+                result.addError("SLA escalation role for step '" + step.getId() + "' must be declared in workflow roles");
+            if (isBlank(sla.getDeadline())) result.addError("SLA onDeadline for step '" + step.getId() + "' requires a deadline duration");
+        }
+    }
+
+    private void lintPositiveDuration(String value, String field, String stepId, LintResult result, boolean required) {
+        if (isBlank(value)) {
+            if (required) result.addError("SLA " + field + " for step '" + stepId + "' is required");
+            return;
+        }
+        try {
+            if (Duration.parse(value).isZero() || Duration.parse(value).isNegative())
+                result.addError("SLA " + field + " for step '" + stepId + "' must be greater than zero");
+        } catch (DateTimeParseException e) {
+            result.addError("SLA " + field + " for step '" + stepId + "' must be an ISO-8601 duration");
+        }
     }
 
     private void lintTimer(StepDefinition step, LintResult result) {

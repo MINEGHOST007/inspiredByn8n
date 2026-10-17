@@ -235,7 +235,9 @@
           "type": "string"
         },
         "onDeadline": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^escalate:[a-z0-9_]+$",
+          "description": "Reassigns the overdue task to the named role candidate pool"
         }
       },
       "additionalProperties": false

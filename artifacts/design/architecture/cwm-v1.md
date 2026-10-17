@@ -25,7 +25,7 @@
 | `end` | explicit resolution | Compiles to BPMN end event. |
 | `childWorkflow` | child workflow key and completion mapping | Draft-only; runtime callback is not implemented. |
 
-`parallel`, `subStage`, `waitEvent` and `childWorkflow` are not executable in v1. The compiler rejects them; migration must report and reject the affected case rather than writing an invalid runnable-looking workflow package. Timer steps are executable, but SLA escalation and timer outcomes are not modeled yet. Unknown types are schema/linter errors and compiler errors. Never default an unknown construct to a human task.
+`parallel`, `subStage`, `waitEvent` and `childWorkflow` are not executable in v1. The compiler rejects them; migration must report and reject the affected case rather than writing an invalid runnable-looking workflow package. Timer steps are executable. User task and approval SLAs accept a positive ISO-8601 `deadline` and `onDeadline: "escalate:<role>"`; Flowable creates a non-interrupting deadline timer that clears the old assignee, moves the task to the target role's candidate queue, and writes an audit event. SLA goal notifications, business calendars, and other deadline actions are not implemented. Unknown types are schema/linter errors and compiler errors. Never default an unknown construct to a human task.
 
 The linter rejects duplicate IDs, missing terminal resolutions and assignees, unsupported step types, invalid route targets, and unreachable steps. When given the workflow source path (CLI validation and application catalog loading), it also resolves condition field references against the package's declared JSON data schema.
 
@@ -45,6 +45,7 @@ The local runtime loads each declared `data.schema` from inside its workflow pac
 - Every generated service/decision task uses a durable Flowable async job. By default the engine attempts the job three times with a one-minute delay, then moves it to the dead-letter queue. A service task may override `retries` (1-100) and `backoff` (positive ISO-8601 duration) in `onError`. CWM v1 currently supports only `onFailure: deadLetter`; other failure policies are rejected by the linter rather than silently ignored.
 - Operations lists failed jobs with workflow, case, step, error message and timestamp. An operator can requeue a job with a fresh retry budget; the action is written to the local audit log. The engine job executor must be active for automatic retries and replays to run.
 - SLA durations use ISO-8601 (`PT4H`, `P2D`). `PT8BH` is reserved for a future business calendar implementation and is not accepted as a standard duration today.
+- `onDeadline` currently supports only `escalate:<role>` for a user task or approval with a positive `deadline`. The escalation timer does not interrupt the task; it changes candidate-group routing and records `SLA_DEADLINE_ESCALATED`. `goal` is validated but does not currently trigger notifications.
 
 ## Traceability metadata
 

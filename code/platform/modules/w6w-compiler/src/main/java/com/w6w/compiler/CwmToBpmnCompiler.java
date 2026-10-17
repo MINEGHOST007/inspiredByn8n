@@ -122,6 +122,7 @@ public class CwmToBpmnCompiler {
                 }
             }
             xml.append(" />\n");
+            compileSlaEscalation(xml, step, stepRef);
 
         } else if ("serviceTask".equals(step.getType())) {
             xml.append("    <serviceTask id=\"").append(stepRef).append("\" name=\"").append(escape(name)).append("\"")
@@ -188,6 +189,40 @@ public class CwmToBpmnCompiler {
         } else {
             xml.append("    <sequenceFlow id=\"flow_").append(stepRef).append("_next\" sourceRef=\"").append(stepRef).append("\" targetRef=\"").append(defaultNextRef).append("\" />\n\n");
         }
+    }
+
+    private void compileSlaEscalation(StringBuilder xml, StepDefinition step, String taskRef) {
+        if (step.getSla() == null || step.getSla().getOnDeadline() == null || step.getSla().getOnDeadline().isBlank()) return;
+        String action = step.getSla().getOnDeadline().trim();
+        if (!action.startsWith("escalate:"))
+            throw new IllegalArgumentException("SLA onDeadline for step '" + step.getId() + "' must use 'escalate:<role>' in CWM v1");
+        String role = action.substring("escalate:".length()).trim();
+        if (!role.matches("[a-z0-9_]+"))
+            throw new IllegalArgumentException("SLA escalation role for step '" + step.getId() + "' must be a role identifier");
+        String deadline = step.getSla().getDeadline();
+        try {
+            java.time.Duration duration = java.time.Duration.parse(deadline);
+            if (duration.isZero() || duration.isNegative()) throw new IllegalArgumentException("SLA deadline must be greater than zero");
+        } catch (java.time.format.DateTimeParseException | NullPointerException e) {
+            throw new IllegalArgumentException("SLA escalation for step '" + step.getId() + "' needs a positive ISO-8601 deadline", e);
+        }
+
+        String suffix = sanitize(step.getId());
+        String boundaryId = "sla_deadline_" + suffix;
+        String escalationId = "sla_escalate_" + suffix;
+        String endId = "sla_end_" + suffix;
+        xml.append("    <boundaryEvent id=\"").append(boundaryId).append("\" attachedToRef=\"").append(taskRef).append("\" cancelActivity=\"false\">\n")
+           .append("      <timerEventDefinition><timeDuration>").append(escape(deadline)).append("</timeDuration></timerEventDefinition>\n")
+           .append("    </boundaryEvent>\n")
+           .append("    <sequenceFlow id=\"flow_").append(boundaryId).append("_to_escalation\" sourceRef=\"").append(boundaryId).append("\" targetRef=\"").append(escalationId).append("\" />\n")
+           .append("    <serviceTask id=\"").append(escalationId).append("\" name=\"Escalate overdue task\" flowable:delegateExpression=\"${w6wSlaEscalationExecutor}\">\n")
+           .append("      <extensionElements>\n")
+           .append("        <flowable:field name=\"taskDefinitionKey\" stringValue=\"").append(escape(taskRef)).append("\" />\n")
+           .append("        <flowable:field name=\"targetRole\" stringValue=\"").append(escape(role)).append("\" />\n")
+           .append("      </extensionElements>\n")
+           .append("    </serviceTask>\n")
+           .append("    <sequenceFlow id=\"flow_").append(escalationId).append("_to_end\" sourceRef=\"").append(escalationId).append("\" targetRef=\"").append(endId).append("\" />\n")
+           .append("    <endEvent id=\"").append(endId).append("\" name=\"SLA escalation complete\" />\n");
     }
 
     private String resolveTargetRef(String target, String defaultRef, WorkflowDefinition workflow) {

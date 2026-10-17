@@ -14,6 +14,7 @@ import org.flowable.engine.history.HistoricProcessInstance;
 import org.flowable.engine.repository.Deployment;
 import org.flowable.engine.runtime.ProcessInstance;
 import org.flowable.job.api.Job;
+import org.flowable.identitylink.api.IdentityLink;
 import org.flowable.task.api.Task;
 import org.flowable.task.api.TaskQuery;
 import org.slf4j.Logger;
@@ -273,13 +274,19 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
     }
 
     private TaskInstance mapTask(Task t) {
+        List<String> candidateGroups = taskService.getIdentityLinksForTask(t.getId()).stream()
+                .filter(link -> "candidate".equals(link.getType()))
+                .map(IdentityLink::getGroupId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
         return new TaskInstance(
             t.getId(),
             t.getProcessInstanceId(),
             t.getName(),
             t.getTaskDefinitionKey(),
             t.getAssignee(),
-            Collections.emptyList(),
+            candidateGroups,
             t.getFormKey(),
             t.getPriority(),
             t.getDueDate(),

@@ -19,8 +19,8 @@ EX-09,C,P3,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
 HT-01,M,MVP,w6w-compiler; w6w-app,WorkflowApiControllerTest,api integration,Partial
 HT-02,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 HT-03,S,P2,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
-HT-04,M,MVP,w6w-compiler; w6w-app,WorkflowApiControllerTest,api integration,Partial
-HT-05,M,MVP,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
+HT-04,M,MVP,w6w-compiler; w6w-app,WorkflowApiControllerTest.deadlineBreachMovesTaskToEscalationRoleAndAuditsTheChange,compiler and API integration (deadline timer, reassignment, role visibility, audit),Partial
+HT-05,M,MVP,w6w-runtime-starter; w6w-engine-flowable; w6w-app,WorkflowApiControllerTest.deadlineBreachMovesTaskToEscalationRoleAndAuditsTheChange,API integration (role reassignment and audit only),Partial
 HT-06,S,P2,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented
 HT-07,M,MVP,w6w-app,WorkflowApiControllerTest,api integration,Partial
 HT-08,C,P3,w6w-runtime-starter / w6w-engine-port,,not covered,Not implemented

@@ -220,6 +220,56 @@ class WorkflowApiControllerTest {
         assertThat(failure.path("errorMessage").asText()).contains("count is below its minimum");
     }
 
+    @Test
+    void deadlineBreachMovesTaskToEscalationRoleAndAuditsTheChange() throws Exception {
+        var workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: sla-escalation-test
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                roles: [service_agent, operations]
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: review
+                        name: Review request
+                        type: userTask
+                        assignee:
+                          user: agent.smith
+                        sla:
+                          deadline: PT2S
+                          onDeadline: escalate:operations
+                """);
+        workflowEngine.deploy("sla-escalation-test", "SLA escalation test", new CwmToBpmnCompiler().compile(workflow));
+        WorkflowInstance instance = workflowEngine.startInstance("sla-escalation-test", "SLA-" + System.nanoTime(), Map.of());
+        TaskInstance original = waitForTask(instance.getId(), "agent.smith", List.of());
+        assertThat(original.getAssignee()).isEqualTo("agent.smith");
+
+        TaskInstance escalated = waitForTask(instance.getId(), "operations.user", List.of("operations"));
+        assertThat(escalated.getAssignee()).isNull();
+        assertThat(escalated.getCandidateGroups()).contains("operations");
+        assertThat(workflowEngine.getTasksForUser("agent.smith", List.of("service_agent")))
+                .noneMatch(task -> instance.getId().equals(task.getInstanceId()));
+        JsonNode auditEvents = json.readTree(mvc.perform(get("/api/instances/" + instance.getId() + "/audit"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(auditEvents.toString()).contains("SLA_DEADLINE_ESCALATED", "operations");
+    }
+
+    private TaskInstance waitForTask(String instanceId, String user, List<String> roles) throws Exception {
+        long deadline = System.nanoTime() + java.time.Duration.ofSeconds(15).toNanos();
+        do {
+            TaskInstance task = workflowEngine.getTasksForUser(user, roles).stream()
+                    .filter(candidate -> instanceId.equals(candidate.getInstanceId())).findFirst().orElse(null);
+            if (task != null) return task;
+            Thread.sleep(50);
+        } while (System.nanoTime() < deadline);
+        throw new AssertionError("No active task found for workflow instance " + instanceId + " as " + user + " / " + roles);
+    }
+
     private JsonNode findTask(String user, String role, String businessKey, String step) throws Exception {
         long deadline = System.nanoTime() + java.time.Duration.ofSeconds(15).toNanos();
         JsonNode tasks = json.createArrayNode();

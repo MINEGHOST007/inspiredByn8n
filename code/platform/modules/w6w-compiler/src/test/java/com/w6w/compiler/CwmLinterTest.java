@@ -99,6 +99,66 @@ class CwmLinterTest {
     }
 
     @Test
+    void slaEscalationRequiresDeadlineAndSupportedRoleAction() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: invalid-sla
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                roles: [operations]
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: review
+                        type: userTask
+                        assignee:
+                          role: operations
+                        sla:
+                          onDeadline: auto-resolve
+                """);
+
+        CwmLinter.LintResult result = new CwmLinter().lint(workflow);
+
+        assertThat(result.getIssues()).extracting(CwmLinter.LintIssue::getMessage)
+                .anyMatch(message -> message.contains("must use 'escalate:<role>'"))
+                .anyMatch(message -> message.contains("requires a deadline duration"));
+    }
+
+    @Test
+    void slaEscalationRoleMustBeDeclaredByTheWorkflow() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: undeclared-sla-role
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                roles: [operations]
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: review
+                        type: userTask
+                        assignee:
+                          role: operations
+                        sla:
+                          deadline: PT1M
+                          onDeadline: escalate:property_manager
+                """);
+
+        CwmLinter.LintResult result = new CwmLinter().lint(workflow);
+
+        assertThat(result.getIssues()).extracting(CwmLinter.LintIssue::getMessage)
+                .anyMatch(message -> message.contains("must be declared in workflow roles"));
+    }
+
+    @Test
     void invalidOutcomeTargetsAndUnreachableStepsAreErrors() throws Exception {
         WorkflowDefinition workflow = CwmParser.parse("""
                 apiVersion: w6w/v1

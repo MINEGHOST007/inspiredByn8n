@@ -41,6 +41,9 @@ class CwmToBpmnCompilerTest {
         assertThat(bpmnXml1).contains("flowable:async=\"true\"")
                 .contains("<flowable:failedJobRetryTimeCycle>R3/PT1M</flowable:failedJobRetryTimeCycle>");
         assertThat(bpmnXml1).contains("<exclusiveGateway id=\"gw_request_refund_approval\"");
+        assertThat(bpmnXml1).contains("<boundaryEvent id=\"sla_deadline_request_refund_approval\"")
+                .contains("flowable:delegateExpression=\"${w6wSlaEscalationExecutor}\"")
+                .contains("<flowable:field name=\"targetRole\" stringValue=\"property_manager\" />");
         assertThat(bpmnXml1).contains("<endEvent id=\"step_close_refund_case\"");
         assertThat(bpmnXml1).contains("name=\"Resolution: Approved\"");
         assertThat(bpmnXml1).contains("<endEvent id=\"end_refund_denied\"");
