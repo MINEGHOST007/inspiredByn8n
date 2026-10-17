@@ -8,6 +8,9 @@ data/
 *.mv.db
 *.trace.db
 /artifacts/test_results/*.xml
+**/node_modules/
+**/test-results/
+**/playwright-report/
 
 # Maven wrapper distribution
 code/platform/.maven/

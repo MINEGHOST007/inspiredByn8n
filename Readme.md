@@ -1876,6 +1876,20 @@ ignored by Git. To run only the automated Maven verification suite:
 .\code\platform\mvnw.cmd -f .\code\platform\pom.xml verify
 ```
 
+For browser acceptance coverage of start-form cancellation and a complete
+refund approval through the worklist and case timeline:
+
+```powershell
+cd code/tests/acceptance
+npm install
+npx playwright install chromium
+npm test
+```
+
+The Playwright configuration starts the app with `run-app.ps1` when port 8080 is
+available, or reuses an existing local instance. The test creates one uniquely
+identified local case and verifies it reaches the `Approved` resolution.
+
 ## Implementation companion documents
 
 The complete SRS and plan remain in this file. Start with the [workflow author quick start](artifacts/playbook/workflow-author-quick-start.md) to create and maintain a local workflow, and the [local operations runbook](artifacts/playbook/local-operations.md) for backup and restore procedures. Current repository responsibilities and ownership are documented in [repository-structure.md](artifacts/design/architecture/repository-structure.md); the CWM v1 contract is in [cwm-v1.md](artifacts/design/architecture/cwm-v1.md); authoring and assistant modes are in [agent-modes.md](artifacts/design/architecture/agent-modes.md). [traceability.csv](artifacts/design/srs/traceability.csv) tracks all 95 functional and 14 non-functional requirements against current code and test evidence. `RULES.md` lists contribution and safety rules.
