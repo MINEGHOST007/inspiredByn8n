@@ -20,7 +20,7 @@ spring:
 
 flowable:
   database-schema-update: true
-  async-executor-activate: false
+  async-executor-activate: true
 
 management:
   endpoints:

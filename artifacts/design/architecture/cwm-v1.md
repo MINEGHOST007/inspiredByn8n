@@ -16,8 +16,8 @@
 |---|---|---|
 | `userTask` | `assignee` (role or user), optional `form`, outcomes and condition | BPMN user task; linter requires assignee and compiles conditions to a run-or-skip gateway. |
 | `approval` | assignee and explicit outcomes | BPMN user task and outcome gateway. SLA/routing are represented only when authored. |
-| `serviceTask` | registered `action` name | BPMN service task; action is resolved by the host registry. |
-| `decision` | explicit decision/table reference and outcomes | Supported when the referenced YAML decision table compiles to a version-pinned DMN table whose single output is a declared string `outcome`. BPMN invokes the Flowable DMN executor and routes that outcome through the generated gateway. |
+| `serviceTask` | registered `action` name | Asynchronous BPMN service task; action is resolved by the host registry. Failed jobs retry with backoff and appear in the local Operations dead-letter queue after exhaustion. |
+| `decision` | explicit decision/table reference and outcomes | Supported when the referenced YAML decision table compiles to a version-pinned DMN table whose single output is a declared string `outcome`. BPMN invokes the Flowable DMN executor asynchronously with the same retry/dead-letter behavior and routes that outcome through the generated gateway. |
 | `parallel` | explicit branch and join definition | Model field exists; compiler does not yet generate split/join semantics. Fails compilation pending full support. |
 | `subStage` | nested stage reference | Reserved; not yet executable. |
 | `waitEvent` | event name/correlation key | Reserved; not yet executable. |
@@ -40,7 +40,8 @@ The linter rejects duplicate IDs, missing terminal resolutions and assignees, un
 - Data schemas are local JSON Schema files. Remote `$ref` is forbidden. Field types derive from JSON Schema; UI hints are separate form files.
 - The local PDF migration writer creates draft form/data-schema files but extracted field names can be truncated by source PDF rendering and require review.
 - Service actions are registry names only. Secrets stay in the host secret store, never in CWM.
-- `onError` retry/backoff/route/fail semantics are not yet implemented. Do not author a retry policy and assume it runs.
+- Every generated service/decision task uses a durable Flowable async job. By default the engine attempts the job three times with a one-minute delay, then moves it to the dead-letter queue. A service task may override `retries` (1-100) and `backoff` (positive ISO-8601 duration) in `onError`. CWM v1 currently supports only `onFailure: deadLetter`; other failure policies are rejected by the linter rather than silently ignored.
+- Operations lists failed jobs with workflow, case, step, error message and timestamp. An operator can requeue a job with a fresh retry budget; the action is written to the local audit log. The engine job executor must be active for automatic retries and replays to run.
 - SLA durations use ISO-8601 (`PT4H`, `P2D`). `PT8BH` is reserved for a future business calendar implementation and is not accepted as a standard duration today.
 
 ## Traceability metadata

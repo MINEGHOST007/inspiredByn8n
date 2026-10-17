@@ -65,6 +65,19 @@ retained indefinitely and restrict access to the machine and database file.
 - Scenario suite: `.\run-local.ps1`; it must finish with zero failures and
   writes JUnit-compatible evidence to `artifacts/test_results/results.xml`.
 
+## Failed service steps
+
+Generated service and decision steps run as durable asynchronous jobs. The
+runtime retries each failed job three times with a one-minute delay by default;
+a step can override its retry count and delay with `onError.retries` and
+`onError.backoff`. After retries are exhausted, open **Operations** and review
+the **Failed service steps** table. It shows the case, workflow, step, error
+summary, and failure time. Fix the underlying integration or data problem, then
+select **Retry** to requeue the job with a fresh set of three attempts. Replays
+are recorded in the local audit log. The local identity selector is not an
+authorization boundary; production use requires host authentication and
+authorization around queue inspection and replay.
+
 If startup fails after a workflow edit, inspect the terminal for CWM lint,
 action registration, YAML, or BPMN compilation errors. The app binds to
 loopback by default and should not be exposed to a network in local-demo mode.

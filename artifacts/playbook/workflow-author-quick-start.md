@@ -156,10 +156,10 @@ classification, outcomes, and migration uncertainty before sharing the change.
 
 ## Current boundaries
 
-This quick start covers the local workflow author and runtime path. The complete
-SRS still includes production authentication and authorization, retry and
-dead-letter operations, business-calendar SLAs, attachments, CI deployment,
-and additional workflow step types; see
+This quick start covers the local workflow author and runtime path. Local
+service-step retries and dead-letter replay are implemented; the complete SRS
+still includes production authentication and authorization, business-calendar
+SLAs, attachments, CI deployment, and additional workflow step types; see
 [`traceability.csv`](../design/srs/traceability.csv) for implementation state.
 
 ## Blueprint PDF migration

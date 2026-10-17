@@ -60,6 +60,7 @@ public class ScenarioRunner {
         StandaloneInMemProcessEngineConfiguration config = new StandaloneInMemProcessEngineConfiguration();
         config.setJdbcUrl(jdbcUrl);
         config.setDatabaseSchemaUpdate(StandaloneInMemProcessEngineConfiguration.DB_SCHEMA_UPDATE_TRUE);
+        config.setAsyncExecutorActivate(true);
 
         Map<Object, Object> beans = new HashMap<>();
         beans.put("w6wActionExecutor", actionExecutor);
@@ -69,7 +70,8 @@ public class ScenarioRunner {
 
         ProcessEngine engine = config.buildProcessEngine();
         FlowableWorkflowEngineAdapter adapter = new FlowableWorkflowEngineAdapter(
-            engine.getRepositoryService(), engine.getRuntimeService(), engine.getTaskService(), engine.getHistoryService()
+            engine.getRepositoryService(), engine.getRuntimeService(), engine.getTaskService(), engine.getHistoryService(),
+            engine.getManagementService()
         );
 
         try {
@@ -86,8 +88,7 @@ public class ScenarioRunner {
                 } else if ("completeTask".equals(step.getAction()) || "completeApproval".equals(step.getAction())) {
                     if (instance == null) throw new IllegalStateException("Scenario must start a workflow before completing a task");
                     String taskDefinitionKey = "step_" + step.getStepId().replace('-', '_');
-                    org.flowable.task.api.Task target = engine.getTaskService().createTaskQuery()
-                            .processInstanceId(instance.getId()).taskDefinitionKey(taskDefinitionKey).singleResult();
+                    org.flowable.task.api.Task target = awaitTask(engine, instance.getId(), taskDefinitionKey);
                     if (target == null) {
                         throw new IllegalStateException("No active task '" + step.getStepId() + "' found for scenario instance " + instance.getId());
                     }
@@ -100,7 +101,8 @@ public class ScenarioRunner {
             }
 
             if (instance != null) {
-                WorkflowInstance finished = adapter.getInstance(instance.getId());
+                WorkflowInstance finished = awaitInstance(adapter, instance.getId(),
+                        scenario.getAssertions().getFinalResolution() == null ? null : "COMPLETED");
                 if (scenario.getAssertions().getFinalResolution() != null) {
                     if (!"COMPLETED".equals(finished.getStatus())) {
                         throw new AssertionError("Workflow did not complete, status was: " + finished.getStatus());
@@ -123,6 +125,29 @@ public class ScenarioRunner {
         }
 
         return result;
+    }
+
+    private org.flowable.task.api.Task awaitTask(ProcessEngine engine, String instanceId, String definitionKey) throws Exception {
+        long deadline = System.nanoTime() + java.time.Duration.ofSeconds(15).toNanos();
+        org.flowable.task.api.Task task;
+        do {
+            task = engine.getTaskService().createTaskQuery().processInstanceId(instanceId)
+                    .taskDefinitionKey(definitionKey).singleResult();
+            if (task != null) return task;
+            Thread.sleep(25);
+        } while (System.nanoTime() < deadline);
+        return null;
+    }
+
+    private WorkflowInstance awaitInstance(FlowableWorkflowEngineAdapter adapter, String instanceId, String status) throws Exception {
+        long deadline = System.nanoTime() + java.time.Duration.ofSeconds(15).toNanos();
+        WorkflowInstance instance;
+        do {
+            instance = adapter.getInstance(instanceId);
+            if (status == null || status.equals(instance.getStatus())) return instance;
+            Thread.sleep(25);
+        } while (System.nanoTime() < deadline);
+        return instance;
     }
 
     /** Runs the sample scenarios against a persistent local H2 file database.

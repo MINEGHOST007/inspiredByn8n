@@ -88,6 +88,10 @@
           <div class="toolbar"><div class="searchbox"><span>⌕</span><input id="admin-search" type="search" placeholder="Search by case ID or workflow" aria-label="Search cases for operations"></div></div>
           <div class="table-wrap"><table><thead><tr><th>CASE</th><th>WORKFLOW</th><th>STAGE</th><th>STATUS</th><th>OPERATIONS</th></tr></thead><tbody id="admin-table"></tbody></table></div>
         </section>
+        <section class="panel list-panel">
+          <div class="panel-heading"><div><h2>Failed service steps</h2><p>Steps that exhausted automatic retries. Inspect the error, fix the cause, then retry the step.</p></div></div>
+          <div class="table-wrap"><table><thead><tr><th>CASE</th><th>WORKFLOW</th><th>FAILED STEP</th><th>ERROR</th><th>FAILED AT</th><th></th></tr></thead><tbody id="dead-letter-table"><tr><td colspan="6" class="empty">No failed service steps.</td></tr></tbody></table></div>
+        </section>
         <p class="local-warning">Local demo controls are for development only. Production use requires host authentication and authorization.</p>
       </section>
     </main>

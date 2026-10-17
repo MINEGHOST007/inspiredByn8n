@@ -12,7 +12,7 @@ EX-02,M,MVP,w6w-compiler; w6w-engine-flowable,CwmToBpmnCompilerTest,unit/fixture
 EX-03,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
 EX-04,M,MVP,w6w-compiler,CwmToBpmnCompilerTest,unit/fixture,Partial
 EX-05,M,MVP,w6w-engine-flowable,FlowableEngineIntegrationTest,integration,Partial
-EX-06,M,MVP,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
+EX-06,M,MVP,w6w-engine-port / w6w-engine-flowable,FlowableEngineIntegrationTest.failedServiceTaskRetriesThenAppearsInDeadLetterQueueAndCanBeReplayed; CwmLinterTest.serviceTaskRetryPolicyRejectsInvalidBackoffAndFailureBehavior; CwmToBpmnCompilerTest.testDeterminismAndCompilation,engine integration; linter; compiler,Implemented
 EX-07,S,P2,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
 EX-08,S,P2,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
 EX-09,C,P3,w6w-engine-port / w6w-engine-flowable,,not covered,Not implemented
@@ -46,7 +46,7 @@ API-05,S,P2,w6w-api (planned),,not covered,Not implemented
 UI-01,M,MVP,w6w-app,WorkflowApiControllerTest,ui resource and api integration,Partial
 UI-02,M,MVP,w6w-app,WorkflowApiControllerTest,ui resource and api integration,Partial
 UI-03,M,MVP,w6w-app,WorkflowApiControllerTest,ui resource and api integration,Partial
-UI-04,M,MVP,w6w-app,WorkflowApiControllerTest,ui resource and api integration,Partial
+UI-04,M,MVP,w6w-app,WorkflowApiControllerTest.servesWorkspaceRunsApprovalWorkflowAndExposesDeadLetterQueueApi; FlowableEngineIntegrationTest.failedServiceTaskRetriesThenAppearsInDeadLetterQueueAndCanBeReplayed,api and engine integration,Partial
 UI-05,S,P2,w6w-ui-kit (planned),,not covered,Not implemented
 UI-06,S,P2,w6w-ui-kit (planned),,not covered,Not implemented
 UI-07,C,P3,w6w-ui-kit (planned),,not covered,Not implemented

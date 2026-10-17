@@ -24,6 +24,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,6 +37,8 @@ class FlowableEngineIntegrationTest {
     private DmnEngine dmnEngine;
     private FlowableWorkflowEngineAdapter adapter;
     private ActionRegistry actionRegistry;
+    private final AtomicBoolean flakyActionSucceeds = new AtomicBoolean(false);
+    private final AtomicInteger flakyActionAttempts = new AtomicInteger();
 
     @BeforeEach
     void setUp() {
@@ -53,11 +59,19 @@ class FlowableEngineIntegrationTest {
         });
         actionRegistry.register("refund.updateLedger", ctx -> ActionResult.success());
         actionRegistry.register("refund.generateReceipt", ctx -> ActionResult.success());
+        flakyActionSucceeds.set(false);
+        flakyActionAttempts.set(0);
+        actionRegistry.register("test.flaky", ctx -> {
+            flakyActionAttempts.incrementAndGet();
+            if (!flakyActionSucceeds.get()) throw new IllegalStateException("synthetic downstream failure");
+            return ActionResult.success();
+        });
 
         FlowableActionExecutor actionExecutor = new FlowableActionExecutor(actionRegistry);
         StandaloneInMemProcessEngineConfiguration config = new StandaloneInMemProcessEngineConfiguration();
         config.setJdbcUrl("jdbc:h2:mem:flowable_int_test;DB_CLOSE_DELAY=-1");
         config.setDatabaseSchemaUpdate(StandaloneInMemProcessEngineConfiguration.DB_SCHEMA_UPDATE_TRUE);
+        config.setAsyncExecutorActivate(true);
         
         Map<Object, Object> beans = new HashMap<>();
         beans.put("w6wActionExecutor", actionExecutor);
@@ -79,7 +93,8 @@ class FlowableEngineIntegrationTest {
             processEngine.getRepositoryService(),
             processEngine.getRuntimeService(),
             processEngine.getTaskService(),
-            processEngine.getHistoryService()
+            processEngine.getHistoryService(),
+            processEngine.getManagementService()
         );
     }
 
@@ -164,12 +179,12 @@ class FlowableEngineIntegrationTest {
 
         WorkflowInstance approved = adapter.startInstance("decision-routing-test", "DECISION-APPROVE", Map.of("amount", 250));
         WorkflowInstance rejected = adapter.startInstance("decision-routing-test", "DECISION-REJECT", Map.of("amount", 900));
-        assertThat(adapter.getInstance(approved.getId()).getStatus()).isEqualTo("COMPLETED");
-        assertThat(adapter.getInstance(approved.getId()).getVariables()).containsEntry("outcome", "approve");
-        assertThat(adapter.getInstance(approved.getId()).getResolution()).isEqualTo("Approved");
-        assertThat(adapter.getInstance(rejected.getId()).getStatus()).isEqualTo("COMPLETED");
-        assertThat(adapter.getInstance(rejected.getId()).getVariables()).containsEntry("outcome", "reject");
-        assertThat(adapter.getInstance(rejected.getId()).getResolution()).isEqualTo("Rejected");
+        WorkflowInstance approvedResult = await(() -> adapter.getInstance(approved.getId()), i -> "COMPLETED".equals(i.getStatus()), "approved decision workflow");
+        WorkflowInstance rejectedResult = await(() -> adapter.getInstance(rejected.getId()), i -> "COMPLETED".equals(i.getStatus()), "rejected decision workflow");
+        assertThat(approvedResult.getVariables()).containsEntry("outcome", "approve");
+        assertThat(approvedResult.getResolution()).isEqualTo("Approved");
+        assertThat(rejectedResult.getVariables()).containsEntry("outcome", "reject");
+        assertThat(rejectedResult.getResolution()).isEqualTo("Rejected");
     }
 
     @Test
@@ -261,10 +276,7 @@ class FlowableEngineIntegrationTest {
 
         // Automated steps execute: validateRequest -> generateId -> sendConfirmation -> retrieveRecords -> checkPolicyAdherence
         // Next human task: 'Review Eligibility Details'
-        tasks = adapter.getTasksForUser("agent.smith", Collections.singletonList("service_agent"));
-        assertThat(tasks).isNotEmpty();
-        TaskInstance reviewTask = tasks.get(0);
-        assertThat(reviewTask.getName()).isEqualTo("Review Eligibility Details");
+        TaskInstance reviewTask = awaitTask(instance.getId(), "Review Eligibility Details", "agent.smith", List.of("service_agent"));
 
         // Complete review task
         Map<String, Object> reviewVars = new HashMap<>();
@@ -273,24 +285,14 @@ class FlowableEngineIntegrationTest {
         adapter.completeTask(reviewTask.getId(), "agent.smith", reviewVars);
 
         // Next approval task: 'Request Refund Approval'
-        tasks = adapter.getTasksForUser("manager.jones", Collections.emptyList());
-        if (tasks.isEmpty()) {
-            // Task assigned via candidate lookup
-            tasks = processEngine.getTaskService().createTaskQuery().list().stream()
-                .map(t -> adapter.getTask(t.getId())).toList();
-        }
-        assertThat(tasks).isNotEmpty();
-        TaskInstance approvalTask = tasks.stream()
-            .filter(t -> t.getName().equals("Request Refund Approval"))
-            .findFirst()
-            .orElseThrow();
+        TaskInstance approvalTask = awaitTask(instance.getId(), "Request Refund Approval", "manager.jones", List.of());
 
         // Complete approval task with 'approve' outcome
         adapter.completeTask(approvalTask.getId(), "manager.jones", Collections.singletonMap("outcome", "approve"));
 
         // Automated steps execute: sendApprovalNotification -> initiateTransaction -> updateLedger -> generateReceipt -> closeCase
         // 5. Assert instance concluded successfully with resolution 'Approved'
-        WorkflowInstance completed = adapter.getInstance(instance.getId());
+        WorkflowInstance completed = await(() -> adapter.getInstance(instance.getId()), i -> "COMPLETED".equals(i.getStatus()), "approved refund workflow");
         assertThat(completed).isNotNull();
         assertThat(completed.getStatus()).isEqualTo("COMPLETED");
         assertThat(completed.getVariables().get("disbursementTransactionId")).isEqualTo("TXN-99881");
@@ -298,5 +300,72 @@ class FlowableEngineIntegrationTest {
         WorkflowInstance duplicateCompletedStart = adapter.startInstance("refund-processing", "CASE-BK-001", Collections.emptyMap());
         assertThat(duplicateCompletedStart.getId()).isEqualTo(instance.getId());
         assertThat(duplicateCompletedStart.getStatus()).isEqualTo("COMPLETED");
+    }
+
+    @Test
+    void failedServiceTaskRetriesThenAppearsInDeadLetterQueueAndCanBeReplayed() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: retry-test
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                roles: [operations]
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: submit
+                        type: userTask
+                        assignee:
+                          role: operations
+                      - id: flaky-action
+                        name: Flaky action
+                        type: serviceTask
+                        action: test.flaky
+                        onError:
+                          retries: 2
+                          backoff: PT1S
+                          onFailure: deadLetter
+                """);
+        adapter.deploy("retry-test", "Retry test", new CwmToBpmnCompiler().compile(workflow));
+        WorkflowInstance instance = adapter.startInstance("retry-test", "RETRY-CASE-001", Map.of());
+        TaskInstance submit = awaitTask(instance.getId(), "submit", null, List.of());
+        adapter.completeTask(submit.getId(), "operator", Map.of());
+
+        List<com.w6w.port.WorkflowFailure> failures = await(adapter::getDeadLetterJobs,
+                jobs -> jobs.stream().anyMatch(job -> instance.getId().equals(job.instanceId())), "dead-lettered action");
+        com.w6w.port.WorkflowFailure failure = failures.stream()
+                .filter(job -> instance.getId().equals(job.instanceId())).findFirst().orElseThrow();
+        assertThat(failure.stepId()).isEqualTo("flaky-action");
+        assertThat(failure.stepName()).isEqualTo("Flaky action");
+        assertThat(failure.errorMessage()).contains("synthetic downstream failure");
+        assertThat(flakyActionAttempts.get()).isGreaterThanOrEqualTo(2);
+
+        flakyActionSucceeds.set(true);
+        adapter.retryDeadLetterJob(failure.id(), 2);
+        WorkflowInstance completed = await(() -> adapter.getInstance(instance.getId()),
+                item -> "COMPLETED".equals(item.getStatus()), "manually retried workflow");
+        assertThat(completed.getResolution()).isEqualTo("Done");
+        assertThat(adapter.getDeadLetterJobs()).noneMatch(job -> failure.id().equals(job.id()));
+    }
+
+    private TaskInstance awaitTask(String instanceId, String taskName, String user, List<String> roles) throws Exception {
+        return await(() -> adapter.getTasksForUser(user, roles).stream()
+                        .filter(task -> instanceId.equals(task.getInstanceId()) && taskName.equals(task.getName()))
+                        .findFirst().orElse(null), task -> task != null, "task '" + taskName + "'");
+    }
+
+    private <T> T await(Supplier<T> query, java.util.function.Predicate<T> ready, String description) throws Exception {
+        long deadline = System.nanoTime() + Duration.ofSeconds(15).toNanos();
+        T result;
+        do {
+            result = query.get();
+            if (ready.test(result)) return result;
+            Thread.sleep(25);
+        } while (System.nanoTime() < deadline);
+        throw new AssertionError("Timed out waiting for " + description + "; last state was " + result);
     }
 }

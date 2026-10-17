@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.time.Duration;
+import java.time.format.DateTimeParseException;
 
 /** Static checks for the subset of CWM v1 that this runtime can execute. */
 public class CwmLinter {
@@ -240,6 +242,7 @@ public class CwmLinter {
         }
         if ("serviceTask".equals(type) && isBlank(step.getAction()))
             result.addError("Service task '" + step.getId() + "' in stage '" + stage.getId() + "' has no registered action name");
+        lintErrorPolicy(step, result);
         if (("decision".equals(type) || "parallel".equals(type))
                 && (step.getOutcomes() == null || step.getOutcomes().isEmpty()))
             result.addError("Step '" + step.getId() + "' of type '" + type + "' must declare explicit outcomes before compilation");
@@ -278,6 +281,41 @@ public class CwmLinter {
                 result.addError("Step '" + step.getId() + "' outcome '" + outcome + "' has invalid target '" + target + "'");
             }
         });
+    }
+
+    private void lintErrorPolicy(StepDefinition step, LintResult result) {
+        Map<String, Object> policy = step.getOnError();
+        if (policy == null) return;
+        if (!"serviceTask".equals(step.getType())) {
+            result.addError("Step '" + step.getId() + "' can declare onError only when it is a serviceTask");
+            return;
+        }
+        Set<String> allowed = Set.of("retries", "backoff", "onFailure");
+        policy.keySet().stream().filter(key -> !allowed.contains(key))
+                .forEach(key -> result.addError("Service task '" + step.getId() + "' has unsupported onError field '" + key + "'"));
+
+        Object retries = policy.get("retries");
+        if (retries != null && (!(retries instanceof Number number) || number.doubleValue() != number.intValue()
+                || number.intValue() < 1 || number.intValue() > 100))
+            result.addError("Service task '" + step.getId() + "' onError.retries must be an integer from 1 to 100");
+
+        Object backoff = policy.get("backoff");
+        if (backoff != null) {
+            if (!(backoff instanceof String value)) {
+                result.addError("Service task '" + step.getId() + "' onError.backoff must be an ISO-8601 duration");
+            } else {
+                try {
+                    if (Duration.parse(value).isZero() || Duration.parse(value).isNegative())
+                        result.addError("Service task '" + step.getId() + "' onError.backoff must be greater than zero");
+                } catch (DateTimeParseException e) {
+                    result.addError("Service task '" + step.getId() + "' onError.backoff must be an ISO-8601 duration");
+                }
+            }
+        }
+
+        Object onFailure = policy.get("onFailure");
+        if (onFailure != null && !"deadLetter".equals(onFailure))
+            result.addError("Service task '" + step.getId() + "' onError.onFailure must be 'deadLetter' in CWM v1");
     }
 
     private void lintCondition(ConditionDefinition condition, String stepId, LintResult result) {

@@ -125,8 +125,10 @@ public class CwmToBpmnCompiler {
 
         } else if ("serviceTask".equals(step.getType())) {
             xml.append("    <serviceTask id=\"").append(stepRef).append("\" name=\"").append(escape(name)).append("\"")
+               .append(" flowable:async=\"true\"")
                .append(" flowable:delegateExpression=\"${w6wActionExecutor}\">\n")
                .append("      <extensionElements>\n")
+               .append("        <flowable:failedJobRetryTimeCycle>").append(failedJobRetryTimeCycle(step)).append("</flowable:failedJobRetryTimeCycle>\n")
                .append("        <flowable:field name=\"actionName\" stringValue=\"").append(escape(step.getAction() != null ? step.getAction() : "")).append("\" />\n")
                .append("        <flowable:field name=\"stepId\" stringValue=\"").append(escape(step.getId())).append("\" />\n")
                .append("      </extensionElements>\n")
@@ -135,8 +137,10 @@ public class CwmToBpmnCompiler {
         } else if ("decision".equals(step.getType())) {
             String decisionKey = versionedDecisionKey(step.getDecision(), workflow.getMetadata().getVersion());
             xml.append("    <serviceTask id=\"").append(stepRef).append("\" name=\"").append(escape(name)).append("\"")
+                    .append(" flowable:async=\"true\"")
                     .append(" flowable:delegateExpression=\"${w6wDecisionExecutor}\">\n")
                     .append("      <extensionElements>\n")
+                    .append("        <flowable:failedJobRetryTimeCycle>").append(failedJobRetryTimeCycle(step)).append("</flowable:failedJobRetryTimeCycle>\n")
                     .append("        <flowable:field name=\"decisionKey\" stringValue=\"").append(escape(decisionKey)).append("\" />\n")
                     .append("        <flowable:field name=\"stepId\" stringValue=\"").append(escape(step.getId())).append("\" />\n")
                     .append("        <flowable:field name=\"allowedOutcomes\" stringValue=\"").append(escape(String.join(",", step.getOutcomes().keySet()))).append("\" />\n")
@@ -248,6 +252,30 @@ public class CwmToBpmnCompiler {
             throw new IllegalArgumentException("Condition operator 'in' requires a non-empty array value");
         return "(" + String.join(" || ", values.stream()
                 .map(value -> fieldExpression + " == " + expressionLiteral(value)).toList()) + ")";
+    }
+
+    private String failedJobRetryTimeCycle(StepDefinition step) {
+        Map<String, Object> policy = step.getOnError();
+        int retries = 3;
+        String backoff = "PT1M";
+        if (policy != null) {
+            Object configuredRetries = policy.get("retries");
+            Object configuredBackoff = policy.get("backoff");
+            Object onFailure = policy.get("onFailure");
+            if (configuredRetries instanceof Number number) retries = number.intValue();
+            if (configuredBackoff instanceof String duration) backoff = duration;
+            if (onFailure != null && !"deadLetter".equals(onFailure))
+                throw new IllegalArgumentException("Unsupported onError.onFailure for step '" + step.getId() + "': " + onFailure);
+        }
+        if (retries < 1 || retries > 100)
+            throw new IllegalArgumentException("onError.retries for step '" + step.getId() + "' must be an integer from 1 to 100");
+        try {
+            java.time.Duration delay = java.time.Duration.parse(backoff);
+            if (delay.isZero() || delay.isNegative()) throw new IllegalArgumentException("Backoff must be greater than zero");
+        } catch (java.time.format.DateTimeParseException e) {
+            throw new IllegalArgumentException("onError.backoff for step '" + step.getId() + "' must be an ISO-8601 duration", e);
+        }
+        return "R" + retries + "/" + backoff;
     }
 
     private String expressionLiteral(Object value) {

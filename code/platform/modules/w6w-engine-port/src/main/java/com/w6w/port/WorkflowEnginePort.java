@@ -54,4 +54,10 @@ public interface WorkflowEnginePort {
 
     /** Resumes a suspended workflow instance. */
     void resumeInstance(String instanceId);
+
+    /** Returns service-step jobs that exhausted their configured automatic retries. */
+    List<WorkflowFailure> getDeadLetterJobs();
+
+    /** Requeues a dead-letter job with a fresh bounded retry count. */
+    void retryDeadLetterJob(String jobId, int retries);
 }

@@ -2,7 +2,9 @@ package com.w6w.engine.flowable;
 
 import com.w6w.port.TaskInstance;
 import com.w6w.port.WorkflowEnginePort;
+import com.w6w.port.WorkflowFailure;
 import com.w6w.port.WorkflowInstance;
+import org.flowable.engine.ManagementService;
 import org.flowable.engine.HistoryService;
 import org.flowable.engine.RepositoryService;
 import org.flowable.engine.RuntimeService;
@@ -10,6 +12,7 @@ import org.flowable.engine.TaskService;
 import org.flowable.engine.history.HistoricProcessInstance;
 import org.flowable.engine.repository.Deployment;
 import org.flowable.engine.runtime.ProcessInstance;
+import org.flowable.job.api.Job;
 import org.flowable.task.api.Task;
 import org.flowable.task.api.TaskQuery;
 import org.slf4j.Logger;
@@ -27,15 +30,18 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
     private final RuntimeService runtimeService;
     private final TaskService taskService;
     private final HistoryService historyService;
+    private final ManagementService managementService;
 
     public FlowableWorkflowEngineAdapter(RepositoryService repositoryService,
                                          RuntimeService runtimeService,
                                          TaskService taskService,
-                                         HistoryService historyService) {
+                                         HistoryService historyService,
+                                         ManagementService managementService) {
         this.repositoryService = repositoryService;
         this.runtimeService = runtimeService;
         this.taskService = taskService;
         this.historyService = historyService;
+        this.managementService = managementService;
     }
 
     @Override
@@ -170,6 +176,37 @@ public class FlowableWorkflowEngineAdapter implements WorkflowEnginePort {
     public void resumeInstance(String instanceId) {
         runtimeService.activateProcessInstanceById(instanceId);
         log.info("Resumed workflow instance '{}'", instanceId);
+    }
+
+    @Override
+    public List<WorkflowFailure> getDeadLetterJobs() {
+        return managementService.createDeadLetterJobQuery().orderByJobCreateTime().desc().list().stream()
+                .map(job -> {
+                    WorkflowInstance instance = job.getProcessInstanceId() == null ? null : getInstance(job.getProcessInstanceId());
+                    String elementId = job.getElementId();
+                    String stepId = elementId != null && elementId.startsWith("step_")
+                            ? elementId.substring(5).replace('_', '-') : elementId;
+                    return new WorkflowFailure(job.getId(), job.getProcessInstanceId(),
+                            instance == null ? null : instance.getWorkflowKey(),
+                            instance == null ? null : instance.getBusinessKey(),
+                            stepId, job.getElementName(), bounded(job.getExceptionMessage()),
+                            job.getCreateTime() == null ? null : job.getCreateTime().toInstant());
+                }).toList();
+    }
+
+    @Override
+    public void retryDeadLetterJob(String jobId, int retries) {
+        if (jobId == null || jobId.isBlank()) throw new IllegalArgumentException("A dead-letter job ID is required");
+        if (retries < 1 || retries > 100) throw new IllegalArgumentException("Retry count must be between 1 and 100");
+        Job job = managementService.createDeadLetterJobQuery().jobId(jobId).singleResult();
+        if (job == null) throw new NoSuchElementException("Dead-letter job not found: " + jobId);
+        managementService.moveDeadLetterJobToExecutableJob(jobId, retries);
+        log.info("Requeued dead-letter job '{}' for instance '{}' with {} retries", jobId, job.getProcessInstanceId(), retries);
+    }
+
+    private String bounded(String message) {
+        if (message == null) return null;
+        return message.length() <= 1000 ? message : message.substring(0, 1000) + "…";
     }
 
     private WorkflowInstance mapActiveInstance(ProcessInstance pi) {

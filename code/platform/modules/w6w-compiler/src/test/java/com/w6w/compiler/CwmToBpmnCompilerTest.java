@@ -38,6 +38,8 @@ class CwmToBpmnCompilerTest {
         assertThat(bpmnXml1).contains("<userTask id=\"step_receive_request\"");
         assertThat(bpmnXml1).contains("flowable:dueDate=\"${w6wSlaService.deadline('PT24H')}\"");
         assertThat(bpmnXml1).contains("<serviceTask id=\"step_validate_request_data\"");
+        assertThat(bpmnXml1).contains("flowable:async=\"true\"")
+                .contains("<flowable:failedJobRetryTimeCycle>R3/PT1M</flowable:failedJobRetryTimeCycle>");
         assertThat(bpmnXml1).contains("<exclusiveGateway id=\"gw_request_refund_approval\"");
         assertThat(bpmnXml1).contains("<endEvent id=\"step_close_refund_case\"");
         assertThat(bpmnXml1).contains("name=\"Resolution: Approved\"");

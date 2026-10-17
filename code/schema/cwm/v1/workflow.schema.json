@@ -179,6 +179,7 @@
         },
         "onError": {
           "type": "object",
+          "description": "Optional service-step retry policy. When omitted, the runtime retries three times with a one-minute delay, then dead-letters the job.",
           "properties": {
             "retries": {
               "type": "integer",

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.w6w.engine.flowable.FlowableWorkflowEngineAdapter;
 import com.w6w.port.TaskInstance;
 import com.w6w.port.WorkflowInstance;
+import com.w6w.port.WorkflowFailure;
 import org.flowable.engine.HistoryService;
 import org.flowable.engine.ProcessEngine;
 import org.flowable.engine.repository.ProcessDefinition;
@@ -190,6 +191,26 @@ public class WorkflowApiController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/dead-letter-jobs")
+    public List<WorkflowFailure> deadLetterJobs() {
+        return engine.getDeadLetterJobs();
+    }
+
+    @PostMapping("/dead-letter-jobs/{jobId}/retry")
+    public ResponseEntity<Void> retryDeadLetterJob(@PathVariable("jobId") String jobId,
+                                                    @RequestBody(required = false) DeadLetterRetryRequest request) {
+        int retries = request == null || request.retries() == null ? 3 : request.retries();
+        WorkflowFailure failedJob = engine.getDeadLetterJobs().stream().filter(job -> jobId.equals(job.id())).findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Dead-letter job not found: " + jobId));
+        engine.retryDeadLetterJob(jobId, retries);
+        Map<String, Object> details = new LinkedHashMap<>();
+        details.put("retries", retries);
+        if (request != null && request.reason() != null && !request.reason().isBlank()) details.put("reason", request.reason());
+        audit.record(failedJob.instanceId(), failedJob.workflowKey(), failedJob.businessKey(), jobId,
+                "local-demo", "DEAD_LETTER_JOB_RETRIED", details);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/audit.csv")
     public ResponseEntity<String> auditCsv(@RequestParam(name = "limit", defaultValue = "200") int limit) {
         StringBuilder csv = new StringBuilder("id,instanceId,workflowKey,businessKey,taskId,actor,action,details,createdAt\n");
@@ -313,6 +334,7 @@ public class WorkflowApiController {
     public record CompleteTaskRequest(String user, String outcome, Map<String, Object> data) {}
     public record BulkClaimRequest(String user, List<String> taskIds) {}
     public record AdminRequest(String action, String taskId, String assignee, String reason) {}
+    public record DeadLetterRetryRequest(Integer retries, String reason) {}
 
     @RestControllerAdvice
     static class ApiErrors {

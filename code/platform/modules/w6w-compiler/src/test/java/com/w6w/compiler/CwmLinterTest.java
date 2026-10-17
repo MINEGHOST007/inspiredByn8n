@@ -142,4 +142,35 @@ class CwmLinterTest {
         assertThat(result.getIssues()).extracting(CwmLinter.LintIssue::getMessage)
                 .anyMatch(message -> message.contains("references undefined data field 'data.unknown'"));
     }
+
+    @Test
+    void serviceTaskRetryPolicyRejectsInvalidBackoffAndFailureBehavior() throws Exception {
+        WorkflowDefinition workflow = CwmParser.parse("""
+                apiVersion: w6w/v1
+                kind: Workflow
+                metadata:
+                  key: invalid-retry-workflow
+                  version: 1.0.0
+                  owner: operations
+                  dataClassification: internal
+                stages:
+                  - id: process
+                    resolution: Done
+                    steps:
+                      - id: flaky-action
+                        type: serviceTask
+                        action: example.process
+                        onError:
+                          retries: 0
+                          backoff: soon
+                          onFailure: pretendSuccess
+                """);
+
+        CwmLinter.LintResult result = new CwmLinter().lint(workflow);
+
+        assertThat(result.getIssues()).extracting(CwmLinter.LintIssue::getMessage)
+                .anyMatch(message -> message.contains("retries must be an integer"))
+                .anyMatch(message -> message.contains("backoff must be an ISO-8601 duration"))
+                .anyMatch(message -> message.contains("onFailure must be 'deadLetter'"));
+    }
 }
